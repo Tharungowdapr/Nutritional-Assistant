@@ -3,34 +3,35 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/lib/auth-context";
+import { Sidebar } from "@/components/sidebar";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "AaharAI NutriSync",
-  description: "AI-Powered Indian Medical Nutritional Assistant",
+  title: "AaharAI NutriSync — AI Nutrition Assistant",
+  description: "AI-powered Indian nutritional assistant grounded in IFCT 2017 and ICMR-NIN 2024 data.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans mesh-bg min-h-screen`} suppressHydrationWarning>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="flex h-screen overflow-hidden">
-            <main className="flex-1 overflow-y-auto w-full">
+      <body className={`${inter.variable} font-sans luxury-bg min-h-screen`} suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <AuthProvider>
+            <Sidebar />
+            {/* Main content offset for sidebar */}
+            <main className="md:ml-[260px] pt-14 md:pt-0 min-h-screen">
               {children}
             </main>
-          </div>
-          <Toaster />
+            <Toaster position="top-right" />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

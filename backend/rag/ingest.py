@@ -4,6 +4,7 @@ Parses IFCT PDF + Excel data → chunks → embeds → stores in ChromaDB.
 Run this once: python -m rag.ingest
 """
 import logging
+import sys
 from pathlib import Path
 
 import chromadb
@@ -11,28 +12,35 @@ import fitz  # PyMuPDF
 import pandas as pd
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+# Add parent dir to path so config can be imported
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config import settings
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s — %(message)s")
 logger = logging.getLogger(__name__)
 
 
 def extract_pdf_text(pdf_path: Path) -> list[dict]:
     """Extract text from IFCT PDF, page by page."""
     docs = []
+    logger.info(f"📄 Opening PDF: {pdf_path.name} ({pdf_path.stat().st_size / 1e6:.1f} MB)")
     with fitz.open(str(pdf_path)) as pdf:
-        for page_num in range(len(pdf)):
+        total = len(pdf)
+        for page_num in range(total):
             page = pdf[page_num]
             text = page.get_text("text").strip()
-            if len(text) > 50:  # skip nearly-empty pages
+            if len(text) > 50:
                 docs.append({
                     "text": text,
                     "metadata": {
                         "source": "IFCT_2017_PDF",
-                        "page_number": page_num + 1,
+                        "page_number": str(page_num + 1),
                         "type": "pdf_page",
                     },
                 })
-    logger.info(f"Extracted {len(docs)} pages from IFCT PDF")
+            if (page_num + 1) % 50 == 0:
+                logger.info(f"   Extracted {page_num + 1}/{total} pages...")
+    logger.info(f"✅ Extracted {len(docs)} pages from IFCT PDF")
     return docs
 
 
@@ -60,7 +68,6 @@ def excel_to_documents(excel_path: Path) -> list[dict]:
             df = df.dropna(subset=[id_col])
 
             for _, row in df.iterrows():
-                # Serialize row to readable text
                 parts = []
                 for col in df.columns:
                     val = row[col]
@@ -68,25 +75,25 @@ def excel_to_documents(excel_path: Path) -> list[dict]:
                         parts.append(f"{col}: {val}")
                 text = "\n".join(parts)
 
-                # Build metadata
                 metadata = {
                     "source": source_tag,
                     "sheet": sheet_name,
                     "type": "excel_row",
                     "identifier": str(row[id_col]),
                 }
-                # Add extra metadata for food rows
                 if source_tag == "food_db":
-                    if "Food Group" in row:
-                        metadata["food_group"] = str(row.get("Food Group", ""))
-                    if "Diet Type" in row:
-                        metadata["diet_type"] = str(row.get("Diet Type", ""))
+                    if "Food Group" in row and pd.notna(row.get("Food Group")):
+                        metadata["food_group"] = str(row["Food Group"])
+                    if "Diet Type" in row and pd.notna(row.get("Diet Type")):
+                        metadata["diet_type"] = str(row["Diet Type"])
 
                 docs.append({"text": text, "metadata": metadata})
-        except Exception as e:
-            logger.warning(f"Could not load sheet '{sheet_name}': {e}")
 
-    logger.info(f"Created {len(docs)} documents from Excel sheets")
+            logger.info(f"   📊 {sheet_name}: {len(df)} rows")
+        except Exception as e:
+            logger.warning(f"   ⚠️ Could not load sheet '{sheet_name}': {e}")
+
+    logger.info(f"✅ Created {len(docs)} documents from Excel sheets")
     return docs
 
 
@@ -106,40 +113,54 @@ def chunk_documents(docs: list[dict], chunk_size: int = 512,
         for i, split in enumerate(splits):
             chunks.append({
                 "text": split,
-                "metadata": {**doc["metadata"], "chunk_index": i},
+                "metadata": {**doc["metadata"], "chunk_index": str(i)},
             })
 
-    logger.info(f"Created {len(chunks)} chunks from {len(docs)} documents")
+    logger.info(f"✅ Created {len(chunks)} chunks from {len(docs)} documents")
     return chunks
 
 
 def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
-    """Embed chunks and store in ChromaDB."""
-    # Create persistent ChromaDB client
-    settings.CHROMA_DB_PATH.mkdir(parents=True, exist_ok=True)
-    client = chromadb.PersistentClient(path=str(settings.CHROMA_DB_PATH))
+    """Embed chunks and store in ChromaDB using default embeddings."""
+    chroma_path = settings.CHROMA_DB_PATH
+    chroma_path.mkdir(parents=True, exist_ok=True)
+    client = chromadb.PersistentClient(path=str(chroma_path))
 
     # Delete existing collection if exists
     try:
         client.delete_collection(collection_name)
+        logger.info("🗑️ Deleted existing collection")
     except Exception:
         pass
 
+    # Create collection with default embedding function (all-MiniLM-L6-v2)
     collection = client.create_collection(
         name=collection_name,
         metadata={"hnsw:space": "cosine"},
     )
 
-    # Batch insert (ChromaDB uses its default embedding model)
+    # Batch insert
     batch_size = 100
+    total_batches = (len(chunks) // batch_size) + 1
     for i in range(0, len(chunks), batch_size):
-        batch = chunks[i : i + batch_size]
+        batch = chunks[i: i + batch_size]
+
+        # Ensure all metadata values are strings (ChromaDB requirement)
+        clean_metadatas = []
+        for c in batch:
+            clean_meta = {}
+            for k, v in c["metadata"].items():
+                clean_meta[k] = str(v) if v is not None else ""
+            clean_metadatas.append(clean_meta)
+
         collection.add(
             ids=[f"chunk_{i + j}" for j in range(len(batch))],
             documents=[c["text"] for c in batch],
-            metadatas=[c["metadata"] for c in batch],
+            metadatas=clean_metadatas,
         )
-        logger.info(f"Inserted batch {i // batch_size + 1}/{(len(chunks) // batch_size) + 1}")
+        batch_num = (i // batch_size) + 1
+        if batch_num % 5 == 0 or batch_num == total_batches:
+            logger.info(f"   Inserted batch {batch_num}/{total_batches}")
 
     logger.info(f"✅ Ingested {len(chunks)} chunks into ChromaDB collection '{collection_name}'")
     return collection
@@ -147,23 +168,33 @@ def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
 
 def run_ingestion():
     """Full ingestion pipeline: PDF + Excel → ChromaDB."""
-    logging.basicConfig(level=logging.INFO)
+    logger.info("=" * 60)
+    logger.info("🚀 AaharAI NutriSync — RAG Ingestion Pipeline")
+    logger.info("=" * 60)
 
     # 1. Extract documents
+    logger.info("\n📄 Step 1: Extracting PDF text...")
     pdf_docs = extract_pdf_text(settings.IFCT_PDF_PATH)
+
+    logger.info("\n📊 Step 2: Converting Excel sheets...")
     excel_docs = excel_to_documents(settings.EXCEL_PATH)
     all_docs = pdf_docs + excel_docs
 
     # 2. Chunk
+    logger.info("\n✂️ Step 3: Chunking documents...")
     chunks = chunk_documents(all_docs, settings.RAG_CHUNK_SIZE, settings.RAG_CHUNK_OVERLAP)
 
     # 3. Ingest into ChromaDB
+    logger.info("\n💾 Step 4: Ingesting into ChromaDB...")
     ingest_to_chroma(chunks)
 
-    print(f"\n✅ Ingestion complete!")
-    print(f"   PDF pages: {len(pdf_docs)}")
-    print(f"   Excel rows: {len(excel_docs)}")
-    print(f"   Total chunks: {len(chunks)}")
+    logger.info("\n" + "=" * 60)
+    logger.info(f"✅ Ingestion complete!")
+    logger.info(f"   PDF pages: {len(pdf_docs)}")
+    logger.info(f"   Excel rows: {len(excel_docs)}")
+    logger.info(f"   Total chunks: {len(chunks)}")
+    logger.info(f"   ChromaDB path: {settings.CHROMA_DB_PATH}")
+    logger.info("=" * 60)
 
 
 if __name__ == "__main__":

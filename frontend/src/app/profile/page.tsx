@@ -1,135 +1,224 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { 
-  User, Activity, Settings, 
-  Stethoscope, ShieldCheck, Save,
-  RotateCcw, ArrowLeft, Info
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import Link from "next/link"
-import { toast } from "sonner"
+import { useState, useEffect } from "react";
+import { UserCircle, Save, Loader2, Beaker } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/lib/auth-context";
+import { nutritionApi } from "@/lib/api";
+import { toast } from "sonner";
+
+const CONDITIONS_LIST = [
+  "T2DM (Diabetes)", "PCOS", "Hypertension", "Hyperthyroid",
+  "Hypothyroid", "Fatty Liver", "CKD Stage 1-2"
+];
 
 export default function ProfilePage() {
-  const [isSaving, setIsSaving] = useState(false)
+  const { user, updateProfile } = useAuth();
+  const [formData, setFormData] = useState<any>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [targets, setTargets] = useState<any>(null);
+  const [isLoadingTargets, setIsLoadingTargets] = useState(false);
 
-  const handleSave = () => {
-    setIsSaving(true)
-    toast.promise(new Promise(resolve => setTimeout(resolve, 2000)), {
-      loading: 'Updating clinical profile...',
-      success: 'Profile Synchronized!',
-      error: 'Failed to update targets.',
-    })
-    setTimeout(() => setIsSaving(false), 2000)
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name,
+        ...user.profile
+      });
+      loadTargets(user.profile);
+    }
+  }, [user]);
+
+  const loadTargets = async (profileData: any) => {
+    setIsLoadingTargets(true);
+    try {
+      const res = await nutritionApi.computeTargets(profileData);
+      setTargets(res.targets);
+    } catch (e) {
+      console.error("Failed to load targets", e);
+    } finally {
+      setIsLoadingTargets(false);
+    }
+  };
+
+  const handleChange = (key: string, value: any) => {
+    setFormData((prev: any) => ({ ...prev, [key]: value }));
+  };
+
+  const toggleCondition = (condition: string) => {
+    const current = formData.conditions || [];
+    if (current.includes(condition)) {
+      handleChange("conditions", current.filter((c: string) => c !== condition));
+    } else {
+      handleChange("conditions", [...current, condition]);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await updateProfile(formData);
+      toast.success("Profile saved successfully");
+      loadTargets(formData);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to save profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (!user) {
+    return <div className="p-8">Please log in to view your profile.</div>;
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-10 space-y-10 max-w-4xl">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/"><ArrowLeft className="w-5 h-5" /></Link>
+    <div className="p-4 md:p-8 max-w-5xl mx-auto flex flex-col gap-8 fade-in pb-20">
+      <header className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-lg bg-primary/10">
+            <UserCircle className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold">Clinical Profile</h1>
+            <p className="text-sm text-muted-foreground">Manage your physical and dietary state</p>
+          </div>
+        </div>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+          Save Profile
         </Button>
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Clinical Profile</h1>
-          <p className="text-muted-foreground">Manage your physiological markers and ICMR-NIN targets.</p>
-        </div>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Sidebar Nav */}
-        <div className="space-y-2">
-          <Button variant="secondary" className="w-full justify-start gap-3 bg-primary/10 text-primary">
-            <User className="w-4 h-4" /> Personal Basics
-          </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3">
-            <Activity className="w-4 h-4" /> Clinical Markers
-          </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3">
-            <Stethoscope className="w-4 h-4" /> Medications
-          </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3">
-            <ShieldCheck className="w-4 h-4" /> Data & Privacy
-          </Button>
-        </div>
-
-        {/* Form Content */}
+      <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-6">
-          <Card className="glass-card overflow-hidden">
-            <CardHeader className="bg-muted/30">
-              <CardTitle>Personal Information</CardTitle>
-              <CardDescription>Update your basic biological data for precise RDA calculation.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Age</Label>
-                  <Input defaultValue="28" className="glass" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Weight (kg)</Label>
-                  <Input defaultValue="74" className="glass" />
-                </div>
+          {/* Basics */}
+          <div className="glass-card p-6">
+            <h2 className="text-lg font-medium mb-4">Basic Information</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2 col-span-2 md:col-span-1">
+                <Label>Full Name</Label>
+                <Input value={formData.name || ""} onChange={e => handleChange("name", e.target.value)} />
+              </div>
+              <div className="space-y-2 col-span-2 md:col-span-1">
+                <Label>Age</Label>
+                <Input type="number" value={formData.age || ""} onChange={e => handleChange("age", parseInt(e.target.value))} />
               </div>
               <div className="space-y-2">
-                <Label>Activity Level</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Badge variant="secondary" className="justify-center py-2 cursor-pointer border-primary/40 bg-primary/5 text-primary">Sedentary</Badge>
-                  <Badge variant="outline" className="justify-center py-2 cursor-pointer">Moderate</Badge>
-                </div>
+                <Label>Weight (kg)</Label>
+                <Input type="number" value={formData.weight_kg || ""} onChange={e => handleChange("weight_kg", parseFloat(e.target.value))} />
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle>Medical Context</CardTitle>
-              <CardDescription>Clinical modifiers used in the RAG inference engine.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Type 2 Diabetes Focus</Label>
-                  <p className="text-xs text-muted-foreground">Prioritize low-GI foods and carb counting.</p>
-                </div>
-                <Switch defaultChecked />
+              <div className="space-y-2">
+                <Label>Diet Type</Label>
+                <select 
+                  className="w-full h-10 px-3 py-2 rounded-md border border-input bg-background"
+                  value={formData.diet_type || ""}
+                  onChange={e => handleChange("diet_type", e.target.value)}
+                >
+                  <option value="">Select Diet</option>
+                  <option value="VEG">Vegetarian</option>
+                  <option value="NON-VEG">Non-Vegetarian</option>
+                  <option value="VEGAN">Vegan</option>
+                </select>
               </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>GLP-1 Medication User</Label>
-                  <p className="text-xs text-muted-foreground">Minimize high-fat/fried foods to reduce nausea.</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" className="gap-2"><RotateCcw className="w-4 h-4" /> Reset</Button>
-            <Button 
-               onClick={handleSave}
-               disabled={isSaving}
-               className="bg-primary hover:bg-primary/90 text-white min-w-32 gap-2"
-            >
-              {isSaving ? "Saving..." : <><Save className="w-4 h-4" /> Save Changes</>}
-            </Button>
+            </div>
           </div>
-          
-          <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 flex gap-3 text-amber-600">
-            <Info className="w-5 h-5 flex-shrink-0" />
-            <p className="text-xs leading-relaxed italic">
-              Note: Changing these values will immediately recalculate your 7-day Meal Plan and Recipe suggestions.
-            </p>
+
+          {/* Clinical */}
+          <div className="glass-card p-6">
+            <h2 className="text-lg font-medium mb-4">Health Conditions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              {CONDITIONS_LIST.map(cond => (
+                <div key={cond} className="flex items-center space-x-2">
+                  <Switch 
+                    id={`cond-${cond}`} 
+                    checked={(formData.conditions || []).includes(cond)}
+                    onCheckedChange={() => toggleCondition(cond)}
+                  />
+                  <Label htmlFor={`cond-${cond}`}>{cond}</Label>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 pt-6 border-t space-y-4">
+              <div>
+                <Label className="text-base text-primary font-medium">GLP-1 Medication (Optional)</Label>
+                <p className="text-xs text-muted-foreground mt-1 mb-3">Ensure strict protein floors and calorie limits</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2 col-span-2 md:col-span-1">
+                  <Label>Medication</Label>
+                  <select 
+                    className="w-full h-10 px-3 py-2 rounded-md border border-input bg-background"
+                    value={formData.glp1_medication || "None"}
+                    onChange={e => handleChange("glp1_medication", e.target.value === "None" ? null : e.target.value)}
+                  >
+                    <option value="None">None</option>
+                    <option value="Semaglutide">Semaglutide</option>
+                    <option value="Liraglutide">Liraglutide</option>
+                    <option value="Tirzepatide">Tirzepatide</option>
+                  </select>
+                </div>
+                {formData.glp1_medication && formData.glp1_medication !== "None" && (
+                  <div className="space-y-2 col-span-2 md:col-span-1">
+                    <Label>Phase</Label>
+                    <select 
+                      className="w-full h-10 px-3 py-2 rounded-md border border-input bg-background"
+                      value={formData.glp1_phase || "Titration"}
+                      onChange={e => handleChange("glp1_phase", e.target.value)}
+                    >
+                      <option value="Titration">Titration</option>
+                      <option value="Maintenance">Maintenance</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Dynamic Targets Side Panel */}
+        <div className="md:col-span-1">
+          <div className="glass-card p-6 sticky top-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Beaker className="w-4 h-4 text-primary" />
+              <h2 className="font-medium text-primary">Inference Engine</h2>
+            </div>
+            <p className="text-xs text-muted-foreground mb-6">
+              Live computed nutrient targets based on ICMR-NIN 2024 and your active condition modifiers.
+            </p>
+
+            {isLoadingTargets ? (
+              <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+            ) : targets ? (
+              <div className="space-y-4">
+                {[
+                  { label: "Daily Calories", value: targets.energy_kcal, unit: "kcal" },
+                  { label: "Optimal Protein", value: targets.protein_g, unit: "g" },
+                  { label: "Fat Limit", value: targets.fat_g, unit: "g" },
+                  { label: "Iron Needs", value: targets.iron_mg, unit: "mg", hilight: true },
+                  { label: "Calcium", value: targets.calcium_mg, unit: "mg" },
+                  { label: "Fibre Minimum", value: targets.fibre_g, unit: "g" },
+                ].map((t, i) => (
+                  <div key={i} className="flex justify-between items-end border-b border-border/50 pb-2">
+                    <span className="text-sm text-foreground/80">{t.label}</span>
+                    <span className={`text-base font-semibold ${t.hilight ? 'text-primary' : ''}`}>
+                      {t.value ? Math.round(t.value) : 0}<span className="text-xs font-normal text-muted-foreground ml-0.5">{t.unit}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-sm text-muted-foreground py-8">
+                Save your profile to compute targets.
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
-  )
+  );
 }

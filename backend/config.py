@@ -12,8 +12,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class Settings(BaseSettings):
     # ── App ──
     APP_NAME: str = "AaharAI NutriSync"
-    APP_VERSION: str = "1.0.0"
+    APP_VERSION: str = "2.0.0"
     DEBUG: bool = True
+
+    # ── Auth / Security ──
+    SECRET_KEY: str = "nutrisync_dev_secret_change_in_production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 1440  # 24 hours
 
     # ── Data paths ──
     DATA_DIR: Path = BASE_DIR / "data"
@@ -21,9 +26,12 @@ class Settings(BaseSettings):
     IFCT_PDF_PATH: Path = BASE_DIR / "data" / "IFCT.pdf"
     CHROMA_DB_PATH: Path = BASE_DIR / "data" / "chroma_db"
 
+    # ── SQLite Database ──
+    SQLITE_DB_PATH: str = str(BASE_DIR / "backend" / "nutrisync.db")
+
     # ── Ollama (primary LLM) ──
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "gemma3:4b"
+    OLLAMA_MODEL: str = "gemma4:e2b"
     OLLAMA_EMBED_MODEL: str = "nomic-embed-text"
 
     # ── Groq (fallback LLM) ──
@@ -39,22 +47,7 @@ class Settings(BaseSettings):
     RAG_TOP_K: int = 5
     RAG_SCORE_THRESHOLD: float = 0.3
 
-    # ── Databases ──
-    SUPABASE_URL: str = ""
-    SUPABASE_KEY: str = ""
-    MONGODB_URI: str = "mongodb://localhost:27017"
-    MONGODB_DB_NAME: str = "nutrisync"
-    REDIS_URL: str = "redis://localhost:6379/0"
-
-    # ── Notifications ──
-    RESEND_API_KEY: str = ""
-    TWILIO_ACCOUNT_SID: str = ""
-    TWILIO_AUTH_TOKEN: str = ""
-    TWILIO_PHONE_NUMBER: str = ""
-    FCM_CREDENTIALS_PATH: str = ""
-
-    # ── CORS ──
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+    CORS_ORIGINS: list[str] = ["http://localhost:3001", "http://localhost:8000", "http://localhost:3000"]
 
     class Config:
         env_file = ".env"
