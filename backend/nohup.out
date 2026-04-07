@@ -1,0 +1,15 @@
+INFO:     Will watch for changes in these directories: ['/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [80824] using WatchFiles
+INFO:     Started server process [80895]
+INFO:     Waiting for application startup.
+INFO:main:Loading NutriSync database...
+INFO:main:✅ Database loaded: 86 foods, 18 RDA profiles
+WARNING:rag.llm_router:❌ LLM Router: No LLM provider available!
+INFO:main:✅ AaharAI NutriSync API ready!
+INFO:     Application startup complete.
+INFO:     127.0.0.1:50877 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50877 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50878 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50878 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50939 - "GET /api/nutrition/diseases HTTP/1.1" 200 OK
