@@ -1,0 +1,171 @@
+
+> frontend@0.1.0 dev
+> next dev --port 3000
+
+▲ Next.js 16.2.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.123:3000
+✓ Ready in 763ms
+
+○ Compiling / ...
+Error: Can't resolve 'tailwindcss-animate' in '/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app'
+    [2m[at finishWithoutResolve (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/enhanced-resolve/lib/Resolver.js:587:18)][0m
+    [2m[at /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/enhanced-resolve/lib/Resolver.js:679:14][0m
+    [2m[at /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/enhanced-resolve/lib/Resolver.js:740:5][0m
+    [2m[at eval (eval at create (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:15:1)][0m
+    [2m[at /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/enhanced-resolve/lib/Resolver.js:740:5][0m
+    [2m[at eval (eval at create (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:27:1)][0m
+    [2m[at /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/enhanced-resolve/lib/DescriptionFilePlugin.js:89:43][0m
+    [2m[at /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/enhanced-resolve/lib/Resolver.js:740:5][0m
+    [2m[at eval (eval at create (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:15:1)][0m
+    [2m[at /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/enhanced-resolve/lib/Resolver.js:740:5][0m {
+  details: "resolve 'tailwindcss-animate' in '/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app'\n" +
+    '  Parsed request is a module\n' +
+    '  using description file: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/package.json (relative path: ./src/app)\n' +
+    '    resolve as module\n' +
+    "      /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app/node_modules doesn't exist or is not a directory\n" +
+    "      /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/node_modules doesn't exist or is not a directory\n" +
+    '      looking for modules in /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules\n' +
+    '        single file module\n' +
+    '          using description file: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/package.json (relative path: ./node_modules/tailwindcss-animate)\n' +
+    '            no extension\n' +
+    "              /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss-animate doesn't exist\n" +
+    '            .js\n' +
+    "              /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss-animate.js doesn't exist\n" +
+    '            .json\n' +
+    "              /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss-animate.json doesn't exist\n" +
+    '            .node\n' +
+    "              /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss-animate.node doesn't exist\n" +
+    '            .ts\n' +
+    "              /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss-animate.ts doesn't exist\n" +
+    "        /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss-animate doesn't exist\n" +
+    "      /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/node_modules doesn't exist or is not a directory\n" +
+    "      /Users/tharungowdapr/Desktop/idp/node_modules doesn't exist or is not a directory\n" +
+    "      /Users/tharungowdapr/Desktop/node_modules doesn't exist or is not a directory\n" +
+    "      /Users/tharungowdapr/node_modules doesn't exist or is not a directory\n" +
+    "      /Users/node_modules doesn't exist or is not a directory\n" +
+    "      /node_modules doesn't exist or is not a directory"
+}
+⨯ ./src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app/globals.css:1:1: Can't resolve 'tailwindcss-animate' in '/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app'
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component]
+
+
+ HEAD / 500 in 6.1s (next.js: 6.0s, application-code: 177ms)
+⨯ ./src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app/globals.css:1:1: Can't resolve 'tailwindcss-animate' in '/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app'
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component]
+
+
+ GET / 500 in 54ms (next.js: 9ms, application-code: 45ms)
+⨯ ./src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app/globals.css:1:1: Can't resolve 'tailwindcss-animate' in '/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app'
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component]
+
+
+ HEAD / 500 in 75ms (next.js: 40ms, application-code: 35ms)
+⨯ ./src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app/globals.css:1:1: Can't resolve 'tailwindcss-animate' in '/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app'
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component]
+
+
+ GET / 500 in 52ms (next.js: 18ms, application-code: 34ms)
+[?25h
+
+> frontend@0.1.0 dev
+> next dev --port 3000
+
+▲ Next.js 16.2.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.123:3000
+✓ Ready in 540ms
+
+⨯ ./src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app/globals.css:1:1: Can't resolve 'tailwindcss-animate' in '/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app'
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component]
+
+
+ HEAD / 500 in 267ms (next.js: 118ms, application-code: 149ms)
+⨯ ./src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app/globals.css:1:1: Can't resolve 'tailwindcss-animate' in '/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app'
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component]
+
+
+ GET / 500 in 25ms (next.js: 4ms, application-code: 21ms)
+Error: Cannot apply unknown utility class `glass`
+    [2m[at onInvalidCandidate (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss/dist/lib.js:21:1511)][0m
+    [2m[at Ee (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss/dist/lib.js:16:36740)][0m
+    [2m[at /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss/dist/lib.js:21:355][0m
+    [2m[at _r (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss/dist/lib.js:3:1733)][0m
+    [2m[at I (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss/dist/lib.js:3:1377)][0m
+    [2m[at Te (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss/dist/lib.js:21:172)][0m
+    [2m[at mn (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss/dist/lib.js:38:294)][0m
+    [2m[at async gn (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss/dist/lib.js:38:631)][0m
+    [2m[at async Xr (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/node/dist/index.js:10:3416)][0m
+    [2m[at async N (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:3979)][0m
