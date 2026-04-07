@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import { 
   Calendar, ShoppingBasket, Calculator, 
   RefreshCw, Download, Share2, Info, 
-  CheckCircle2, Clock
+  CheckCircle2, Clock, Sparkles
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -61,7 +61,7 @@ export default function MealPlanPage() {
             <Slider 
               value={[budget]} 
               max={2000} min={100} step={50}
-              onValueChange={([v]) => setBudget(v)}
+              onValueChange={(vals) => setBudget(vals[0])}
             />
             <div className="flex gap-4 text-xs text-muted-foreground">
               <span>₹100 (Economic)</span>
