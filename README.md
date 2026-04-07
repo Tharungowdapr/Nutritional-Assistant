@@ -29,7 +29,7 @@ Layer 8: DevOps (Docker · GitHub Actions · Vercel · Railway)
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.12 (Avoid 3.14 as numpy/pandas lack arm64 wheels for now)
 - [Ollama](https://ollama.ai) installed (or Groq API key)
 - Node.js 18+ (for frontend)
 
