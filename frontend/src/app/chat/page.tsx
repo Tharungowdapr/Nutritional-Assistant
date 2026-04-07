@@ -1,200 +1,165 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { 
-  Send, Bot, User, Sparkles, PlusCircle, 
-  Trash2, Copy, RefreshCw, MessageSquare
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { toast } from "sonner"
+import { useState, useEffect, useRef } from "react";
+import { Send, Bot, User as UserIcon, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/lib/auth-context";
+import { chatApi } from "@/lib/api";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
-  role: "user" | "assistant"
-  content: string
-  sources?: string[]
+  role: "user" | "assistant";
+  content: string;
+  sources?: any[];
 }
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "Namaste! I'm your AaharAI NutriSync assistant. How can I help you today with your nutritional goals?",
-    }
-  ])
-  const [input, setInput] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Load history
+    chatApi.history().then((data: any) => {
+      if (data.messages && data.messages.length > 0) {
+        setMessages(data.messages);
+      } else {
+        setMessages([{
+          role: "assistant",
+          content: "Hello! I'm your IFCT-grounded nutrition assistant. How can I help you today?"
+        }]);
+      }
+    }).catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages])
+  }, [messages, isLoading]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
 
-    const userMessage = input.trim()
-    setInput("")
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }])
-    setIsLoading(true)
+    const userMsg = input.trim();
+    setInput("");
+    setMessages(prev => [...prev, { role: "user", content: userMsg }]);
+    setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          message: userMessage,
-          user_profile: {
-             gender: "MALE", // Mock — in real app use session state
-             age: 30,
-             weight_kg: 70,
-             height_cm: 170,
-             profession: "Sedentary",
-             region_zone: "South",
-             diet_type: "VEG"
-          }
-        }),
-      })
-
-      if (!response.ok) throw new Error("Failed to fetch")
-      const data = await response.json()
-
-      setMessages((prev) => [...prev, { 
-        role: "assistant", 
-        content: data.answer,
-        sources: data.sources
-      }])
-    } catch (error) {
-      toast.error("Connection failed", {
-        description: "Make sure the backend is running on port 8000.",
-      })
-      console.error(error)
+      const res = await chatApi.send(userMsg, user?.profile);
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: res.answer,
+        sources: res.sources
+      }]);
+    } catch (err) {
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: "Sorry, I encountered an error processing your request."
+      }]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="flex flex-col h-screen max-w-5xl mx-auto p-4 md:p-6 gap-4">
-      {/* Header */}
-      <div className="flex items-center justify-between glass p-4 rounded-2xl border-primary/20 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 p-2 rounded-xl">
-            <Bot className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="font-bold text-lg leading-none">RAG Nutrition Assistant</h1>
-            <Badge variant="outline" className="mt-1 text-[10px] uppercase font-bold text-primary border-primary/30">
-              Grounded in IFCT 2017
-            </Badge>
-          </div>
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] md:h-screen lg:max-w-4xl mx-auto p-4 md:p-8 fade-in">
+      <header className="mb-6 flex items-center gap-3">
+        <div className="p-2.5 rounded-lg bg-primary/10">
+          <Sparkles className="w-5 h-5 text-primary" />
         </div>
-        <Button variant="ghost" size="icon" onClick={() => setMessages([messages[0]])}>
-          <Trash2 className="w-4 h-4 text-muted-foreground" />
-        </Button>
-      </div>
+        <div>
+          <h1 className="text-xl font-semibold">Knowledge Chat</h1>
+          <p className="text-sm text-muted-foreground">Answers grounded in Indian Food Composition Tables</p>
+        </div>
+      </header>
 
-      {/* Chat Area */}
-      <Card className="flex-1 glass-card border-primary/20 overflow-hidden flex flex-col">
+      <div className="flex-1 glass-card overflow-hidden flex flex-col mb-4">
         <ScrollArea className="flex-1 p-4 md:p-6" ref={scrollRef}>
           <div className="space-y-6">
-            {messages.map((m, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex gap-4 ${m.role === "user" ? "flex-row-reverse" : ""}`}
-              >
-                <Avatar className={`w-10 h-10 border shadow-sm ${m.role === "user" ? "bg-primary text-white" : "bg-white"}`}>
-                  <AvatarFallback className={m.role === "user" ? "bg-primary text-white" : ""}>
-                    {m.role === "user" ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5 text-primary" />}
-                  </AvatarFallback>
-                </Avatar>
-                <div className={`flex flex-col gap-2 max-w-[80%] ${m.role === "user" ? "items-end" : ""}`}>
-                  <div className={`
-                    p-4 rounded-2xl shadow-sm text-sm leading-relaxed
-                    ${m.role === "user" 
-                      ? "bg-primary text-white rounded-tr-none" 
-                      : "bg-muted/50 border rounded-tl-none"}
-                  `}>
-                    {m.content}
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex gap-4 ${msg.role === "user" ? "justify-end" : ""}`}>
+                {msg.role === "assistant" && (
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Bot className="w-4 h-4 text-primary" />
                   </div>
-                  {m.sources && m.sources.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                       {m.sources.map((s, idx) => (
-                         <Badge key={idx} variant="secondary" className="bg-primary/5 text-primary hover:bg-primary/10 transition-colors text-[10px]">
-                           Source: {s.split("/").pop()}
-                         </Badge>
-                       ))}
+                )}
+                
+                <div className={`flex flex-col gap-2 max-w-[85%] ${msg.role === "user" ? "items-end" : ""}`}>
+                  <div className={`p-4 rounded-2xl ${
+                    msg.role === "user" 
+                      ? "bg-primary text-primary-foreground rounded-tr-sm" 
+                      : "bg-muted/50 rounded-tl-sm text-foreground prose prose-sm dark:prose-invert max-w-none"
+                  }`}>
+                    {msg.role === "user" ? (
+                      msg.content
+                    ) : (
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    )}
+                  </div>
+                  
+                  {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {msg.sources.slice(0, 3).map((source: any, idx: number) => (
+                        <div key={idx} className="text-[10px] uppercase font-semibold text-primary px-2 py-1 bg-primary/5 rounded border border-primary/10">
+                          {source.source}
+                          {source.identifier && ` • ${source.identifier}`}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
-              </motion.div>
+
+                {msg.role === "user" && (
+                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                    <UserIcon className="w-4 h-4" />
+                  </div>
+                )}
+              </div>
             ))}
             {isLoading && (
               <div className="flex gap-4">
-                <Avatar className="w-10 h-10 border bg-white">
-                  <AvatarFallback><Bot className="w-5 h-5 text-primary" /></AvatarFallback>
-                </Avatar>
-                <div className="bg-muted/50 border p-4 rounded-2xl rounded-tl-none animate-pulse flex items-center gap-2">
-                  <RefreshCw className="w-4 h-4 animate-spin text-primary" />
-                  <span className="text-xs text-muted-foreground">Thinking...</span>
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-primary" />
+                </div>
+                <div className="p-4 rounded-2xl rounded-tl-sm bg-muted/50 w-24">
+                  <div className="flex justify-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-foreground/30 animate-bounce" style={{ animationDelay: "0ms" }}></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-foreground/30 animate-bounce" style={{ animationDelay: "150ms" }}></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-foreground/30 animate-bounce" style={{ animationDelay: "300ms" }}></span>
+                  </div>
                 </div>
               </div>
             )}
           </div>
         </ScrollArea>
 
-        {/* Input Area */}
-        <div className="p-4 border-t glass bg-background/50">
-          <div className="flex gap-2 relative group">
-            <Input 
-              placeholder="Ask about nutrients in Ragi, Curd, or Moong dal..." 
+        <div className="p-4 bg-background/50 border-t border-border">
+          <form onSubmit={handleSend} className="relative flex items-center">
+            <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              className="pr-12 py-6 rounded-2xl border-primary/20 shadow-inner group-focus-within:border-primary/50 transition-all"
+              placeholder="Ask about protein sources, specific diseases, or meal ideas..."
+              className="pr-12 py-6 rounded-xl bg-card border-border/50 text-base"
+              disabled={isLoading}
             />
-            <Button 
-              size="icon" 
-              onClick={handleSend}
-              disabled={isLoading || !input.trim()}
-              className="absolute right-2 top-1.5 bottom-1.5 h-auto w-10 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/20"
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!input.trim() || isLoading}
+              className="absolute right-2 h-9 w-9 rounded-lg"
             >
               <Send className="w-4 h-4" />
             </Button>
-          </div>
-          <p className="text-[10px] text-center mt-3 text-muted-foreground flex items-center justify-center gap-1">
-            <Sparkles className="w-3 h-3" /> Grounded in IFCT 2017 & ICMR-NIN RDA 2024
-          </p>
+          </form>
         </div>
-      </Card>
-
-      {/* Suggested Topics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          "Nutrient density in Ragi?",
-          "PCOS low-GI staples",
-          "GLP-1 titration diet",
-          "Iron rich veg foods"
-        ].map((topic) => (
-          <Button 
-            key={topic} 
-            variant="outline" 
-            onClick={() => setInput(topic)}
-            className="glass hover:bg-primary/10 text-xs border-primary/20 py-6"
-          >
-            {topic}
-          </Button>
-        ))}
       </div>
     </div>
-  )
+  );
 }

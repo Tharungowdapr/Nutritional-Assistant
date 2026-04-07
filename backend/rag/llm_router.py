@@ -1,13 +1,7 @@
 """
 AaharAI NutriSync — LLM Router
 Implements Ollama ↔ Groq fallback with circuit-breaker pattern.
-
-Strategy:
-1. On startup, check if Ollama is available at localhost:11434
-2. If available → use Ollama for all LLM + embedding calls
-3. If unavailable → switch to Groq API (free tier)
-4. Circuit breaker: retry Ollama every 60 seconds
-5. If both fail → return graceful error
+Updated for gemma4:e2b model.
 """
 import time
 import logging
@@ -42,10 +36,10 @@ class LLMRouter:
 
         if self._ollama_available:
             self._active_provider = "ollama"
-            logger.info("✅ LLM Router: Using Ollama (local) as primary")
+            logger.info(f"✅ LLM Router: Using Ollama (local) — model: {self.ollama_model}")
         elif self._groq_available:
             self._active_provider = "groq"
-            logger.info("⚡ LLM Router: Ollama unavailable, using Groq (cloud) as fallback")
+            logger.info(f"⚡ LLM Router: Using Groq (cloud) — model: {self.groq_model}")
         else:
             self._active_provider = "none"
             logger.warning("❌ LLM Router: No LLM provider available!")
@@ -64,7 +58,7 @@ class LLMRouter:
 
     async def _check_groq(self) -> bool:
         """Verify Groq API key is valid."""
-        if not self.groq_api_key or self.groq_api_key == "your_groq_api_key_here":
+        if not self.groq_api_key or self.groq_api_key in ("", "your_groq_api_key_here"):
             self._groq_available = False
             return False
         try:
@@ -88,8 +82,7 @@ class LLMRouter:
 
     async def generate(self, prompt: str, system: str = "",
                        temperature: float = 0.7) -> tuple[str, str]:
-        """
-        Generate text using the active LLM provider.
+        """Generate text using the active LLM provider.
         Returns (response_text, provider_name).
         """
         await self._maybe_retry_ollama()
@@ -108,7 +101,7 @@ class LLMRouter:
             except Exception as e:
                 logger.error(f"Groq also failed: {e}")
 
-        return "I'm sorry, no LLM provider is currently available. Please ensure Ollama is running or configure a Groq API key.", "none"
+        return "I'm sorry, no LLM provider is currently available. Please ensure Ollama is running.", "none"
 
     async def _generate_ollama(self, prompt: str, system: str,
                                 temperature: float) -> str:
@@ -120,7 +113,7 @@ class LLMRouter:
             "stream": False,
             "options": {"temperature": temperature},
         }
-        async with httpx.AsyncClient(timeout=120) as client:
+        async with httpx.AsyncClient(timeout=180) as client:
             resp = await client.post(f"{self.ollama_url}/api/generate", json=payload)
             resp.raise_for_status()
             return resp.json()["response"]

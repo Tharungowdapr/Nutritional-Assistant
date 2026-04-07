@@ -1,164 +1,184 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { 
-  Calendar, ShoppingBasket, Calculator, 
-  RefreshCw, Download, Share2, Info, 
-  CheckCircle2, Clock, Sparkles
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Slider } from "@/components/ui/slider"
-import { toast } from "sonner"
+import { useState, useEffect } from "react";
+import { FileText, Bot, Loader2, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth-context";
+import { mealPlanApi } from "@/lib/api";
+import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 
 export default function MealPlanPage() {
-  const [budget, setBudget] = useState(500)
-  const [isGenerating, setIsGenerating] = useState(false)
+  const { user } = useAuth();
+  const [plans, setPlans] = useState<any[]>([]);
+  const [activePlan, setActivePlan] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [days, setDays] = useState(7);
+  const [budget, setBudget] = useState(300);
 
-  const handleGenerate = () => {
-    setIsGenerating(true)
-    toast.info("Agent is planning your meals...", {
-      description: "Optimizing for ₹" + budget + " daily budget + ICMR-NIN targets."
-    })
-    setTimeout(() => {
-      setIsGenerating(false)
-      toast.success("Meal Plan Ready!")
-    }, 3000)
-  }
+  useEffect(() => {
+    loadHistory();
+  }, [user]);
 
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  const loadHistory = async () => {
+    if (!user) return;
+    try {
+      const data: any = await mealPlanApi.history();
+      setPlans(data.plans || []);
+      if (data.plans?.length > 0 && !activePlan) {
+        setActivePlan(data.plans[0]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleGenerate = async () => {
+    if (!user) {
+      toast.error("Please log in and complete your profile to generate meal plans.");
+      return;
+    }
+    setIsGenerating(true);
+    toast.info("AI is analyzing IFCT data and your profile to craft a plan. This may take a minute...");
+    
+    try {
+      const res: any = await mealPlanApi.generate({
+        user_profile: user.profile,
+        days,
+        budget_per_day_inr: budget
+      });
+      
+      const newPlan = {
+        plan_text: res.meal_plan?.plan_text || "",
+        targets: res.targets || {},
+        created_at: new Date().toISOString()
+      };
+      
+      setActivePlan(newPlan);
+      await loadHistory();
+      toast.success("Meal plan generated successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to generate meal plan");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
-    <div className="container mx-auto p-4 md:p-10 space-y-10 max-w-6xl">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-          <h1 className="text-4xl font-extrabold tracking-tight">Agentic Meal Planner</h1>
-          <p className="text-muted-foreground mt-2">Personalized weekly schedules with budget-aware grocery consolidation.</p>
+    <div className="p-4 md:p-8 max-w-6xl mx-auto flex flex-col gap-8 fade-in h-[calc(100vh-3.5rem)] md:h-screen overflow-y-auto pb-20">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-lg bg-primary/10">
+            <Calendar className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold">AI Meal Planner</h1>
+            <p className="text-sm text-muted-foreground">Personalized to your life stage and conditions</p>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="icon" className="glass"><Download className="w-4 h-4" /></Button>
-          <Button variant="outline" size="icon" className="glass"><Share2 className="w-4 h-4" /></Button>
+
+        <div className="flex items-center gap-3 bg-card p-2 rounded-xl border">
+          <div className="flex items-center px-3 border-r">
+            <span className="text-xs text-muted-foreground mr-2">Days</span>
+            <select 
+              value={days} onChange={e => setDays(Number(e.target.value))}
+              className="bg-transparent text-sm font-medium outline-none"
+            >
+              <option value={1}>1 Day</option>
+              <option value={3}>3 Days</option>
+              <option value={7}>7 Days</option>
+            </select>
+          </div>
+          <div className="flex items-center px-3">
+            <span className="text-xs text-muted-foreground mr-2">₹/Day</span>
+            <input 
+              type="number" value={budget} onChange={e => setBudget(Number(e.target.value))}
+              className="bg-transparent text-sm font-medium outline-none w-16"
+              min="100" step="50"
+            />
+          </div>
+          <Button onClick={handleGenerate} disabled={isGenerating} size="sm" className="rounded-lg ml-2">
+            {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Bot className="w-4 h-4 mr-2" />}
+            Generate New
+          </Button>
+        </div>
+      </header>
+
+      <div className="grid md:grid-cols-12 gap-8 items-start">
+        {/* Main Content */}
+        <div className="md:col-span-8 space-y-6">
+          {activePlan ? (
+            <div className="glass-card p-6 md:p-8">
+              <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
+                <ReactMarkdown>{activePlan.plan_text}</ReactMarkdown>
+              </div>
+            </div>
+          ) : (
+            <div className="glass-card p-12 flex flex-col items-center justify-center text-center min-h-[400px]">
+              <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
+                <FileText className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h2 className="text-xl font-medium mb-2">No Meal Plan Yet</h2>
+              <p className="text-muted-foreground max-w-md">
+                Click "Generate New" to create your first personalized AI meal plan based on your nutritional profile.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <div className="md:col-span-4 space-y-6">
+          {activePlan && activePlan.targets && Object.keys(activePlan.targets).length > 0 && (
+            <div className="glass-card p-5">
+              <h3 className="text-sm font-medium text-foreground mb-4 border-b pb-2">Computed Daily Targets</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Calories</span>
+                  <span className="text-sm font-semibold">{Math.round(activePlan.targets.energy_kcal || 0)} kcal</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Protein</span>
+                  <span className="text-sm font-semibold">{Math.round(activePlan.targets.protein_g || 0)}g</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Fat</span>
+                  <span className="text-sm font-semibold">{Math.round(activePlan.targets.fat_g || 0)}g</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Carbs</span>
+                  <span className="text-sm font-semibold">{Math.round(activePlan.targets.carbs_g || 0)}g</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Iron</span>
+                  <span className="text-sm font-semibold text-primary">{Math.round(activePlan.targets.iron_mg || 0)}mg</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {plans.length > 0 && (
+            <div className="glass-card p-5">
+              <h3 className="text-sm font-medium text-foreground mb-4">Past Plans</h3>
+              <div className="space-y-2">
+                {plans.map((p, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActivePlan(p)}
+                    className={`w-full text-left p-3 rounded-lg text-sm transition-colors ${
+                      activePlan?.id === p.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"
+                    }`}
+                  >
+                    Plan from {new Date(p.created_at).toLocaleDateString()}
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {p.days} Days • ₹{p.budget}/day
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Configuration */}
-      <Card className="glass-card border-primary/20 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-10"><Calculator className="w-20 h-20 text-primary" /></div>
-        <CardHeader>
-          <CardTitle>Plan Parameters</CardTitle>
-          <CardDescription>Adjust your constraints for the AI agent.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          <div className="space-y-6">
-            <div className="flex justify-between">
-              <label className="text-sm font-semibold">Daily Budget (INR): ₹{budget}</label>
-              <Badge variant="secondary" className="bg-primary/10 text-primary">Budget-Aware Mode</Badge>
-            </div>
-            <Slider 
-              value={[budget]} 
-              max={2000} min={100} step={50}
-              onValueChange={(vals) => setBudget(vals[0])}
-            />
-            <div className="flex gap-4 text-xs text-muted-foreground">
-              <span>₹100 (Economic)</span>
-              <span className="flex-1 text-center">₹500 (Moderate)</span>
-              <span>₹2000+ (Premium)</span>
-            </div>
-          </div>
-          <div className="flex items-end">
-            <Button 
-              className="w-full bg-primary hover:bg-primary/90 text-white h-14 text-lg shadow-xl shadow-primary/20"
-              onClick={handleGenerate}
-              disabled={isGenerating}
-            >
-              {isGenerating ? (
-                <><RefreshCw className="w-5 h-5 mr-3 animate-spin"/> Thinking...</>
-              ) : (
-                <><Sparkles className="w-5 h-5 mr-3 font-bold"/> Generate 7-Day Plan</>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Tabs defaultValue="calendar" className="w-full">
-        <TabsList className="bg-muted/50 p-1 mb-8">
-          <TabsTrigger value="calendar" className="gap-2 px-8 py-3"><Calendar className="w-4 h-4" /> Weekly Calendar</TabsTrigger>
-          <TabsTrigger value="grocery" className="gap-2 px-8 py-3"><ShoppingBasket className="w-4 h-4" /> Grocery List</TabsTrigger>
-          <TabsTrigger value="stats" className="gap-2 px-8 py-3"><Info className="w-4 h-4" /> Nutrients</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="calendar">
-          <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-            {days.map((day, idx) => (
-              <motion.div 
-                key={day}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-              >
-                <Card className={`glass-card hover:border-primary/50 cursor-pointer overflow-hidden ${idx === 0 ? "border-primary bg-primary/5" : ""}`}>
-                  <div className="p-3 border-b text-center font-bold text-sm bg-muted/30">{day}</div>
-                  <CardContent className="p-4 space-y-4">
-                    <div className="space-y-1">
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Breakfast</p>
-                      <p className="text-xs font-medium">Ragi Porridge + Almonds</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Lunch</p>
-                      <p className="text-xs font-medium">Bajra Roti + Moong Dal</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Dinner</p>
-                      <p className="text-xs font-medium">Paneer Bhurji + Veggies</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="grocery">
-          <Card className="glass-card">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Consolidated Grocery List</CardTitle>
-                <CardDescription>Automated shopping list for 1 week based on your plan.</CardDescription>
-              </div>
-              <Button size="sm" className="bg-primary text-white">Order via Blinkit</Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <h3 className="font-bold border-b pb-2 text-primary flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" /> Grains & Pulses
-                  </h3>
-                  <ul className="space-y-2">
-                    <li className="flex justify-between text-sm"><span>Ragi Flour</span> <span className="text-muted-foreground">1 kg</span></li>
-                    <li className="flex justify-between text-sm"><span>Moong Dal</span> <span className="text-muted-foreground">500g</span></li>
-                    <li className="flex justify-between text-sm"><span>Bajra</span> <span className="text-muted-foreground">2 kg</span></li>
-                  </ul>
-                </div>
-                <div className="space-y-4">
-                  <h3 className="font-bold border-b pb-2 text-blue-500 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" /> Vegetables & Dairy
-                  </h3>
-                  <ul className="space-y-2">
-                    <li className="flex justify-between text-sm"><span>Paneer</span> <span className="text-muted-foreground">400g</span></li>
-                    <li className="flex justify-between text-sm"><span>Spinach</span> <span className="text-muted-foreground">2 Bunches</span></li>
-                    <li className="flex justify-between text-sm"><span>Curd</span> <span className="text-muted-foreground">1 liter</span></li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
-  )
+  );
 }

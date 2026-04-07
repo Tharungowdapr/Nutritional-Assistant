@@ -20,6 +20,9 @@ backend/.env
 # Data (large files — keep in data/ via Git LFS or download separately)
 data/chroma_db/
 
+# Database
+backend/nutrisync.db
+
 # Node / Next.js
 node_modules/
 .next/

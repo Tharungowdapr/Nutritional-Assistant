@@ -23,7 +23,8 @@ Rules:
 5. For GLP-1 users, always enforce protein floors and nausea-safe food recommendations
 6. Flag supplement needs when dietary sources alone cannot meet RDA (especially B12 for vegetarians)
 7. Be specific with quantities — say "1 katori (150g) cooked ragi" not just "eat ragi"
-8. Always provide the nutritional rationale behind your recommendations"""
+8. Always provide the nutritional rationale behind your recommendations
+9. Format your response with clear sections using markdown headers and bullet points"""
 
 
 class RAGService:
@@ -36,42 +37,56 @@ class RAGService:
     def _get_collection(self):
         """Lazy-load ChromaDB collection."""
         if self._collection is None:
-            client = chromadb.PersistentClient(path=str(settings.CHROMA_DB_PATH))
-            self._collection = client.get_collection("nutrisync")
+            try:
+                client = chromadb.PersistentClient(path=str(settings.CHROMA_DB_PATH))
+                self._collection = client.get_collection("nutrisync")
+            except Exception as e:
+                logger.warning(f"ChromaDB collection not found: {e}. Run 'python -m rag.ingest' first.")
+                return None
         return self._collection
 
     def retrieve(self, query: str, top_k: int = None,
                  source_filter: Optional[str] = None) -> list[dict]:
         """Retrieve relevant chunks from ChromaDB."""
         collection = self._get_collection()
+        if collection is None:
+            return []
+
         top_k = top_k or settings.RAG_TOP_K
 
-        # Build where filter
         where = None
         if source_filter:
             where = {"source": source_filter}
 
-        results = collection.query(
-            query_texts=[query],
-            n_results=top_k,
-            where=where,
-        )
+        try:
+            results = collection.query(
+                query_texts=[query],
+                n_results=top_k,
+                where=where,
+            )
+        except Exception as e:
+            logger.error(f"ChromaDB query failed: {e}")
+            return []
 
         chunks = []
-        for i in range(len(results["documents"][0])):
-            chunks.append({
-                "text": results["documents"][0][i],
-                "metadata": results["metadatas"][0][i],
-                "distance": results["distances"][0][i] if results.get("distances") else None,
-            })
+        if results and results["documents"] and results["documents"][0]:
+            for i in range(len(results["documents"][0])):
+                chunks.append({
+                    "text": results["documents"][0][i],
+                    "metadata": results["metadatas"][0][i] if results.get("metadatas") else {},
+                    "distance": results["distances"][0][i] if results.get("distances") else None,
+                })
 
         return chunks
 
     def _build_context(self, chunks: list[dict]) -> str:
         """Format retrieved chunks into a context string."""
+        if not chunks:
+            return "No relevant data found in the knowledge base."
+
         context_parts = []
         for i, chunk in enumerate(chunks):
-            meta = chunk["metadata"]
+            meta = chunk.get("metadata", {})
             source = meta.get("source", "unknown")
             identifier = meta.get("identifier", "")
             page = meta.get("page_number", "")
@@ -93,20 +108,25 @@ class RAGService:
             return ""
 
         parts = ["USER PROFILE:"]
-        if user_profile.get("life_stage"):
-            parts.append(f"  Life stage: {user_profile['life_stage']}")
-        if user_profile.get("sex"):
-            parts.append(f"  Sex: {user_profile['sex']}")
-        if user_profile.get("diet_type"):
-            parts.append(f"  Diet: {user_profile['diet_type']}")
+        field_map = {
+            "life_stage": "Life stage",
+            "sex": "Sex",
+            "diet_type": "Diet",
+            "region_zone": "Region",
+            "profession": "Profession",
+            "glp1_medication": "GLP-1 Medication",
+            "glp1_phase": "GLP-1 Phase",
+        }
+        for key, label in field_map.items():
+            if user_profile.get(key):
+                parts.append(f"  {label}: {user_profile[key]}")
+
         if user_profile.get("conditions"):
             parts.append(f"  Conditions: {', '.join(user_profile['conditions'])}")
-        if user_profile.get("glp1_medication"):
-            parts.append(f"  GLP-1: {user_profile['glp1_medication']} ({user_profile.get('glp1_phase', '')})")
-        if user_profile.get("region_zone"):
-            parts.append(f"  Region: {user_profile['region_zone']} {user_profile.get('region_state', '')}")
         if user_profile.get("energy_score"):
-            parts.append(f"  Energy: {user_profile['energy_score']}/5 | Sleep: {user_profile.get('sleep_hours', '?')}h | Focus: {user_profile.get('focus_score', '?')}/5")
+            parts.append(f"  Energy: {user_profile['energy_score']}/5 | "
+                         f"Sleep: {user_profile.get('sleep_hours', '?')}h | "
+                         f"Focus: {user_profile.get('focus_score', '?')}/5")
 
         return "\n".join(parts)
 
@@ -139,10 +159,10 @@ Please provide a detailed, evidence-based answer using the retrieved knowledge a
         # 4. Format sources
         sources = [
             {
-                "source": c["metadata"].get("source", "unknown"),
-                "identifier": c["metadata"].get("identifier", ""),
-                "page": c["metadata"].get("page_number", None),
-                "sheet": c["metadata"].get("sheet", None),
+                "source": c.get("metadata", {}).get("source", "unknown"),
+                "identifier": c.get("metadata", {}).get("identifier", ""),
+                "page": c.get("metadata", {}).get("page_number", None),
+                "sheet": c.get("metadata", {}).get("sheet", None),
             }
             for c in chunks
         ]
@@ -158,6 +178,6 @@ Please provide a detailed, evidence-based answer using the retrieved knowledge a
         """Check if ChromaDB collection exists and has documents."""
         try:
             collection = self._get_collection()
-            return collection.count() > 0
+            return collection is not None and collection.count() > 0
         except Exception:
             return False

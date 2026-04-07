@@ -14,6 +14,7 @@ from database.models import HealthCheckResponse
 from rag.llm_router import LLMRouter
 from rag.service import RAGService
 from agent.meal_agent import MealPlanAgent
+from auth.database import init_db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -32,10 +33,19 @@ def get_meal_agent() -> MealPlanAgent:
     return _meal_agent
 
 
+def get_llm_router() -> LLMRouter:
+    return _llm_router
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: load database, initialize LLM router and RAG service."""
     global _llm_router, _rag_service, _meal_agent
+
+    # 0. Initialize SQLite database
+    logger.info("Initializing SQLite database...")
+    init_db()
+    logger.info("✅ SQLite database ready")
 
     # 1. Load all Excel sheets
     logger.info("Loading NutriSync database...")
@@ -82,10 +92,12 @@ app.add_middleware(
 )
 
 # ── Routes ──
+from routes.auth import router as auth_router
 from routes.chat import router as chat_router
 from routes.nutrition import router as nutrition_router
 from routes.meal_plan import router as meal_plan_router
 
+app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(nutrition_router)
 app.include_router(meal_plan_router)
