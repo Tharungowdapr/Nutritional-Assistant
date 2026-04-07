@@ -487,3 +487,68 @@ https://nextjs.org/docs/messages/module-not-found
     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
 ✓ Compiled in 602ms
  GET /onboarding 200 in 646ms (next.js: 341ms, application-code: 304ms)
+ GET / 200 in 503ms (next.js: 410ms, application-code: 93ms)
+[browser] React does not recognize the `asChild` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `aschild` instead. If you accidentally passed it from a parent component, remove it from the DOM element. 
+○ Compiling /chat ...
+ GET /chat 200 in 3.4s (next.js: 3.0s, application-code: 399ms)
+ GET /chat 200 in 330ms (next.js: 16ms, application-code: 314ms)
+ GET /chat 200 in 241ms (next.js: 16ms, application-code: 224ms)
+ GET /meal-plan 200 in 3.7s (next.js: 3.0s, application-code: 660ms)
+ GET /meal-plan 200 in 128ms (next.js: 16ms, application-code: 112ms)
+[browser] Uncaught ReferenceError: Sparkles is not defined
+    at MealPlanPage (src/app/meal-plan/page.tsx:81:20)
+  79 |                 <><RefreshCw className="w-5 h-5 mr-3 animate-spin"/> Thinking...</>
+  80 |               ) : (
+> 81 |                 <><Sparkles className="w-5 h-5 mr-3 font-bold"/> Generate 7-Day Plan</>
+     |                    ^
+  82 |               )}
+  83 |             </Button>
+  84 |           </div>
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 419ms
+⨯ ReferenceError: Sparkles is not defined
+    at MealPlanPage (src/app/meal-plan/page.tsx:81:20)
+  79 |                 <><RefreshCw className="w-5 h-5 mr-3 animate-spin"/> Thinking...</>
+  80 |               ) : (
+> 81 |                 <><Sparkles className="w-5 h-5 mr-3 font-bold"/> Generate 7-Day Plan</>
+     |                    ^
+  82 |               )}
+  83 |             </Button>
+  84 |           </div> {
+  digest: '3111157756'
+}
+ GET /meal-plan 500 in 427ms (next.js: 98ms, application-code: 329ms)
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+[browser] Uncaught ReferenceError: Sparkles is not defined
+    at MealPlanPage (src/app/meal-plan/page.tsx:81:20)
+  79 |                 <><RefreshCw className="w-5 h-5 mr-3 animate-spin"/> Thinking...</>
+  80 |               ) : (
+> 81 |                 <><Sparkles className="w-5 h-5 mr-3 font-bold"/> Generate 7-Day Plan</>
+     |                    ^
+  82 |               )}
+  83 |             </Button>
+  84 |           </div>
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 1766ms
+⨯ ReferenceError: Sparkles is not defined
+    at MealPlanPage (src/app/meal-plan/page.tsx:81:20)
+  79 |                 <><RefreshCw className="w-5 h-5 mr-3 animate-spin"/> Thinking...</>
+  80 |               ) : (
+> 81 |                 <><Sparkles className="w-5 h-5 mr-3 font-bold"/> Generate 7-Day Plan</>
+     |                    ^
+  82 |               )}
+  83 |             </Button>
+  84 |           </div> {
+  digest: '1850430527'
+}
+ GET /meal-plan 500 in 1570ms (next.js: 230ms, application-code: 1340ms)
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+[browser] Uncaught ReferenceError: Sparkles is not defined
+    at MealPlanPage (src/app/meal-plan/page.tsx:81:20)
+  79 |                 <><RefreshCw className="w-5 h-5 mr-3 animate-spin"/> Thinking...</>
+  80 |               ) : (
+> 81 |                 <><Sparkles className="w-5 h-5 mr-3 font-bold"/> Generate 7-Day Plan</>
+     |                    ^
+  82 |               )}
+  83 |             </Button>
+  84 |           </div>
