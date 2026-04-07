@@ -552,3 +552,39 @@ https://nextjs.org/docs/messages/module-not-found
   82 |               )}
   83 |             </Button>
   84 |           </div>
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 64ms
+ GET /onboarding 200 in 521ms (next.js: 7ms, application-code: 514ms)
+ GET /onboarding 200 in 878ms (next.js: 149ms, application-code: 728ms)
+ GET / 200 in 1532ms (next.js: 502ms, application-code: 1030ms)
+ GET /onboarding? 200 in 122ms (next.js: 12ms, application-code: 110ms)
+ GET / 200 in 111ms (next.js: 46ms, application-code: 64ms)
+ GET /meal-plan 200 in 68ms (next.js: 40ms, application-code: 28ms)
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+ GET /meal-plan 200 in 55ms (next.js: 10ms, application-code: 45ms)
+ GET /chat 200 in 152ms (next.js: 105ms, application-code: 48ms)
+✓ Compiled in 273ms
+ GET /chat 200 in 177ms (next.js: 23ms, application-code: 153ms)
+ GET /chat 200 in 141ms (next.js: 6ms, application-code: 134ms)
+ GET /chat 200 in 87ms (next.js: 8ms, application-code: 79ms)
+ GET /chat 200 in 44ms (next.js: 6ms, application-code: 37ms)
+[browser] Error: Failed to fetch
+    at handleSend (src/app/chat/page.tsx:66:31)
+  64 |       })
+  65 |
+> 66 |       if (!response.ok) throw new Error("Failed to fetch")
+     |                               ^
+  67 |       const data = await response.json()
+  68 |
+  69 |       setMessages((prev) => [...prev, {  (src/app/chat/page.tsx:78:15)
+✓ Compiled in 296ms
+ GET /chat 200 in 3.2s (next.js: 456ms, application-code: 2.7s)
+ GET /chat 200 in 754ms (next.js: 23ms, application-code: 730ms)
+ GET /chat 200 in 320ms (next.js: 30ms, application-code: 290ms)
+ GET /chat 200 in 168ms (next.js: 23ms, application-code: 146ms)
+ GET / 200 in 186ms (next.js: 27ms, application-code: 159ms)
+○ Compiling /recipes ...
+ GET /recipes 200 in 5.1s (next.js: 4.3s, application-code: 796ms)
+ GET /profile 404 in 2.8s (next.js: 2.7s, application-code: 92ms)
+ GET /profile 404 in 291ms (next.js: 11ms, application-code: 280ms)
+ GET /profile 404 in 390ms (next.js: 62ms, application-code: 327ms)
