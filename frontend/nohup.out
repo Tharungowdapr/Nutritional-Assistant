@@ -665,3 +665,5 @@ https://nextjs.org/docs/messages/module-not-found
     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
     at <unknown> (Error: (./src/app/profile/page.tsx:16:1)
     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+✓ Compiled in 271ms
+ GET /profile 200 in 328ms (next.js: 129ms, application-code: 199ms)
