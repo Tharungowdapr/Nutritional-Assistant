@@ -667,3 +667,6 @@ https://nextjs.org/docs/messages/module-not-found
     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
 ✓ Compiled in 271ms
  GET /profile 200 in 328ms (next.js: 129ms, application-code: 199ms)
+ GET / 200 in 110ms (next.js: 50ms, application-code: 60ms)
+ GET /meal-plan 200 in 105ms (next.js: 46ms, application-code: 59ms)
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
