@@ -169,3 +169,321 @@ Error: Cannot apply unknown utility class `glass`
     [2m[at async gn (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/tailwindcss/dist/lib.js:38:631)][0m
     [2m[at async Xr (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/node/dist/index.js:10:3416)][0m
     [2m[at async N (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:3979)][0m
+○ Compiling /onboarding ...
+⨯ ./src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app/globals.css:1:1: Cannot apply unknown utility class `glass`
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component]
+
+
+
+./src/app/onboarding/page.tsx:14:1
+Module not found: Can't resolve '@/components/ui/radio-group'
+Import map: aliased to relative './src/components/ui/radio-group' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/onboarding/page.tsx [Client Component Browser]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/onboarding/page.tsx [Client Component SSR]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET /onboarding 500 in 5.6s (next.js: 5.5s, application-code: 74ms)
+[browser] Uncaught Error: ./src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app/globals.css:1:1: Cannot apply unknown utility class `glass`
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component]
+
+
+[browser] ./src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app/globals.css:1:1: Cannot apply unknown utility class `glass`
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component] 
+[browser] ./src/app/onboarding/page.tsx:14:1
+Module not found: Can't resolve '@/components/ui/radio-group'
+Import map: aliased to relative './src/components/ui/radio-group' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/app/onboarding/page.tsx [Client Component Browser]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/onboarding/page.tsx [Client Component SSR]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] ./src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app/globals.css:1:1: Cannot apply unknown utility class `glass`
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component] 
+[browser] ./src/app/onboarding/page.tsx:14:1
+Module not found: Can't resolve '@/components/ui/radio-group'
+Import map: aliased to relative './src/components/ui/radio-group' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/app/onboarding/page.tsx [Client Component Browser]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/onboarding/page.tsx [Client Component SSR]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] ./src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app/globals.css:1:1: Cannot apply unknown utility class `glass`
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component] 
+[browser] ./src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/src/app/globals.css:1:1: Cannot apply unknown utility class `glass`
+    [at Input.error (turbopack:///[project]/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/tharungowdapr/Desktop/idp/Nutritional-Assistant/frontend/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./src/app/globals.css [Client Component Browser]
+    ./src/app/layout.tsx [Server Component] 
+[browser] ./src/app/onboarding/page.tsx:14:1
+Module not found: Can't resolve '@/components/ui/radio-group'
+Import map: aliased to relative './src/components/ui/radio-group' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/app/onboarding/page.tsx [Client Component Browser]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/onboarding/page.tsx [Client Component SSR]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found 
+⨯ ./src/app/onboarding/page.tsx:14:1
+Module not found: Can't resolve '@/components/ui/radio-group'
+Import map: aliased to relative './src/components/ui/radio-group' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/onboarding/page.tsx [Client Component Browser]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/onboarding/page.tsx [Client Component SSR]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/onboarding/page.tsx:14:1
+Module not found: Can't resolve '@/components/ui/radio-group'
+Import map: aliased to relative './src/components/ui/radio-group' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/onboarding/page.tsx [Client Component Browser]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/onboarding/page.tsx [Client Component SSR]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/onboarding/page.tsx:14:1
+Module not found: Can't resolve '@/components/ui/radio-group'
+Import map: aliased to relative './src/components/ui/radio-group' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/onboarding/page.tsx [Client Component Browser]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/onboarding/page.tsx [Client Component SSR]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/onboarding/page.tsx:14:1
+Module not found: Can't resolve '@/components/ui/radio-group'
+Import map: aliased to relative './src/components/ui/radio-group' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/onboarding/page.tsx [Client Component Browser]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/onboarding/page.tsx [Client Component SSR]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/onboarding/page.tsx:14:1
+Module not found: Can't resolve '@/components/ui/radio-group'
+Import map: aliased to relative './src/components/ui/radio-group' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/onboarding/page.tsx [Client Component Browser]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/onboarding/page.tsx [Client Component SSR]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./src/app/onboarding/page.tsx:14:1
+Module not found: Can't resolve '@/components/ui/radio-group'
+Import map: aliased to relative './src/components/ui/radio-group' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/onboarding/page.tsx [Client Component Browser]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/onboarding/page.tsx [Client Component SSR]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+✓ Compiled in 760ms
+[?25h
+
+> frontend@0.1.0 dev
+> next dev --port 3000
+
+▲ Next.js 16.2.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.123:3000
+✓ Ready in 581ms
+
+[browser] ./src/app/onboarding/page.tsx:14:1
+Module not found: Can't resolve '@/components/ui/radio-group'
+Import map: aliased to relative './src/components/ui/radio-group' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/app/onboarding/page.tsx [Client Component Browser]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/onboarding/page.tsx [Client Component SSR]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found 
+⨯ ./src/app/onboarding/page.tsx:14:1
+Module not found: Can't resolve '@/components/ui/radio-group'
+Import map: aliased to relative './src/components/ui/radio-group' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/onboarding/page.tsx [Client Component Browser]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/onboarding/page.tsx [Client Component SSR]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET /onboarding 500 in 747ms (next.js: 553ms, application-code: 194ms)
+[browser] Uncaught Error: ./src/app/onboarding/page.tsx:14:1
+Module not found: Can't resolve '@/components/ui/radio-group'
+Import map: aliased to relative './src/components/ui/radio-group' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/onboarding/page.tsx [Client Component Browser]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/onboarding/page.tsx [Client Component SSR]
+    ./src/app/onboarding/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./src/app/onboarding/page.tsx:14:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (Error: (./src/app/onboarding/page.tsx:14:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+✓ Compiled in 602ms
+ GET /onboarding 200 in 646ms (next.js: 341ms, application-code: 304ms)
