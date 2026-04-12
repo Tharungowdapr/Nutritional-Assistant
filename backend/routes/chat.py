@@ -4,7 +4,8 @@ Supports both authenticated and anonymous chat with optional history persistence
 """
 import json
 import uuid
-from fastapi import APIRouter, Depends, Request
+import logging
+from fastapi import APIRouter, Depends, Request, HTTPException
 from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -14,6 +15,8 @@ from slowapi.util import get_remote_address
 from database.models import ChatRequest, ChatResponse
 from auth.database import get_db, ChatHistoryDB
 from auth.dependencies import get_current_user
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 limiter = Limiter(key_func=get_remote_address)
@@ -30,6 +33,13 @@ async def chat(
     """RAG-powered chat with nutrition knowledge base."""
     from main import get_rag_service
     rag_service = get_rag_service()
+    
+    # Check if RAG service is initialized
+    if rag_service is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Knowledge base not ready. Run: python -m rag.ingest"
+        )
 
     user_profile = data.user_profile.model_dump() if data.user_profile else None
 
@@ -50,20 +60,14 @@ async def chat(
             db.add(ChatHistoryDB(
                 user_id=user.id,
                 session_id=session_id,
-                role="user",
-                content=data.message,
-            ))
-            db.add(ChatHistoryDB(
-                user_id=user.id,
-                session_id=session_id,
-                role="assistant",
-                content=result["answer"],
+                user_message=data.message,
+                assistant_message=result["answer"],
                 sources_json=json.dumps(result["sources"]),
                 llm_provider=result["llm_provider"],
             ))
             db.commit()
-        except Exception:
-            pass  # Don't fail the request if history save fails
+        except Exception as e:
+            logger.warning(f"Failed to save chat history: {e}")
 
     return ChatResponse(
         answer=result["answer"],
@@ -95,8 +99,8 @@ async def get_chat_history(
     return {
         "messages": [
             {
-                "role": m.role,
-                "content": m.content,
+                "user_message": m.user_message,
+                "assistant_message": m.assistant_message,
                 "sources": json.loads(m.sources_json) if m.sources_json else [],
                 "llm_provider": m.llm_provider,
                 "session_id": m.session_id,

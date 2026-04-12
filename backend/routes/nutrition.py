@@ -1,13 +1,16 @@
 """
 AaharAI NutriSync — API Routes: Nutrition
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from database.models import UserProfile, NutrientTargets
 from database.loader import db
 from engines.inference_engine import inference_engine
 
 router = APIRouter(prefix="/api/nutrition", tags=["Nutrition"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 class CompareRequest(BaseModel):
@@ -15,14 +18,17 @@ class CompareRequest(BaseModel):
 
 
 @router.post("/targets")
-async def compute_targets(profile: UserProfile):
+@limiter.limit("20/minute")
+async def compute_targets(request: Request, profile: UserProfile):
     """Compute personalized nutrient targets from user profile."""
     targets = inference_engine.compute_targets(profile.model_dump())
     return {"targets": targets}
 
 
 @router.get("/foods")
+@limiter.limit("50/minute")
 async def search_foods(
+    request: Request,
     query: str = "",
     diet_type: str = None,
     food_group: str = None,
