@@ -29,18 +29,25 @@ class UserProfile(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     user_profile: Optional[UserProfile] = None
+    session_id: Optional[str] = None  # UUID for conversation grouping
 
 
 class ChatResponse(BaseModel):
     answer: str
     sources: list[dict] = []
     llm_provider: str = ""  # "ollama" or "groq"
+    session_id: Optional[str] = None
 
 
 class MealPlanRequest(BaseModel):
     user_profile: UserProfile
     days: int = Field(7, ge=1, le=30)
     budget_per_day_inr: Optional[float] = None
+
+
+class GroceryRequest(BaseModel):
+    meal_plan_text: str
+    days: int = Field(7, ge=1, le=30)
 
 
 class GroceryListResponse(BaseModel):
@@ -80,3 +87,31 @@ class HealthCheckResponse(BaseModel):
     groq_available: bool
     chroma_ready: bool
     db_stats: dict
+
+
+class LogFoodRequest(BaseModel):
+    meal_slot: str = Field(..., pattern="^(Breakfast|Lunch|Dinner|Snack)$")
+    food_name: str
+    quantity_g: float = 100.0
+
+
+class DailyLogResponse(BaseModel):
+    id: int
+    log_date: str
+    meal_slot: str
+    food_name: str
+    quantity_g: float
+    calories: Optional[float] = None
+    protein_g: Optional[float] = None
+    carbs_g: Optional[float] = None
+    fat_g: Optional[float] = None
+
+
+class DailySummaryResponse(BaseModel):
+    log_date: str
+    total_calories: float
+    total_protein_g: float
+    total_carbs_g: float
+    total_fat_g: float
+    meal_count: int
+    meals_by_slot: dict[str, list[DailyLogResponse]]

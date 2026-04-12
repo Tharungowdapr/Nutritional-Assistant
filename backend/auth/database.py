@@ -1,6 +1,6 @@
 """
 AaharAI NutriSync — SQLAlchemy Database Models & Engine
-SQLite-based persistence for users, profiles, and meal plan history.
+SQLite (development) or PostgreSQL (production) persistence for users, profiles, and meal plan history.
 """
 import json
 from datetime import datetime
@@ -8,9 +8,23 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, Text, Date
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from config import settings
 
-DATABASE_URL = f"sqlite:///{settings.SQLITE_DB_PATH}"
+# Determine database URL: PostgreSQL if configured, otherwise SQLite
+if settings.DATABASE_URL:
+    DATABASE_URL = settings.DATABASE_URL
+else:
+    # PostgreSQL fallback if env vars set
+    if settings.POSTGRES_PASSWORD:
+        DATABASE_URL = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
+    else:
+        # SQLite for development
+        DATABASE_URL = f"sqlite:///{settings.SQLITE_DB_PATH}"
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False}, echo=False)
+# Connection kwargs
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -25,6 +39,16 @@ class UserDB(Base):
     name = Column(String(255), default="")
     created_at = Column(DateTime, default=datetime.utcnow)
     is_active = Column(Boolean, default=True)
+    
+    # Password reset
+    reset_token = Column(String(255), nullable=True, unique=True, index=True)
+    reset_token_expires = Column(DateTime, nullable=True)
+    
+    # Profile metadata
+    email_verified = Column(Boolean, default=False)
+    last_login_at = Column(DateTime, nullable=True)
+    avatar_url = Column(String(500), nullable=True)
+    is_admin = Column(Boolean, default=False)
 
     # Profile data stored as JSON
     profile_json = Column(Text, default="{}")
@@ -55,16 +79,41 @@ class MealPlanDB(Base):
 
 
 class ChatHistoryDB(Base):
-    """Chat message history."""
+    """Chat message history with session support."""
     __tablename__ = "chat_history"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, nullable=True)
-    role = Column(String(20), nullable=False)  # "user" or "assistant"
-    content = Column(Text, nullable=False)
+    session_id = Column(String(36), nullable=True, index=True)  # UUID for grouping conversations
+    user_message = Column(Text, nullable=True)
+    assistant_message = Column(Text, nullable=True)
     sources_json = Column(Text, default="[]")
     llm_provider = Column(String(50), default="")
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+
+class DailyLogDB(Base):
+    """Daily food intake log with macro tracking."""
+    __tablename__ = "daily_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=True, index=True)
+    log_date = Column(String(10), nullable=False)  # YYYY-MM-DD format
+    meal_slot = Column(String(20), nullable=False)  # "Breakfast", "Lunch", "Dinner", "Snack"
+    food_name = Column(String(255), nullable=False)
+    quantity_g = Column(Float, default=100.0)
+    
+    # Macros (per serving/quantity)
+    calories = Column(Float, nullable=True)
+    protein_g = Column(Float, nullable=True)
+    fat_g = Column(Float, nullable=True)
+    carbs_g = Column(Float, nullable=True)
+    fibre_g = Column(Float, nullable=True)
+    iron_mg = Column(Float, nullable=True)
+    calcium_mg = Column(Float, nullable=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 def init_db():

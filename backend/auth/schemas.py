@@ -48,3 +48,17 @@ class ProfileUpdateRequest(BaseModel):
     sleep_hours: Optional[float] = None
     focus_score: Optional[int] = None
     daily_budget_inr: Optional[float] = None
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str = Field(..., min_length=5, max_length=255)
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=6, max_length=128)
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(..., min_length=6, max_length=128)

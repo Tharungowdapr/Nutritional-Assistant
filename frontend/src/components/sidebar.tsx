@@ -5,21 +5,31 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard, MessageSquare, CalendarDays, CookingPot,
-  UserCircle, LogOut, Menu, X, Sparkles
+  UserCircle, LogOut, Sparkles, Salad, TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/lib/auth-context";
 
 const NAV_ITEMS = [
+  { href: "/", label: "Home", icon: LayoutDashboard },
+  { href: "/chat", label: "Chat", icon: MessageSquare },
+  { href: "/tracker", label: "Track", icon: TrendingUp },
+  { href: "/foods", label: "Foods", icon: Salad },
+  { href: "/profile", label: "Profile", icon: UserCircle },
+];
+
+const DESKTOP_NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/chat", label: "RAG Chat", icon: MessageSquare },
   { href: "/meal-plan", label: "Meal Planner", icon: CalendarDays },
+  { href: "/tracker", label: "Nutrition Tracker", icon: TrendingUp },
+  { href: "/foods", label: "Food Database", icon: Salad },
   { href: "/recipes", label: "Recipes", icon: CookingPot },
   { href: "/profile", label: "Profile", icon: UserCircle },
 ];
 
-function NavContent({ onNavigate }: { onNavigate?: () => void }) {
+function NavContent({ onNavigate, items = DESKTOP_NAV_ITEMS }: { onNavigate?: () => void; items?: typeof DESKTOP_NAV_ITEMS }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
@@ -40,7 +50,7 @@ function NavContent({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* Nav Links */}
       <nav className="flex-1 px-3 space-y-1">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link key={item.href} href={item.href} onClick={onNavigate}>
@@ -95,30 +105,43 @@ function NavContent({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export function Sidebar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[260px] border-r border-border bg-card/50 backdrop-blur-sm flex-col z-40">
-        <NavContent />
+        <NavContent items={DESKTOP_NAV_ITEMS} />
       </aside>
 
-      {/* Mobile Header + Sheet */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-14 border-b border-border bg-card/80 backdrop-blur-sm flex items-center px-4 z-40">
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9">
-            <Menu className="w-5 h-5" />
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[260px] p-0">
-            <NavContent onNavigate={() => setMobileOpen(false)} />
-          </SheetContent>
-        </Sheet>
-        <div className="flex items-center gap-2 ml-3">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <span className="font-semibold text-sm">NutriSync</span>
-        </div>
-      </div>
+      {/* Mobile Bottom Tab Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-sm border-t border-border flex items-center justify-around z-40">
+        {NAV_ITEMS.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex flex-col items-center justify-center py-2 px-3 min-w-0 flex-1"
+            >
+              <item.icon
+                className={`w-5 h-5 transition-colors ${
+                  isActive ? "text-primary" : "text-muted-foreground"
+                }`}
+              />
+              <span
+                className={`text-[10px] mt-0.5 transition-colors ${
+                  isActive
+                    ? "text-primary font-medium"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
     </>
   );
 }

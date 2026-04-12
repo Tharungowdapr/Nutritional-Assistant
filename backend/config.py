@@ -26,8 +26,18 @@ class Settings(BaseSettings):
     IFCT_PDF_PATH: Path = BASE_DIR / "data" / "IFCT.pdf"
     CHROMA_DB_PATH: Path = BASE_DIR / "data" / "chroma_db"
 
-    # ── SQLite Database ──
+    # ── Database Configuration ──
+    # Use DATABASE_URL for PostgreSQL: postgresql://user:password@localhost:5432/nutrisync
+    # Or leave empty to use SQLite
+    DATABASE_URL: str = ""
     SQLITE_DB_PATH: str = str(BASE_DIR / "backend" / "nutrisync.db")
+    
+    # PostgreSQL defaults (used if DATABASE_URL not set)
+    POSTGRES_HOST: str = "localhost"
+    POSTGRES_PORT: int = 5432
+    POSTGRES_USER: str = "nutrisync"
+    POSTGRES_PASSWORD: str = ""
+    POSTGRES_DB: str = "nutrisync"
 
     # ── Ollama (primary LLM) ──
     OLLAMA_BASE_URL: str = "http://localhost:11434"
@@ -47,11 +57,12 @@ class Settings(BaseSettings):
     RAG_TOP_K: int = 5
     RAG_SCORE_THRESHOLD: float = 0.3
 
-    CORS_ORIGINS: list[str] = ["http://localhost:3001", "http://localhost:8000", "http://localhost:3000"]
+    CORS_ORIGINS: list[str] = ["http://localhost:3001", "http://localhost:8000", "http://localhost:3000", "http://127.0.0.1:3001"]
 
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
 settings = Settings()
