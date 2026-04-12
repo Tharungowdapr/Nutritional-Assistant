@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/analysis", tags=["Analysis"])
 @router.get("/food-group-stats")
 async def get_food_group_stats():
     """Get distribution of foods by group and key nutrients."""
-    if not getattr(db, 'food', None) is not None:
+    if getattr(db, 'food', None) is None:
         return {"error": "Database not loaded"}
     
     stats = []
@@ -30,7 +30,7 @@ async def get_food_group_stats():
 @router.get("/veg-nonveg")
 async def get_veg_nonveg_stats():
     """Compare vegetarian vs non-vegetarian foods."""
-    if not getattr(db, 'food', None) is not None:
+    if getattr(db, 'food', None) is None:
         return {"error": "Database not loaded"}
     
     veg = db.food[db.food["Diet Type"] == "VEG"]
@@ -55,7 +55,7 @@ async def get_veg_nonveg_stats():
 @router.get("/top-protein-foods")
 async def get_top_protein_foods(limit: int = 10):
     """Get top protein sources."""
-    if not getattr(db, 'food', None) is not None:
+    if getattr(db, 'food', None) is None:
         return {"error": "Database not loaded"}
     
     top = db.food.nlargest(limit, "Protein (g)")[
@@ -68,7 +68,7 @@ async def get_top_protein_foods(limit: int = 10):
 @router.get("/iron-analysis")
 async def get_iron_analysis():
     """Analyze iron content across foods - India's #1 deficiency."""
-    if not getattr(db, 'food', None) is not None:
+    if getattr(db, 'food', None) is None:
         return {"error": "Database not loaded"}
     
     veg = db.food[db.food["Diet Type"] == "VEG"]["Iron (mg)"].describe().to_dict()
@@ -86,7 +86,7 @@ async def get_iron_analysis():
 @router.get("/b12-analysis")
 async def get_b12_analysis():
     """Analyze B12 content - vegetarian crisis."""
-    if not getattr(db, 'food', None) is not None:
+    if getattr(db, 'food', None) is None:
         return {"error": "Database not loaded"}
     
     veg = db.food[db.food["Diet Type"] == "VEG"]
@@ -105,7 +105,7 @@ async def get_b12_analysis():
 @router.get("/gi-distribution")
 async def get_gi_distribution():
     """Get Glycaemic Index distribution."""
-    if not getattr(db, 'food', None) is not None:
+    if getattr(db, 'food', None) is None:
         return {"error": "Database not loaded"}
     
     food_clean = db.food.dropna(subset=["GI (Glycaemic Index)"])
@@ -120,7 +120,7 @@ async def get_gi_distribution():
 @router.get("/calorie-distribution")
 async def get_calorie_distribution():
     """Get food distribution by caloric density."""
-    if not getattr(db, 'food', None) is not None:
+    if getattr(db, 'food', None) is None:
         return {"error": "Database not loaded"}
     
     food_clean = db.food.dropna(subset=["Energy (kcal)"])
@@ -136,7 +136,7 @@ async def get_calorie_distribution():
 @router.get("/nutrient-summary")
 async def get_nutrient_summary():
     """Get overall nutrient statistics."""
-    if not getattr(db, 'food', None) is not None:
+    if getattr(db, 'food', None) is None:
         return {"error": "Database not loaded"}
     
     return {

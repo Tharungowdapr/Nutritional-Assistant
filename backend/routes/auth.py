@@ -4,7 +4,7 @@ Signup, login, profile management, password reset, etc.
 """
 import json
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from slowapi import Limiter
@@ -81,7 +81,7 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Ses
         # Generate secure reset token
         token = secrets.token_urlsafe(32)
         user.reset_token = token
-        user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+        user.reset_token_expires = datetime.now(timezone.utc) + timedelta(hours=1)
         db.commit()
         # TODO: Send email with reset link to user.email
         # await send_reset_email(user.email, token)
@@ -96,7 +96,7 @@ async def reset_password(request: Request, data: ResetPasswordRequest, db: Sessi
     """Reset password using token from email link."""
     user = db.query(UserDB).filter(
         UserDB.reset_token == data.token,
-        UserDB.reset_token_expires > datetime.utcnow()
+        UserDB.reset_token_expires > datetime.now(timezone.utc)
     ).first()
     if not user:
         raise HTTPException(status_code=400, detail="Invalid or expired reset token")

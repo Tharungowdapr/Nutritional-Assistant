@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # ── Auth / Security ──
-    SECRET_KEY: str = "nutrisync_dev_secret_change_in_production"
+    SECRET_KEY: str = ""  # MUST be set in .env - generate with: python -c "import secrets; print(secrets.token_hex(32))"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 1440  # 24 hours
 
@@ -41,7 +41,7 @@ class Settings(BaseSettings):
 
     # ── Ollama (primary LLM) ──
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "gemma4:e2b"
+    OLLAMA_MODEL: str = "gemma3:4b"
     OLLAMA_EMBED_MODEL: str = "nomic-embed-text"
 
     # ── Groq (fallback LLM) ──

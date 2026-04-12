@@ -3,11 +3,11 @@ AaharAI NutriSync — API Routes: Nutrition Tracker
 Daily food logging with macro tracking.
 """
 from fastapi import APIRouter, HTTPException, Depends
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 
-from auth.database import SessionLocal, get_db, DailyLogDB, UserDB
-from auth.dependencies import get_current_user
+from auth.database import get_db, DailyLogDB, UserDB
+from auth.dependencies import require_user
 from database.models import LogFoodRequest, DailyLogResponse, DailySummaryResponse
 from database.loader import db
 
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/tracker", tags=["Tracker"])
 @router.post("/log-food")
 async def log_food(
     request: LogFoodRequest,
-    current_user: UserDB = Depends(get_current_user),
+    current_user: UserDB = Depends(require_user),
     db_session = Depends(get_db),
 ):
     """Log a food item for today."""
@@ -65,7 +65,7 @@ async def log_food(
 @router.get("/daily/{log_date}")
 async def get_daily_summary(
     log_date: str,  # YYYY-MM-DD
-    current_user: UserDB = Depends(get_current_user),
+    current_user: UserDB = Depends(require_user),
     db_session = Depends(get_db),
 ):
     """Get daily summary with all meals logged."""
@@ -114,13 +114,16 @@ async def get_daily_summary(
 
 @router.get("/weekly")
 async def get_weekly_summary(
-    current_user: UserDB = Depends(get_current_user),
+    current_user: UserDB = Depends(require_user),
     db_session = Depends(get_db),
 ):
     """Get last 7 days summary."""
+    # Filter by date range directly in the query
+    seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d")
     logs = db_session.query(DailyLogDB).filter(
         DailyLogDB.user_id == current_user.id,
-    ).order_by(DailyLogDB.log_date.desc()).limit(7*50).all()  # Rough limit
+        DailyLogDB.log_date >= seven_days_ago,
+    ).order_by(DailyLogDB.log_date.desc()).all()
     
     # Group by date
     daily_summary = {}
@@ -149,7 +152,7 @@ async def get_weekly_summary(
 @router.delete("/logs/{log_id}")
 async def delete_log(
     log_id: int,
-    current_user: UserDB = Depends(get_current_user),
+    current_user: UserDB = Depends(require_user),
     db_session = Depends(get_db),
 ):
     """Delete a food log entry."""

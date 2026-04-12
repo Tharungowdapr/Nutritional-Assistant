@@ -61,7 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = async (profileData: Record<string, any>) => {
     const data: any = await authApi.updateProfile(profileData);
-    setUser(data);
+    // Profile endpoint returns UserResponse directly (not wrapped in .user like login/signup)
+    const user: User = data as User;
+    setUser(user);
   };
 
   return (

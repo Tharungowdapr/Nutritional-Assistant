@@ -89,7 +89,7 @@ class ChatHistoryDB(Base):
     assistant_message = Column(Text, nullable=True)
     sources_json = Column(Text, default="[]")
     llm_provider = Column(String(50), default="")
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: __import__('datetime').datetime.now(__import__('datetime').timezone.utc))
 
 
 class DailyLogDB(Base):
