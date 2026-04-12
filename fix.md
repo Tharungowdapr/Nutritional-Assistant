@@ -1,4 +1,6 @@
 # NutriSync (AaharAI) — Complete Professional Improvement Guide
+
+> NOTE: This document is a detailed audit and improvement guide. For day-to-day setup and developer instructions, prefer `README.md`, `SETUP.md`, and `ARCHITECTURE.md` which contain the canonical, up-to-date instructions.
 ### Component-wise Problems & Solutions
 **Repo:** `github.com/Tharungowdapr/Nutritional-Assistant`  
 **Stack:** Next.js 15 · FastAPI · SQLite · ChromaDB · Ollama/Groq  
