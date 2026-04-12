@@ -21,10 +21,11 @@ export function clearToken() {
   localStorage.removeItem("nutrisync_token");
 }
 
-/** Core fetch wrapper */
+/** Core fetch wrapper with automatic token refresh on 401 */
 async function apiFetch<T = any>(
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  retry = true
 ): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = {
@@ -41,6 +42,40 @@ async function apiFetch<T = any>(
   });
 
   if (!res.ok) {
+    // Handle 401 Unauthorized with automatic token refresh
+    if (res.status === 401 && retry) {
+      try {
+        // Attempt silent token refresh
+        const refreshRes = await fetch(`${API_BASE}/api/auth/refresh`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json();
+          setToken(refreshData.access_token);
+          // Retry original request with new token
+          return apiFetch<T>(path, options, false);
+        } else {
+          // Refresh failed — clear token and redirect to login
+          clearToken();
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
+          throw new ApiError(401, "Session expired. Please log in again.");
+        }
+      } catch (err: any) {
+        clearToken();
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+        throw err;
+      }
+    }
+
     const body = await res.json().catch(() => ({}));
     throw new ApiError(res.status, body.detail || "Request failed");
   }
@@ -63,34 +98,71 @@ export const authApi = {
   login: (data: { email: string; password: string }) =>
     apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify(data) }),
 
+  refresh: () =>
+    apiFetch("/api/auth/refresh", { method: "POST" }),
+
   me: () => apiFetch("/api/auth/me"),
 
   updateProfile: (data: Record<string, any>) =>
     apiFetch("/api/auth/profile", { method: "PUT", body: JSON.stringify(data) }),
+
+  forgotPassword: (data: { email: string }) =>
+    apiFetch("/api/auth/forgot-password", { method: "POST", body: JSON.stringify(data) }),
+
+  resetPassword: (data: { token: string; new_password: string }) =>
+    apiFetch("/api/auth/reset-password", { method: "POST", body: JSON.stringify(data) }),
+
+  changePassword: (data: { current_password: string; new_password: string }) =>
+    apiFetch("/api/auth/change-password", { method: "PUT", body: JSON.stringify(data) }),
 };
 
 // ── Chat ──
 export const chatApi = {
-  send: (message: string, userProfile?: any) =>
+  send: (message: string, userProfile?: any, sessionId?: string) =>
     apiFetch("/api/chat", {
       method: "POST",
-      body: JSON.stringify({ message, user_profile: userProfile }),
+      body: JSON.stringify({ message, user_profile: userProfile, session_id: sessionId }),
     }),
 
   history: (limit = 50) => apiFetch(`/api/chat/history?limit=${limit}`),
+
+  listSessions: (limit = 20) => apiFetch(`/api/chat/sessions?limit=${limit}`),
+
+  getSession: (sessionId: string) => apiFetch(`/api/chat/sessions/${sessionId}`),
+
+  deleteSession: (sessionId: string) =>
+    apiFetch(`/api/chat/sessions/${sessionId}`, { method: "DELETE" }),
 };
 
 // ── Nutrition ──
 export const nutritionApi = {
-  searchFoods: (query = "", dietType?: string, foodGroup?: string) => {
+  searchFoods: (
+    query = "",
+    dietType?: string,
+    foodGroup?: string,
+    page = 1,
+    limit = 20,
+    sortBy = "Food Name",
+    sortOrder = "asc"
+  ) => {
     const params = new URLSearchParams();
     if (query) params.set("query", query);
     if (dietType) params.set("diet_type", dietType);
     if (foodGroup) params.set("food_group", foodGroup);
+    params.set("page", String(page));
+    params.set("limit", String(limit));
+    params.set("sort_by", sortBy);
+    params.set("sort_order", sortOrder);
     return apiFetch(`/api/nutrition/foods?${params}`);
   },
 
   getFood: (name: string) => apiFetch(`/api/nutrition/foods/${encodeURIComponent(name)}`),
+
+  compareFoods: (foodNames: string[]) =>
+    apiFetch("/api/nutrition/foods/compare", {
+      method: "POST",
+      body: JSON.stringify({ food_names: foodNames }),
+    }),
 
   computeTargets: (profile: any) =>
     apiFetch("/api/nutrition/targets", { method: "POST", body: JSON.stringify(profile) }),
@@ -108,8 +180,9 @@ export const mealPlanApi = {
   history: (limit = 10) => apiFetch(`/api/meal-plan/history?limit=${limit}`),
 
   grocery: (mealPlanText: string, days = 7) =>
-    apiFetch(`/api/meal-plan/grocery?meal_plan_text=${encodeURIComponent(mealPlanText)}&days=${days}`, {
+    apiFetch("/api/meal-plan/grocery", {
       method: "POST",
+      body: JSON.stringify({ meal_plan_text: mealPlanText, days }),
     }),
 
   recipe: (data: { meal_name: string; ingredients: string[]; servings?: number }) =>
@@ -119,4 +192,56 @@ export const mealPlanApi = {
 // ── Health ──
 export const healthApi = {
   check: () => apiFetch("/api/health"),
+};
+
+// ── Admin ──
+export const adminApi = {
+  getStats: () => apiFetch("/api/admin/stats"),
+
+  listUsers: (page = 1, limit = 20) =>
+    apiFetch(`/api/admin/users?page=${page}&limit=${limit}`),
+
+  getUserActivity: (userId: number) =>
+    apiFetch(`/api/admin/users/${userId}/activity`),
+
+  getUsageStats: () => apiFetch("/api/admin/usage"),
+
+  toggleUserAdmin: (userId: number) =>
+    apiFetch(`/api/admin/users/${userId}/toggle-admin`, { method: "POST" }),
+};
+
+// ── Tracker ──
+export const trackerApi = {
+  logFood: (mealSlot: string, foodName: string, quantityG: number = 100) =>
+    apiFetch("/api/tracker/log-food", {
+      method: "POST",
+      body: JSON.stringify({ meal_slot: mealSlot, food_name: foodName, quantity_g: quantityG }),
+    }),
+
+  getDailySummary: (logDate: string) =>
+    apiFetch(`/api/tracker/daily/${logDate}`),
+
+  getWeeklySummary: () => apiFetch("/api/tracker/weekly"),
+
+  deleteLog: (logId: number) =>
+    apiFetch(`/api/tracker/logs/${logId}`, { method: "DELETE" }),
+};
+
+// ── Analysis ──
+export const analysisApi = {
+  getFoodGroupStats: () => apiFetch("/api/analysis/food-group-stats"),
+
+  getVegNonvegStats: () => apiFetch("/api/analysis/veg-nonveg"),
+
+  getTopProteinFoods: (limit = 10) => apiFetch(`/api/analysis/top-protein-foods?limit=${limit}`),
+
+  getIronAnalysis: () => apiFetch("/api/analysis/iron-analysis"),
+
+  getB12Analysis: () => apiFetch("/api/analysis/b12-analysis"),
+
+  getGIDistribution: () => apiFetch("/api/analysis/gi-distribution"),
+
+  getCalorieDistribution: () => apiFetch("/api/analysis/calorie-distribution"),
+
+  getNutrientSummary: () => apiFetch("/api/analysis/nutrient-summary"),
 };

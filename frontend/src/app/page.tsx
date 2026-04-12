@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Bot, Target, FileText, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MacroRing } from "@/components/macro-ring";
 import { useAuth } from "@/lib/auth-context";
 import { healthApi } from "@/lib/api";
 
@@ -45,6 +46,49 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {/* Macro Rings - Today's Progress (logged-in users only) */}
+      {user && (
+        <div className="glass-card p-6 md:p-8">
+          <h2 className="text-xl font-semibold mb-6 flex items-center gap-2 text-foreground">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Target className="w-4 h-4 text-primary" />
+            </div>
+            Daily Nutrition Progress
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            <MacroRing
+              label="Calories"
+              current={user.profile?.energy_score ? 1800 + (user.profile.energy_score * 200) : 2000}
+              target={2000}
+              color="var(--color-calories)"
+              unit="kcal"
+            />
+            <MacroRing
+              label="Protein"
+              current={60}
+              target={75}
+              color="var(--color-protein)"
+              unit="g"
+            />
+            <MacroRing
+              label="Carbs"
+              current={220}
+              target={275}
+              color="var(--color-carbs)"
+              unit="g"
+            />
+            <MacroRing
+              label="Fat"
+              current={55}
+              target={65}
+              color="var(--color-fat)"
+              unit="g"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-6">💡 Log your meals to see your actual progress. Feature coming soon.</p>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Profile Card */}

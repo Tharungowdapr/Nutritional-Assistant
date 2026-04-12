@@ -3,11 +3,11 @@ AaharAI NutriSync — API Routes: Meal Plan, Grocery, Recipes
 Now with persistence for logged-in users.
 """
 import json
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional
 from sqlalchemy.orm import Session
 
-from database.models import MealPlanRequest, RecipeRequest
+from database.models import MealPlanRequest, RecipeRequest, GroceryRequest
 from auth.database import get_db, MealPlanDB
 from auth.dependencies import get_current_user
 
@@ -23,6 +23,8 @@ async def generate_meal_plan(
     """Generate a personalized meal plan using the agent."""
     from main import get_meal_agent
     agent = get_meal_agent()
+    if agent is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Meal agent unavailable")
 
     result = await agent.generate_meal_plan(
         profile=request.user_profile.model_dump(),
@@ -83,11 +85,13 @@ async def get_meal_plan_history(
 
 
 @router.post("/grocery")
-async def generate_grocery_list(meal_plan_text: str, days: int = 7):
+async def generate_grocery_list(request: GroceryRequest):
     """Generate a grocery shopping list from a meal plan."""
     from main import get_meal_agent
     agent = get_meal_agent()
-    result = await agent.generate_grocery_list(meal_plan_text, days)
+    if agent is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Meal agent unavailable")
+    result = await agent.generate_grocery_list(request.meal_plan_text, request.days)
     return result
 
 
@@ -96,6 +100,8 @@ async def generate_recipe(request: RecipeRequest):
     """Generate a detailed recipe from ingredients."""
     from main import get_meal_agent
     agent = get_meal_agent()
+    if agent is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Meal agent unavailable")
     result = await agent.generate_recipe(
         meal_name=request.meal_name,
         ingredients=request.ingredients,

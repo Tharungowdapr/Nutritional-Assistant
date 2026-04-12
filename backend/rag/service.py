@@ -156,6 +156,23 @@ Please provide a detailed, evidence-based answer using the retrieved knowledge a
             temperature=0.7,
         )
 
+        # If no LLM provider was available, provide a safe fallback using retrieved
+        # context so the API remains useful even without a working local LLM.
+        if provider == "none" or (isinstance(response_text, str) and "no LLM provider" in response_text):
+            fallback = "**LLM unavailable — retrieved knowledge:**\n\n"
+            if chunks:
+                for i, c in enumerate(chunks[:5]):
+                    meta = c.get("metadata", {})
+                    src = meta.get("source", "unknown")
+                    ident = meta.get("identifier", "")
+                    header = f"- Source {i+1}: {src}"
+                    if ident:
+                        header += f" ({ident})"
+                    fallback += f"{header}\n{c.get('text','')}\n\n"
+            else:
+                fallback += "No knowledge-base results available."
+            response_text = fallback
+
         # 4. Format sources
         sources = [
             {

@@ -7,29 +7,33 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from config import settings
 from database.loader import db
 from database.models import HealthCheckResponse
 from rag.llm_router import LLMRouter
-from rag.service import RAGService
-from agent.meal_agent import MealPlanAgent
 from auth.database import init_db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# ── Rate Limiter ──
+limiter = Limiter(key_func=get_remote_address)
+
 # ── Global instances ──
 _llm_router: LLMRouter = None
-_rag_service: RAGService = None
-_meal_agent: MealPlanAgent = None
+_rag_service = None
+_meal_agent = None
 
 
-def get_rag_service() -> RAGService:
+def get_rag_service():
     return _rag_service
 
 
-def get_meal_agent() -> MealPlanAgent:
+def get_meal_agent():
     return _meal_agent
 
 
@@ -49,9 +53,15 @@ async def lifespan(app: FastAPI):
 
     # 1. Load all Excel sheets
     logger.info("Loading NutriSync database...")
-    db.load()
-    stats = db.stats()
-    logger.info(f"✅ Database loaded: {stats['foods']} foods, {stats['rda_profiles']} RDA profiles")
+    try:
+        db.load()
+        if db._loaded:
+            stats = db.stats()
+            logger.info(f"✅ Database loaded: {stats['foods']} foods, {stats['rda_profiles']} RDA profiles")
+        else:
+            logger.info("No NutriSync Excel/DB loaded — continuing in degraded mode.")
+    except Exception as e:
+        logger.warning(f"Failed to load NutriSync database: {e}. Continuing without knowledge base.")
 
     # 2. Initialize LLM Router (Ollama ↔ Groq)
     _llm_router = LLMRouter(
@@ -63,11 +73,23 @@ async def lifespan(app: FastAPI):
     )
     await _llm_router.initialize()
 
-    # 3. Initialize RAG Service
-    _rag_service = RAGService(llm_router=_llm_router)
+    # 3. Initialize RAG Service (lazy import so missing optional deps don't break startup)
+    try:
+        from rag.service import RAGService
 
-    # 4. Initialize Meal Agent
-    _meal_agent = MealPlanAgent(llm_router=_llm_router)
+        _rag_service = RAGService(llm_router=_llm_router)
+    except Exception as e:
+        logger.warning(f"Could not initialize RAGService: {e}")
+        _rag_service = None
+
+    # 4. Initialize Meal Agent (lazy import)
+    try:
+        from agent.meal_agent import MealPlanAgent
+
+        _meal_agent = MealPlanAgent(llm_router=_llm_router)
+    except Exception as e:
+        logger.warning(f"Could not initialize MealPlanAgent: {e}")
+        _meal_agent = None
 
     logger.info("✅ AaharAI NutriSync API ready!")
     yield
@@ -81,6 +103,10 @@ app = FastAPI(
     description="AI-powered Indian nutrition assistant with RAG, GLP-1 support, and meal planning",
     lifespan=lifespan,
 )
+
+# ── Rate Limiting Setup ──
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── CORS ──
 app.add_middleware(
@@ -96,11 +122,17 @@ from routes.auth import router as auth_router
 from routes.chat import router as chat_router
 from routes.nutrition import router as nutrition_router
 from routes.meal_plan import router as meal_plan_router
+from routes.admin import router as admin_router
+from routes.tracker import router as tracker_router
+from routes.analysis import router as analysis_router
 
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(nutrition_router)
 app.include_router(meal_plan_router)
+app.include_router(admin_router)
+app.include_router(tracker_router)
+app.include_router(analysis_router)
 
 
 @app.get("/api/health", response_model=HealthCheckResponse)
@@ -109,9 +141,9 @@ async def health_check():
     return HealthCheckResponse(
         status="healthy",
         database_loaded=db._loaded,
-        ollama_available=_llm_router._ollama_available if _llm_router else False,
-        groq_available=_llm_router._groq_available if _llm_router else False,
-        chroma_ready=_rag_service.is_ready if _rag_service else False,
+        ollama_available=bool(_llm_router._ollama_available) if _llm_router else False,
+        groq_available=bool(_llm_router._groq_available) if _llm_router else False,
+        chroma_ready=bool(_rag_service.is_ready) if _rag_service else False,
         db_stats=db.stats() if db._loaded else {},
     )
 

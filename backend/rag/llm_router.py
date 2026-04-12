@@ -6,6 +6,7 @@ Updated for gemma4:e2b model.
 import time
 import logging
 import httpx
+import json
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -23,8 +24,8 @@ class LLMRouter:
         self.groq_model = groq_model
         self.retry_interval = retry_interval
 
-        self._ollama_available: Optional[bool] = None
-        self._groq_available: Optional[bool] = None
+        self._ollama_available: bool = False
+        self._groq_available: bool = False
         self._last_ollama_check: float = 0
         self._active_provider: str = "unknown"
 
@@ -110,13 +111,29 @@ class LLMRouter:
             "model": self.ollama_model,
             "prompt": prompt,
             "system": system,
-            "stream": False,
+            "stream": True,
             "options": {"temperature": temperature},
         }
+        # Ollama returns an NDJSON stream of partial tokens. Consume the
+        # stream and concatenate `response` fields into the final string.
         async with httpx.AsyncClient(timeout=180) as client:
-            resp = await client.post(f"{self.ollama_url}/api/generate", json=payload)
-            resp.raise_for_status()
-            return resp.json()["response"]
+            async with client.stream("POST", f"{self.ollama_url}/api/generate", json=payload) as resp:
+                resp.raise_for_status()
+                assembled = ""
+                async for raw_line in resp.aiter_lines():
+                    if not raw_line:
+                        continue
+                    try:
+                        part = json.loads(raw_line)
+                    except Exception:
+                        continue
+                    # Concatenate incremental `response` tokens
+                    if "response" in part and part["response"]:
+                        assembled += part["response"]
+                    # If the stream indicates completion, stop
+                    if part.get("done"):
+                        break
+                return assembled
 
     async def _generate_groq(self, prompt: str, system: str,
                               temperature: float) -> str:
