@@ -6,7 +6,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import bcrypt
-from jose import jwt, JWTError
+import jwt
+from jwt import PyJWTError as JWTError
 
 from config import settings
 
