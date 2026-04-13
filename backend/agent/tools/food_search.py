@@ -19,9 +19,30 @@ def search_foods_tool(query: str, diet_type: str = None, food_group: str = None,
         List of food dicts with nutrient data
     """
     results = db.search_foods(query=query, diet_type=diet_type, food_group=food_group)
-    foods = results.head(limit)
 
     output = []
+    # db.search_foods may return a DataFrame or an empty list; handle both
+    if isinstance(results, list):
+        rows = results[:limit]
+        for row in rows:
+            food = {
+                "name": row.get("name") or row.get("Food Name", ""),
+                "food_group": row.get("food_group") or row.get("Food Group", ""),
+                "diet_type": row.get("diet_type") or row.get("Diet Type", ""),
+                "energy_kcal": _safe_float(row.get("energy_kcal") or row.get("Energy (kcal)")),
+                "protein_g": _safe_float(row.get("protein_g") or row.get("Protein (g)")),
+                "fat_g": _safe_float(row.get("fat_g") or row.get("Fat (g)")),
+                "carbs_g": _safe_float(row.get("carbs_g") or row.get("Carbs (g)")),
+                "fibre_g": _safe_float(row.get("fibre_g") or row.get("Fibre (g)")),
+                "iron_mg": _safe_float(row.get("iron_mg") or row.get("Iron (mg)")),
+                "calcium_mg": _safe_float(row.get("calcium_mg") or row.get("Calcium (mg)")),
+                "source": "IFCT_2017",
+            }
+            output.append(food)
+        return output
+
+    # Otherwise assume DataFrame-like
+    foods = results.head(limit)
     for _, row in foods.iterrows():
         food = {
             "name": row.get("Food Name", ""),

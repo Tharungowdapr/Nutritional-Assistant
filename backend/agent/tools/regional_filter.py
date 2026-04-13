@@ -14,6 +14,9 @@ def get_regional_foods(zone: str) -> dict:
     Returns:
         Dict with regional dietary info and recommended staples
     """
+    if getattr(db, 'region', None) is None:
+        return {"zone": zone, "found": False, "recommendations": []}
+
     match = db.region[db.region["Zone"].str.contains(zone, case=False, na=False)]
     if match.empty:
         return {"zone": zone, "found": False, "recommendations": []}

@@ -38,16 +38,18 @@ class InferenceEngine:
         (False, True, False): {"magnesium_mg": 1.30, "zinc_mg": 1.15},
         (False, False, True): {"vit_b12_mcg": 1.20, "iron_mg": 1.10, "omega3_g": 1.30},
         (True, True, False): {"vit_b12_mcg": 1.35, "iron_mg": 1.30, "magnesium_mg": 1.40, "zinc_mg": 1.15},
+        # Missing combination (energy low, sleep ok, focus low) used in tests
+        (True, False, True): {"vit_b12_mcg": 1.40, "iron_mg": 1.10, "omega3_g": 1.30},
         (True, True, True): {"vit_b12_mcg": 1.40, "iron_mg": 1.35, "magnesium_mg": 1.45, "omega3_g": 1.30, "zinc_mg": 1.15},
     }
 
     def compute_targets(self, profile: dict) -> dict:
         """Full pipeline: profile → personalized nutrient targets."""
-        # IMP-002: Guard against unloaded database
-        if not getattr(db, '_loaded', False):
-            return self._default_targets(profile)
-        
-        targets = self._get_base_rda(profile)
+        # IMP-002: If RDA table unavailable, fall back to defaults for base targets
+        db_has_rda = getattr(db, '_loaded', False) and getattr(db, 'rda', None) is not None
+        targets = self._get_base_rda(profile) if db_has_rda else self._default_targets(profile)
+
+        # Profession adjustment may be skipped if profession table is missing
         targets = self._adjust_profession_calories(targets, profile)
         targets = self._apply_disease_overrides(targets, profile)
         targets = self._apply_glp1_modifier(targets, profile)
@@ -116,6 +118,14 @@ class InferenceEngine:
         """Step 2: Adjust calories based on profession PAL."""
         import re
         prof = profile.get("profession", "Sedentary")
+        # If profession table is not loaded, skip profession-based adjustments
+        if getattr(db, 'profession', None) is None:
+            # Still derive macros from current calories
+            targets["protein_g"] = max(targets.get("protein_g", 0), targets["calories"] * 0.15 / 4)
+            targets["fat_g"] = targets["calories"] * 0.25 / 9
+            targets["carbs_g"] = targets["calories"] * 0.55 / 4
+            return targets
+
         match = db.profession[db.profession["Profession Category"].str.contains(
             re.escape(prof), case=False, na=False, regex=False)]
 
@@ -132,7 +142,7 @@ class InferenceEngine:
             targets["calories"] = pal_calories * weight_factor
 
         # Calculate macros from calories
-        targets["protein_g"] = max(targets["protein_g"], targets["calories"] * 0.15 / 4)
+        targets["protein_g"] = max(targets.get("protein_g", 0), targets["calories"] * 0.15 / 4)
         targets["fat_g"] = targets["calories"] * 0.25 / 9
         targets["carbs_g"] = targets["calories"] * 0.55 / 4
 
