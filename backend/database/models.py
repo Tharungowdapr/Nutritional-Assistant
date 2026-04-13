@@ -28,7 +28,7 @@ class UserProfile(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    user_profile: Optional[UserProfile] = None
+    user_profile: Optional[dict] = None
     session_id: Optional[str] = None  # UUID for conversation grouping
 
 
@@ -57,10 +57,7 @@ class GroceryListResponse(BaseModel):
 
 
 class RecipeRequest(BaseModel):
-    meal_name: str
-    ingredients: list[str]
-    servings: int = 2
-    cuisine_preference: str = "Indian"
+    instructions: str
 
 
 class NutrientTargets(BaseModel):

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard, MessageSquare, CalendarDays, CookingPot,
-  UserCircle, LogOut, Sparkles, Salad, TrendingUp
+  UserCircle, LogOut, Sparkles, Salad, TrendingUp, BarChart3, Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -26,7 +26,9 @@ const DESKTOP_NAV_ITEMS = [
   { href: "/tracker", label: "Nutrition Tracker", icon: TrendingUp },
   { href: "/foods", label: "Food Database", icon: Salad },
   { href: "/recipes", label: "Recipes", icon: CookingPot },
+  { href: "/analysis", label: "Analytics", icon: BarChart3 },
   { href: "/profile", label: "Profile", icon: UserCircle },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 function NavContent({ onNavigate, items = DESKTOP_NAV_ITEMS }: { onNavigate?: () => void; items?: typeof DESKTOP_NAV_ITEMS }) {

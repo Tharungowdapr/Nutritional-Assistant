@@ -81,14 +81,18 @@ USER PROFILE:
 - Region: {profile.get('region_zone', 'South')} India
 {glp1_str}
 
-FORMAT each day as:
 Day X:
-- Breakfast: [food items with portions in Indian units like katori or cups]
-- Lunch: [food items with portions]
-- Evening Snack: [food items]
-- Dinner: [food items with portions]
+| Meal | Food Items | Portion/Quantity | Macros (P/F/C/Kcal) |
+| :--- | :--- | :--- | :--- |
+| Breakfast | Item 1, Item 2 | 1 bowl, 2 pcs | 10g / 5g / 40g / 250kcal |
+| Lunch | Item 3, Item 4 | 2 katori, 1 roti | 15g / 8g / 60g / 450kcal |
+| Snack | Item 5 | 1 cup | 2g / 1g / 15g / 80kcal |
+| Dinner | Item 6, Item 7 | 1 bowl, 1 roti | 12g / 7g / 50g / 350kcal |
 
-Keep portions realistic (1 katori rice = 150g). Prioritize variety across the week."""
+After the daily tables, provide a "Nutritional Estimate" table for the week.
+
+Keep portions realistic (1 katori rice = 150g). Prioritize variety across the week. Ensure ALL DAILY MEALS ARE IN THE TABLE FORMAT SHOWN ABOVE. DO NOT USE BULLET POINTS FOR MEALS.
+"""
 
         system = "You are a certified Indian nutritionist creating personalized daily meal plans."
         response, provider = await self.llm_router.generate(prompt, system, temperature=0.6)
@@ -110,18 +114,17 @@ At the end, estimate total cost in ₹ (use typical Indian market prices)."""
         response, provider = await self.llm_router.generate(prompt, system, temperature=0.4)
         return {"grocery_text": response, "provider": provider}
 
-    async def generate_recipe(self, meal_name: str, ingredients: list[str], servings: int = 2) -> dict:
-        """Generate a detailed Indian recipe from ingredients."""
-        prompt = f"""Generate a detailed Indian recipe for: {meal_name}
-
-Available ingredients: {', '.join(ingredients)}
-Servings: {servings}
+    async def generate_recipe(self, instructions: str) -> dict:
+        """Generate a detailed recipe from natural language instructions."""
+        prompt = f"""Generate a detailed recipe based on following instructions:
+{instructions}
 
 Include:
 1. Preparation time and cooking time
 2. Step-by-step instructions
-3. Nutritional info per serving
-4. GLP-1 tips (e.g., reduce oil, avoid deep frying) if applicable"""
+3. Nutritional info per serving (present this in a Markdown Table)
+4. GLP-1 tips (e.g., reduce oil, avoid deep frying) if applicable
+5. Ingredient Composition Table (Item | Quantity | Calories | Protein)"""
 
         system = "You are an expert Indian home cook creating healthy recipes."
         response, provider = await self.llm_router.generate(prompt, system, temperature=0.7)

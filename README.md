@@ -1,65 +1,60 @@
 # 🧬 AaharAI NutriSync
 
-A production-ready, AI-powered Indian nutritional assistant. Built with Retrieval-Augmented Generation (RAG) over the IFCT 2017 (Indian Food Composition Tables) and ICMR-NIN 2024 RDA guidelines.
-
-This repository contains the backend (FastAPI + RAG pipeline), a Next.js frontend, and tooling to run local LLMs (Ollama). For full setup walkthrough see [`SETUP.md`](SETUP.md) and for system architecture details see [`ARCHITECTURE.md`](ARCHITECTURE.md).
-
----
-
-## 🌟 What this project does
-- RAG knowledge base using ChromaDB built from IFCT & ICMR-NIN sources.
-- LLM-driven nutritional assistant with Indian food names, portion recommendations, and RDA-aware guidance.
-- Local-first privacy model: data and LLMs run on your machine (Ollama) or in your chosen cloud.
+### **Uncompromising Precision. Minimal Luxury Design.**
+A state-of-the-art, AI-powered Indian nutritional assistant grounded in **IFCT 2017** and **ICMR-NIN 2024** guidelines.
 
 ---
 
-## 🛠️ Tech Stack (high level)
-- Backend: Python 3.12, FastAPI, SQLAlchemy (SQLite/postgres optional), ChromaDB
-- Frontend: TypeScript, Next.js, Tailwind CSS
-- LLMs: Ollama (local) with optional Groq fallback
-- Storage: SQLite for app data, ChromaDB for vector index
+## 🎨 Minimal Luxury UI/UX
+The platform has undergone a complete visual overhaul, moving away from "plain" interfaces to a **Minimal Luxury** design system.
+- **Glassmorphic Interfaces**: Refined transparency, subtle blurs, and premium typography.
+- **Micro-Animations**: Fluid transitions and interactive elements for a premium feel.
+- **Dark Mode Excellence**: Optimized for high contrast and modern aesthetics.
 
 ---
 
-## 🚀 Quickstart — Recommended (Docker Compose)
-The easiest way to run a fully local stack (backend, frontend, Ollama, optional Postgres):
+## 🚀 Key Features
 
-1. Ensure Docker is installed and running.
-2. From the repository root run:
+### 🧠 Scientific Intelligence Hub
+Deep analytical insights derived from **12+ verified nutritional datasets**:
+- **Regional Food Culture**: Traditional culinary wisdom across India.
+- **Clinical Precision**: Nutritional protocols for various health conditions.
+- **Medicine Impacts**: Real-time tracking of drug-nutrient interactions.
+- **Occupational Guidance**: Tailored calorie targets based on profession intensity.
 
-```bash
-docker compose up --build -d
-```
+### 📅 Advanced Meal Planner
+- **AI-Driven Personalization**: Hyper-local recommendations based on your unique profile.
+- **Structured Tables**: Clean, readable composition and calorie breakdowns for every meal.
+- **Dynamic Grocery Lists**: Instant generation of Shopping lists from your plans.
 
-3. Wait until services show healthy. Then:
-
-```bash
-# Backend health
-curl http://localhost:8000/api/health
-
-# Frontend
-open http://localhost:3000
-```
-
-For detailed manual steps and troubleshooting, see [`SETUP.md`](SETUP.md).
+### 📊 Health & Macro Tracker
+- **Historical Analysis**: Apple Health-style visualization of your nutritional journey.
+- **Real-Time Progress**: Dynamic macro rings tracked against ICMR-NIN 2024 targets.
+- **Intelligent Food Search**: Fast, filterable access to over 7,000+ IFCT food items.
 
 ---
 
-## 🧭 Developer — Manual (non-Docker) Quick Notes
-- Backend: Create a Python venv, install `backend/requirements.txt`, then run `uvicorn backend.main:app --reload --port 8000`.
-- Frontend: `cd frontend && npm install && npm run dev -p 3001`.
-- Ingest RAG data: `python -m rag.ingest` (runs once to populate ChromaDB).
+## 🛠️ Technical Excellence
+- **RAG Architecture**: Retrieval-Augmented Generation ensures every AI response is fact-checked against official databases.
+- **Local-First Privacy**: Run LLMs locally (Ollama) to keep your health data private.
+- **Full-Stack Performance**: FastAPI backend for speed, Next.js for a fluid frontend.
 
 ---
 
-## 🏗️ Architecture & Docs
-See [`ARCHITECTURE.md`](ARCHITECTURE.md) for system diagrams, component responsibilities, and how data flows from query → retrieval → generation.
+## 📦 Getting Started
+
+1. **Docker Quickstart**:
+   ```bash
+   docker compose up --build -d
+   ```
+2. **Manual Setup**:
+   - Backend: `uvicorn backend.main:app --reload`
+   - Frontend: `npm run dev`
+
+For detailed setup, see [SETUP.md](SETUP.md).
 
 ---
 
-## 🧾 License & Contributing
-Contributions are welcome — open a PR with a clear description. See `CONTRIBUTING.md` (if present) for guidelines.
-
----
-
-If something in this README feels outdated, please open an issue or submit a PR. Thank you for exploring AaharAI NutriSync!
+## ⚖️ License
+Grounding data sourced from IFCT & ICMR-NIN. Project licensed under MIT.
+Built with ❤️ for a healthier India.

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -88,6 +89,13 @@
     --glass-border: rgba(232, 228, 221, 0.6);
 
     --sidebar-width: 260px;
+    --bg-subtle: #F8F9FA;
+    --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 1px 4px -1px rgba(0, 0, 0, 0.02);
+    --card-radius: 20px;
+    --google-blue: #1A73E8;
+    --app-bg: #F8F9FA;
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(232, 228, 221, 0.5);
   }
 
   /* ═══════════════════════════════════════════
@@ -138,74 +146,71 @@
 
     --glass-bg: rgba(26, 26, 26, 0.8);
     --glass-border: rgba(42, 42, 42, 0.6);
+    --bg-subtle: #202124;
+    --app-bg: #0F0F0F; 
+    --card-shadow: 0 1px 2px 0 rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
+    --google-blue: #8AB4F8;
   }
 }
 
-/* ═══════════════════════════════════════════
-   Base Styles
-   ═══════════════════════════════════════════ */
+
+
 @layer base {
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    letter-spacing: -0.01em;
+    background-color: var(--app-bg);
+    font-feature-settings: "pnum" on, "lnum" on, "cv11" on, "cv01" on;
+    letter-spacing: -0.011em;
   }
   h1, h2, h3, h4 {
+    @apply font-semibold tracking-tight;
     letter-spacing: -0.025em;
   }
 }
 
-/* ═══════════════════════════════════════════
-   Utility Classes — Minimal Luxury
-   ═══════════════════════════════════════════ */
 @layer utilities {
-  /* Refined glass effect */
-  .glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-  }
-
   .glass-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    @apply shadow-sm rounded-xl transition-all duration-300;
+    background: var(--card-bg);
+    box-shadow: var(--card-shadow);
+    border-radius: var(--card-radius);
+    border: 1px solid var(--border);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    @apply overflow-hidden;
   }
 
   .glass-card:hover {
-    @apply shadow-md;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary);
   }
 
-  /* Subtle warm gradient background */
-  .luxury-bg {
-    background-color: var(--background);
-    background-image:
-      radial-gradient(at 0% 0%, hsla(153, 43%, 35%, 0.06) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(30, 40%, 70%, 0.04) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, hsla(153, 43%, 35%, 0.03) 0px, transparent 50%);
-  }
-
-  /* Loading shimmer */
   .shimmer {
-    background: linear-gradient(90deg, var(--muted) 25%, var(--background) 50%, var(--muted) 75%);
+    background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
     background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+    animation: shimmer 1.5s infinite;
   }
 
-  /* Smooth fade in */
   .fade-in {
-    animation: fadeIn 0.4s ease-out;
+    animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /* Sidebar layout */
-  .with-sidebar {
-    margin-left: var(--sidebar-width);
+  .settings-card {
+    @apply bg-card border border-border rounded-[20px] p-6 shadow-sm;
+  }
+
+  .google-sidebar-item {
+    @apply flex items-center gap-3 px-6 py-3.5 rounded-r-full text-sm font-medium transition-all;
+  }
+
+  .google-sidebar-item.active {
+    @apply bg-primary/10 text-primary font-bold;
+  }
+
+  .google-sidebar-item:not(.active) {
+    @apply text-muted-foreground hover:bg-muted hover:text-foreground;
   }
 }
 

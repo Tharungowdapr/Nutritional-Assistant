@@ -1,26 +1,52 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserCircle, Save, Loader2, Beaker } from "lucide-react";
+import { User, Activity, Heart, Briefcase, Zap, Save, Loader2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth-context";
-import { nutritionApi } from "@/lib/api";
 import { toast } from "sonner";
+import { SettingsLayout, SettingsCard } from "@/components/settings-layout";
+import { cn } from "@/lib/utils";
 
-const CONDITIONS_LIST = [
-  "T2DM (Diabetes)", "PCOS", "Hypertension", "Hyperthyroid",
-  "Hypothyroid", "Fatty Liver", "CKD Stage 1-2"
+const SIDEBAR_ITEMS = [
+  { id: "overview", label: "Overview", icon: Info },
+  { id: "personal", label: "Personal Info", icon: User },
+  { id: "health", label: "Health Profile", icon: Activity },
+  { id: "clinical", label: "Clinical Data", icon: Heart },
+  { id: "lifestyle", label: "Lifestyle", icon: Briefcase },
+  { id: "wellness", label: "Wellness", icon: Zap },
 ];
 
-export default function ProfilePage() {
+const LIFE_STAGES = [
+  "Infant", "Toddler", "Preschool", "School age", "Adolescent", "Young Adult",
+  "Adult", "Middle age", "Senior", "Pregnancy 1st Trimester", "Pregnancy 2nd Trimester",
+  "Pregnancy 3rd Trimester", "Lactation", "Postmenopausal Female", "Healthy Senior",
+  "Athlete", "Office Worker", "Manual Laborer"
+];
+
+const PROFESSIONS = [
+  "Student", "Office Worker", "Manual Laborer", "Healthcare", "Agriculture", "Retired"
+];
+
+const CONDITIONS = [
+  "T2DM (Diabetes)", "PCOS", "Hypertension", "Hyperthyroid", "Hypothyroid",
+  "Fatty Liver", "CKD Stage 1-2", "IBS", "Anemia", "Obesity", "Underweight", "GERD"
+];
+
+const REGIONS = {
+  "North": ["Delhi", "Punjab", "Haryana", "Himachal Pradesh", "Jammu & Kashmir"],
+  "South": ["Tamil Nadu", "Karnataka", "Telangana", "Andhra Pradesh", "Kerala"],
+  "East": ["West Bengal", "Bihar", "Assam", "Odisha", "Jharkhand"],
+  "West": ["Gujarat", "Maharashtra", "Goa", "Rajasthan"],
+  "Central": ["Madhya Pradesh", "Chhattisgarh", "Uttar Pradesh"]
+};
+
+export default function RebuiltProfilePage() {
   const { user, updateProfile } = useAuth();
+  const [activeTab, setActiveTab] = useState("overview");
   const [formData, setFormData] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
-  const [targets, setTargets] = useState<any>(null);
-  const [isLoadingTargets, setIsLoadingTargets] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -28,21 +54,8 @@ export default function ProfilePage() {
         name: user.name,
         ...user.profile
       });
-      loadTargets(user.profile);
     }
   }, [user]);
-
-  const loadTargets = async (profileData: any) => {
-    setIsLoadingTargets(true);
-    try {
-      const res = await nutritionApi.computeTargets(profileData);
-      setTargets(res.targets);
-    } catch (e) {
-      console.error("Failed to load targets", e);
-    } finally {
-      setIsLoadingTargets(false);
-    }
-  };
 
   const handleChange = (key: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [key]: value }));
@@ -62,7 +75,6 @@ export default function ProfilePage() {
     try {
       await updateProfile(formData);
       toast.success("Profile saved successfully");
-      loadTargets(formData);
     } catch (e: any) {
       toast.error(e.message || "Failed to save profile");
     } finally {
@@ -74,151 +86,312 @@ export default function ProfilePage() {
     return <div className="p-8">Please log in to view your profile.</div>;
   }
 
-  return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto flex flex-col gap-8 fade-in pb-20">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-primary/10">
-            <UserCircle className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold">Clinical Profile</h1>
-            <p className="text-sm text-muted-foreground">Manage your physical and dietary state</p>
-          </div>
-        </div>
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-          Save Profile
-        </Button>
-      </header>
+  const bmi = formData.height_cm && formData.weight_kg 
+    ? formData.weight_kg / ((formData.height_cm / 100) ** 2) 
+    : null;
 
-      <div className="grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 space-y-6">
-          {/* Basics */}
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-medium mb-4">Basic Information</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2 col-span-2 md:col-span-1">
-                <Label>Full Name</Label>
-                <Input value={formData.name || ""} onChange={e => handleChange("name", e.target.value)} />
+  const getBMIDisplay = () => {
+    if (!bmi) return null;
+    if (bmi < 18.5) return { category: "Underweight", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" };
+    if (bmi < 25) return { category: "Normal", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" };
+    if (bmi < 30) return { category: "Overweight", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" };
+    return { category: "Obese", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" };
+  };
+
+  const bmiDisplay = getBMIDisplay();
+
+  return (
+    <SettingsLayout
+      title="Profile"
+      description="Personal info and options to manage your health data."
+      sidebarItems={SIDEBAR_ITEMS}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    >
+      {/* OVERVIEW */}
+      {activeTab === "overview" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <SettingsCard title="Health Snapshot" description="Quick look at your primary metrics.">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-muted/40 rounded-xl border border-border">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Current BMI</p>
+                  <p className="text-2xl font-bold">{bmi ? bmi.toFixed(1) : "—"}</p>
+                </div>
+                {bmiDisplay && (
+                  <span className={cn(
+                    "px-3 py-1 rounded-full text-xs font-semibold",
+                    bmiDisplay.color
+                  )}>
+                    {bmiDisplay.category}
+                  </span>
+                )}
               </div>
-              <div className="space-y-2 col-span-2 md:col-span-1">
-                <Label>Age</Label>
-                <Input type="number" value={formData.age || ""} onChange={e => handleChange("age", parseInt(e.target.value))} />
+              <div className="p-4 bg-primary/5 rounded-xl border border-primary/10">
+                <p className="text-sm font-medium text-primary mb-1">Health Goal</p>
+                <p className="text-sm text-muted-foreground">{formData.goals || "Set your goals in the Wellness tab"}</p>
               </div>
-              <div className="space-y-2">
-                <Label>Weight (kg)</Label>
-                <Input type="number" value={formData.weight_kg || ""} onChange={e => handleChange("weight_kg", parseFloat(e.target.value))} />
+            </div>
+          </SettingsCard>
+
+          <SettingsCard title="Profile Completeness" description="Keep your data up to date for better AI plans.">
+            <div className="flex items-center gap-6">
+              <div className="relative w-20 h-20">
+                <svg className="w-full h-full" viewBox="0 0 100 100">
+                  <circle className="text-muted/30 stroke-current" strokeWidth="8" fill="transparent" r="40" cx="50" cy="50" />
+                  <circle className="text-primary stroke-current" strokeWidth="8" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * 0.75)} strokeLinecap="round" fill="transparent" r="40" cx="50" cy="50" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">75%</div>
               </div>
-              <div className="space-y-2">
-                <Label>Diet Type</Label>
-                <select 
-                  className="w-full h-10 px-3 py-2 rounded-md border border-input bg-background"
-                  value={formData.diet_type || ""}
-                  onChange={e => handleChange("diet_type", e.target.value)}
+              <div>
+                <p className="text-sm font-medium">Almost there!</p>
+                <p className="text-xs text-muted-foreground mt-1">Complete your Lifestyle and Wellness tabs to reach 100%.</p>
+              </div>
+            </div>
+          </SettingsCard>
+        </div>
+      )}
+
+      {/* PERSONAL INFO */}
+      {activeTab === "personal" && (
+        <SettingsCard title="Basic Information" description="Standard identifier fields.">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Display Name</label>
+                <Input value={formData.name || ""} onChange={(e) => handleChange("name", e.target.value)} />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Email Address</label>
+                <Input value={user.email} disabled className="bg-muted text-muted-foreground" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Age</label>
+                <Input type="number" value={formData.age || ""} onChange={(e) => handleChange("age", Number(e.target.value))} />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium mb-2 block">Sex</label>
+                <div className="flex gap-2">
+                  {["Male", "Female", "Other"].map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => handleChange("sex", s)}
+                      className={cn(
+                        "flex-1 py-2 rounded-lg border text-sm font-medium transition-all",
+                        formData.sex === s ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/50"
+                      )}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </SettingsCard>
+      )}
+
+      {/* HEALTH PROFILE */}
+      {activeTab === "health" && (
+        <div className="space-y-6">
+          <SettingsCard title="Physical Metrics" description="Vital stats for nutritional calculation.">
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Height (cm)</label>
+                <Input type="number" value={formData.height_cm || ""} onChange={(e) => handleChange("height_cm", Number(e.target.value))} />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Weight (kg)</label>
+                <Input type="number" value={formData.weight_kg || ""} onChange={(e) => handleChange("weight_kg", Number(e.target.value))} />
+              </div>
+            </div>
+          </SettingsCard>
+
+          <SettingsCard title="Geography & Life Stage" description="Helps in regional recommendation and RDA targets.">
+            <div className="space-y-6">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Life Stage</label>
+                <select
+                  value={formData.life_stage || ""}
+                  onChange={(e) => handleChange("life_stage", e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-background"
                 >
-                  <option value="">Select Diet</option>
-                  <option value="VEG">Vegetarian</option>
-                  <option value="NON-VEG">Non-Vegetarian</option>
-                  <option value="VEGAN">Vegan</option>
+                  <option value="">Select Stage</option>
+                  {LIFE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Region</label>
+                  <select
+                    value={formData.region || ""}
+                    onChange={(e) => handleChange("region", e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-background"
+                  >
+                    <option value="">Select Region</option>
+                    {Object.keys(REGIONS).map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">State</label>
+                  <select
+                    value={formData.region_state || ""}
+                    onChange={(e) => handleChange("region_state", e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-background"
+                    disabled={!formData.region}
+                  >
+                    <option value="">Select State</option>
+                    {formData.region && REGIONS[formData.region as keyof typeof REGIONS]?.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </SettingsCard>
+        </div>
+      )}
+
+      {/* CLINICAL DATA */}
+      {activeTab === "clinical" && (
+        <div className="space-y-6">
+          <SettingsCard title="Medical Conditions" description="Critical for safe meal planning.">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {CONDITIONS.map(c => (
+                <button
+                  key={c}
+                  onClick={() => toggleCondition(c)}
+                  className={cn(
+                    "px-4 py-3 rounded-xl border text-sm font-medium transition-all text-left flex items-center justify-between group",
+                    (formData.conditions || []).includes(c) 
+                      ? "bg-primary/10 border-primary text-primary" 
+                      : "bg-card border-border hover:border-primary/50 text-foreground"
+                  )}
+                >
+                  {c}
+                  <div className={cn(
+                    "w-4 h-4 rounded-full border border-current flex items-center justify-center",
+                    (formData.conditions || []).includes(c) ? "bg-primary" : "bg-transparent"
+                  )}>
+                    {(formData.conditions || []).includes(c) && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </SettingsCard>
+
+          <SettingsCard title="Restrictions & Allergies" description="Foods to avoid at all costs.">
+            <Input 
+              value={formData.allergies || ""} 
+              onChange={(e) => handleChange("allergies", e.target.value)}
+              placeholder="e.g. Peanuts, Lactose, Shellfish"
+              className="h-12"
+            />
+          </SettingsCard>
+        </div>
+      )}
+
+      {/* LIFESTYLE */}
+      {activeTab === "lifestyle" && (
+        <SettingsCard title="Daily Lifestyle" description="Activity levels and diet preferences.">
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Profession</label>
+                <select
+                  value={formData.profession || ""}
+                  onChange={(e) => handleChange("profession", e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-background"
+                >
+                  <option value="">Select Profession</option>
+                  {PROFESSIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Diet Preference</label>
+                <select
+                  value={formData.diet_pref || ""}
+                  onChange={(e) => handleChange("diet_pref", e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-background"
+                >
+                  <option value="">Select</option>
+                  {["Vegetarian", "Non-Vegetarian", "Vegan", "Jain"].map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
             </div>
+            <div>
+              <label className="text-sm font-medium mb-3 block text-foreground flex items-center gap-2">
+                Exercise Frequency <span className="text-xs text-muted-foreground">(days/week)</span>
+              </label>
+              <div className="flex gap-2">
+                {[0, 1, 2, 3, 4, 5, 6, 7].map(num => (
+                  <button
+                    key={num}
+                    onClick={() => handleChange("exercise_frequency", num)}
+                    className={cn(
+                      "w-10 h-10 rounded-full border text-sm font-bold transition-all",
+                      formData.exercise_frequency === num 
+                        ? "bg-primary text-primary-foreground border-primary" 
+                        : "bg-card border-border hover:border-primary/50"
+                    )}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
+        </SettingsCard>
+      )}
 
-          {/* Clinical */}
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-medium mb-4">Health Conditions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-              {CONDITIONS_LIST.map(cond => (
-                <div key={cond} className="flex items-center space-x-2">
-                  <Switch 
-                    id={`cond-${cond}`} 
-                    checked={(formData.conditions || []).includes(cond)}
-                    onCheckedChange={() => toggleCondition(cond)}
+      {/* WELLNESS */}
+      {activeTab === "wellness" && (
+        <div className="space-y-6">
+          <SettingsCard title="Wellness Markers" description="Subjective health metrics (1-10).">
+            <div className="space-y-8 py-4">
+              {[
+                { key: "energy_level", label: "Energy Level", icon: Zap },
+                { key: "focus_level", label: "Focus/Clarity", icon: User },
+                { key: "sleep_quality", label: "Sleep Quality", icon: Heart },
+              ].map(item => (
+                <div key={item.key}>
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="text-sm font-medium flex items-center gap-2">
+                      <item.icon className="w-4 h-4 text-primary" />
+                      {item.label}
+                    </label>
+                    <span className="text-sm font-bold text-primary">{formData[item.key] || 5}/10</span>
+                  </div>
+                  <Input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={formData[item.key] || "5"}
+                    onChange={(e) => handleChange(item.key, Number(e.target.value))}
+                    className="h-2"
                   />
-                  <Label htmlFor={`cond-${cond}`}>{cond}</Label>
                 </div>
               ))}
             </div>
+          </SettingsCard>
 
-            <div className="mt-8 pt-6 border-t space-y-4">
-              <div>
-                <Label className="text-base text-primary font-medium">GLP-1 Medication (Optional)</Label>
-                <p className="text-xs text-muted-foreground mt-1 mb-3">Ensure strict protein floors and calorie limits</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2 col-span-2 md:col-span-1">
-                  <Label>Medication</Label>
-                  <select 
-                    className="w-full h-10 px-3 py-2 rounded-md border border-input bg-background"
-                    value={formData.glp1_medication || "None"}
-                    onChange={e => handleChange("glp1_medication", e.target.value === "None" ? null : e.target.value)}
-                  >
-                    <option value="None">None</option>
-                    <option value="Semaglutide">Semaglutide</option>
-                    <option value="Liraglutide">Liraglutide</option>
-                    <option value="Tirzepatide">Tirzepatide</option>
-                  </select>
-                </div>
-                {formData.glp1_medication && formData.glp1_medication !== "None" && (
-                  <div className="space-y-2 col-span-2 md:col-span-1">
-                    <Label>Phase</Label>
-                    <select 
-                      className="w-full h-10 px-3 py-2 rounded-md border border-input bg-background"
-                      value={formData.glp1_phase || "Titration"}
-                      onChange={e => handleChange("glp1_phase", e.target.value)}
-                    >
-                      <option value="Titration">Titration</option>
-                      <option value="Maintenance">Maintenance</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <SettingsCard title="Health Goals & Notes" description="What do you want to achieve?">
+            <textarea
+              value={formData.goals || ""}
+              onChange={(e) => handleChange("goals", e.target.value)}
+              className="w-full h-32 p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+              placeholder="e.g., Weight loss, Muscle gain, Improve energy..."
+            />
+          </SettingsCard>
         </div>
+      )}
 
-        {/* Dynamic Targets Side Panel */}
-        <div className="md:col-span-1">
-          <div className="glass-card p-6 sticky top-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Beaker className="w-4 h-4 text-primary" />
-              <h2 className="font-medium text-primary">Inference Engine</h2>
-            </div>
-            <p className="text-xs text-muted-foreground mb-6">
-              Live computed nutrient targets based on ICMR-NIN 2024 and your active condition modifiers.
-            </p>
-
-            {isLoadingTargets ? (
-              <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-            ) : targets ? (
-              <div className="space-y-4">
-                {[
-                  { label: "Daily Calories", value: targets.energy_kcal, unit: "kcal" },
-                  { label: "Optimal Protein", value: targets.protein_g, unit: "g" },
-                  { label: "Fat Limit", value: targets.fat_g, unit: "g" },
-                  { label: "Iron Needs", value: targets.iron_mg, unit: "mg", hilight: true },
-                  { label: "Calcium", value: targets.calcium_mg, unit: "mg" },
-                  { label: "Fibre Minimum", value: targets.fibre_g, unit: "g" },
-                ].map((t, i) => (
-                  <div key={i} className="flex justify-between items-end border-b border-border/50 pb-2">
-                    <span className="text-sm text-foreground/80">{t.label}</span>
-                    <span className={`text-base font-semibold ${t.hilight ? 'text-primary' : ''}`}>
-                      {t.value ? Math.round(t.value) : 0}<span className="text-xs font-normal text-muted-foreground ml-0.5">{t.unit}</span>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center text-sm text-muted-foreground py-8">
-                Save your profile to compute targets.
-              </div>
-            )}
-          </div>
-        </div>
-
+      <div className="pt-8 border-t border-border flex justify-end">
+        <Button onClick={handleSave} disabled={isSaving} className="px-10 h-12 text-base rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
+          {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
+          Save Profile Changes
+        </Button>
       </div>
-    </div>
+    </SettingsLayout>
   );
 }

@@ -2,11 +2,116 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
+import { Loader2, TrendingUp, Info } from 'lucide-react';
 import { analysisApi } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
-import { TrendingUp, Zap, Leaf } from 'lucide-react';
+
+// SVG Donut Chart
+function DonutChart({ 
+  data, 
+  title,
+  colors = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6']
+}: { 
+  data: Array<{ label: string; value: number }>;
+  title: string;
+  colors?: string[];
+}) {
+  const total = data.reduce((sum, d) => sum + d.value, 0) || 1;
+  let offset = 0;
+  const circumference = 2 * Math.PI * 45;
+
+  const segments = data.map((d, i) => {
+    const percent = (d.value / total) * 100;
+    const segmentLength = (percent / 100) * circumference;
+    const nextOffset = offset + segmentLength;
+    const result = {
+      label: d.label,
+      value: d.value,
+      percent,
+      color: colors[i % colors.length],
+      offset,
+      segmentLength
+    };
+    offset = nextOffset;
+    return result;
+  });
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <svg width="150" height="150" viewBox="0 0 150 150" className="drop-shadow">
+        <circle cx="75" cy="75" r="45" fill="none" stroke="#e5e7eb" strokeWidth="8" />
+        {segments.map((seg, i) => (
+          <circle
+            key={i}
+            cx="75" cy="75" r="45"
+            fill="none"
+            stroke={seg.color}
+            strokeWidth="8"
+            strokeDasharray={seg.segmentLength} 
+            strokeDashoffset={seg.offset * -1}
+            strokeLinecap="round"
+          />
+        ))}
+        <circle cx="75" cy="75" r="28" fill="white" />
+        <text x="75" y="75" textAnchor="middle" dy="0.3em" className="text-xs font-bold" fill="#1f2937">
+          {title}
+        </text>
+      </svg>
+      <div className="flex flex-col gap-2 text-xs">
+        {data.map((d, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors[i % colors.length] }} />
+            <span>{d.label}: {d.value} ({((d.value / total) * 100).toFixed(0)}%)</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// CSS Bar Chart
+function BarChart({ 
+  data, 
+  title,
+  color = 'bg-green-500',
+  valueLabel = ''
+}: { 
+  data: Array<{ label: string; value: number }>;
+  title: string;
+  color?: string;
+  valueLabel?: string;
+}) {
+  const maxValue = Math.max(...data.map(d => d.value), 1);
+  
+  return (
+    <div>
+      <h3 className="font-semibold mb-4 text-sm">{title}</h3>
+      <div className="space-y-3">
+        {data.slice(0, 8).map((item) => {
+          const percent = (item.value / maxValue) * 100;
+          return (
+            <div key={item.label}>
+              <div className="flex justify-between mb-1">
+                <span className="text-xs font-medium">{item.label}</span>
+                <span className="text-xs text-slate-600">{item.value.toFixed(1)} {valueLabel}</span>
+              </div>
+              <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${color} transition-all duration-300`}
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function AnalysisPage() {
+  const { user } = useAuth();
   const [nutrientSummary, setNutrientSummary] = useState<any>(null);
   const [foodStats, setFoodStats] = useState<any>(null);
   const [vegNonvegStats, setVegNonvegStats] = useState<any>(null);
@@ -14,6 +119,8 @@ export default function AnalysisPage() {
   const [ironAnalysis, setIronAnalysis] = useState<any>(null);
   const [b12Analysis, setB12Analysis] = useState<any>(null);
   const [calorieDistribution, setCalorieDistribution] = useState<any>(null);
+  const [giDistribution, setGIDistribution] = useState<any>(null);
+  const [personalAnalysis, setPersonalAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,27 +130,39 @@ export default function AnalysisPage() {
   const loadAnalysisData = async () => {
     try {
       setLoading(true);
-      const [nutrientRes, foodGroupRes, vegNonvegRes, proteinRes, ironRes, b12Res, calorieRes] = 
-        await Promise.all([
-          analysisApi.getNutrientSummary(),
-          analysisApi.getFoodGroupStats(),
-          analysisApi.getVegNonvegStats(),
-          analysisApi.getTopProteinFoods(10),
-          analysisApi.getIronAnalysis(),
-          analysisApi.getB12Analysis(),
-          analysisApi.getCalorieDistribution(),
-        ]);
+      const [
+        summary, 
+        stats, 
+        veg, 
+        protein, 
+        iron, 
+        b12, 
+        calDist, 
+        giDist, 
+        personal
+      ] = await Promise.all([
+        analysisApi.getNutrientSummary(),
+        analysisApi.getFoodGroupStats(),
+        analysisApi.getVegNonvegStats(),
+        analysisApi.getTopProteinFoods(10),
+        analysisApi.getIronAnalysis(),
+        analysisApi.getB12Analysis(),
+        analysisApi.getCalorieDistribution(),
+        analysisApi.getGIDistribution().catch(() => ({})),
+        analysisApi.getPersonalAnalysis().catch(() => null),
+      ]);
 
-      setNutrientSummary(nutrientRes);
-      setFoodStats(foodGroupRes);
-      setVegNonvegStats(vegNonvegRes);
-      setProteinFoods(proteinRes.foods || []);
-      setIronAnalysis(ironRes);
-      setB12Analysis(b12Res);
-      setCalorieDistribution(calorieRes);
+      setNutrientSummary(summary);
+      setFoodStats(stats);
+      setVegNonvegStats(veg);
+      setProteinFoods(protein?.foods || []);
+      setIronAnalysis(iron);
+      setB12Analysis(b12);
+      setCalorieDistribution(calDist);
+      setGIDistribution(giDist);
+      setPersonalAnalysis(personal);
     } catch (error) {
       toast.error('Failed to load analysis data');
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -51,200 +170,165 @@ export default function AnalysisPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6 flex items-center justify-center">
-        <div className="text-white">Loading analysis...</div>
+      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background p-4 md:p-8">
+      <div className="max-w-7xl mx-auto pb-20 fade-in">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Nutrition Analytics</h1>
-          <p className="text-slate-400">Database insights and nutritional trends</p>
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Nutritional Intelligence</h1>
+          <p className="text-muted-foreground text-lg">Deep analysis of the IFCT database and your personal habits.</p>
         </div>
 
-        {/* Nutrient Summary Cards */}
-        {nutrientSummary && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white/10 backdrop-blur-xl rounded-lg p-6 border border-white/20">
-              <p className="text-slate-400 text-sm mb-2">Total Foods</p>
-              <p className="text-3xl font-bold text-white">{nutrientSummary.total_foods}</p>
+        {/* Personal Analysis Hook - ONLY IF LOGGED IN */}
+        {personalAnalysis?.has_data && (
+          <section className="mb-12">
+            <div className="flex items-center gap-2 mb-6">
+              <TrendingUp className="w-6 h-6 text-primary" />
+              <h2 className="text-xl font-semibold">Your Personalized Insights</h2>
             </div>
-            <div className="bg-white/10 backdrop-blur-xl rounded-lg p-6 border border-white/20">
-              <p className="text-slate-400 text-sm mb-2">Food Groups</p>
-              <p className="text-3xl font-bold text-white">{nutrientSummary.food_groups}</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-xl rounded-lg p-6 border border-white/20">
-              <p className="text-slate-400 text-sm mb-2">Avg Calories/100g</p>
-              <p className="text-3xl font-bold text-amber-400">{Math.round(nutrientSummary.avg_nutrients.calories)}</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-xl rounded-lg p-6 border border-white/20">
-              <p className="text-slate-400 text-sm mb-2">Avg Protein/100g</p>
-              <p className="text-3xl font-bold text-blue-400">{nutrientSummary.avg_nutrients.protein.toFixed(1)}</p>
-              <p className="text-xs text-slate-500 mt-1">g</p>
-            </div>
-          </div>
-        )}
-
-        {/* Calorie Distribution */}
-        {calorieDistribution && (
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 mb-8">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-amber-400" />
-              Caloric Density Distribution
-            </h2>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-gradient-to-br from-red-500/20 to-red-600/10 rounded-lg p-4 border border-red-500/30">
-                <p className="text-slate-300 text-sm mb-2">Low Calorie (&lt;100 kcal/100g)</p>
-                <p className="text-2xl font-bold text-red-300">{calorieDistribution.low_calorie}</p>
-              </div>
-              <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 rounded-lg p-4 border border-yellow-500/30">
-                <p className="text-slate-300 text-sm mb-2">Medium (100-300 kcal/100g)</p>
-                <p className="text-2xl font-bold text-yellow-300">{calorieDistribution.medium_calorie}</p>
-              </div>
-              <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-lg p-4 border border-orange-500/30">
-                <p className="text-slate-300 text-sm mb-2">High Calorie (&gt;300 kcal/100g)</p>
-                <p className="text-2xl font-bold text-orange-300">{calorieDistribution.high_calorie}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Veg vs NonVeg Comparison */}
-        {vegNonvegStats && (
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 mb-8">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <Leaf className="w-5 h-5 text-green-400" />
-              Vegetarian vs Non-Vegetarian
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-semibold text-green-300 mb-4">Vegetarian</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center px-4 py-2 bg-white/5 rounded">
-                    <span className="text-slate-300">Foods</span>
-                    <span className="text-white font-semibold">{vegNonvegStats.vegetarian.count}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2 bg-white/5 rounded">
-                    <span className="text-slate-300">Avg Calories</span>
-                    <span className="text-amber-400 font-semibold">{Math.round(vegNonvegStats.vegetarian.avg_calories)}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2 bg-white/5 rounded">
-                    <span className="text-slate-300">Avg Protein</span>
-                    <span className="text-blue-400 font-semibold">{vegNonvegStats.vegetarian.avg_protein.toFixed(1)}g</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2 bg-white/5 rounded">
-                    <span className="text-slate-300">Avg Iron</span>
-                    <span className="text-red-400 font-semibold">{vegNonvegStats.vegetarian.avg_iron.toFixed(2)}mg</span>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="p-6 md:col-span-2 glass-card border-primary/20">
+                <h3 className="font-medium mb-4 flex items-center gap-2">
+                  <Info className="w-4 h-4 text-primary" />
+                  Weekly Observation
+                </h3>
+                <ul className="space-y-3">
+                  {personalAnalysis.insights.map((insight: string, idx: number) => (
+                    <li key={idx} className="flex gap-3 text-sm text-foreground/80">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                      {insight}
+                    </li>
+                  ))}
+                  {personalAnalysis.insights.length === 0 && (
+                    <li className="text-sm text-muted-foreground">Your intake is well-aligned with RDA targets for this period.</li>
+                  )}
+                </ul>
+              </Card>
+              <Card className="p-6 glass-card border-none bg-primary/5">
+                <p className="text-sm font-medium text-primary mb-1 text-center">Avg. Weekly Energy</p>
+                <div className="text-4xl font-bold text-center py-4 border-b border-primary/10 mb-4">
+                  {Math.round(personalAnalysis.avg_nutrients.calories)} <span className="text-sm font-normal">kcal</span>
                 </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-orange-300 mb-4">Non-Vegetarian</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center px-4 py-2 bg-white/5 rounded">
-                    <span className="text-slate-300">Foods</span>
-                    <span className="text-white font-semibold">{vegNonvegStats.non_vegetarian.count}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2 bg-white/5 rounded">
-                    <span className="text-slate-300">Avg Calories</span>
-                    <span className="text-amber-400 font-semibold">{Math.round(vegNonvegStats.non_vegetarian.avg_calories)}</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2 bg-white/5 rounded">
-                    <span className="text-slate-300">Avg Protein</span>
-                    <span className="text-blue-400 font-semibold">{vegNonvegStats.non_vegetarian.avg_protein.toFixed(1)}g</span>
-                  </div>
-                  <div className="flex justify-between items-center px-4 py-2 bg-white/5 rounded">
-                    <span className="text-slate-300">Avg Iron</span>
-                    <span className="text-red-400 font-semibold">{vegNonvegStats.non_vegetarian.avg_iron.toFixed(2)}mg</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Top Protein Foods */}
-        {proteinFoods.length > 0 && (
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 mb-8">
-            <h2 className="text-xl font-bold text-white mb-6">Top Protein Sources</h2>
-            <div className="space-y-2">
-              {proteinFoods.slice(0, 5).map((food: any, idx: number) => (
-                <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition">
+                <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
-                    <p className="text-white font-medium">{food['Food Name']}</p>
-                    <p className="text-xs text-slate-400">{food['Food Group']}</p>
+                    <p className="text-[10px] uppercase text-muted-foreground">Protein</p>
+                    <p className="font-bold">{personalAnalysis.avg_nutrients.protein.toFixed(1)}g</p>
                   </div>
-                  <span className="text-blue-400 font-bold">{food['Protein (g)']?.toFixed(1) || '0'}g</span>
+                  <div>
+                    <p className="text-[10px] uppercase text-muted-foreground">Iron</p>
+                    <p className="font-bold">{personalAnalysis.avg_nutrients.iron.toFixed(1)}mg</p>
+                  </div>
                 </div>
-              ))}
+              </Card>
             </div>
-          </div>
+          </section>
         )}
 
-        {/* Iron Analysis */}
-        {ironAnalysis && (
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 mb-8">
-            <h2 className="text-xl font-bold text-white mb-6">Iron Analysis (India's #1 Deficiency)</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className="bg-gradient-to-br from-red-500/20 to-red-600/10 rounded-lg p-4 border border-red-500/30">
-                <p className="text-slate-300 mb-2">Vegetarian Avg Iron</p>
-                <p className="text-2xl font-bold text-red-300">{ironAnalysis.vegetarian_iron.mean?.toFixed(2) || '0'}mg</p>
-              </div>
-              <div className="bg-gradient-to-br from-red-600/20 to-red-700/10 rounded-lg p-4 border border-red-600/30">
-                <p className="text-slate-300 mb-2">Non-Veg Avg Iron</p>
-                <p className="text-2xl font-bold text-red-200">{ironAnalysis.non_vegetarian_iron.mean?.toFixed(2) || '0'}mg</p>
-              </div>
-            </div>
-            {ironAnalysis.top_iron_sources && (
-              <div>
-                <p className="text-slate-300 text-sm mb-3">Top Iron Sources:</p>
-                <div className="space-y-2">
-                  {ironAnalysis.top_iron_sources.map((food: any, idx: number) => (
-                    <div key={idx} className="flex justify-between items-center p-2 bg-white/5 rounded text-sm">
-                      <span className="text-slate-300">{food['Food Name']}</span>
-                      <span className="text-red-400 font-bold">{food['Iron (mg)']?.toFixed(2) || '0'}mg</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+        {/* Database Stats Toggle */}
+        <section className="space-y-8">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-1.5 h-6 bg-primary rounded-full" />
+            <h2 className="text-xl font-semibold">Database Landscape</h2>
           </div>
-        )}
 
-        {/* B12 Analysis */}
-        {b12Analysis && (
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
-            <h2 className="text-xl font-bold text-white mb-6">Vitamin B12 Analysis (Vegetarian Crisis)</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/10 rounded-lg p-4 border border-purple-500/30">
-                <p className="text-slate-300 mb-2">Veg Foods with B12</p>
-                <p className="text-2xl font-bold text-purple-300">{b12Analysis.veg_with_b12}</p>
-              </div>
-              <div className="bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 rounded-lg p-4 border border-cyan-500/30">
-                <p className="text-slate-300 mb-2">Avg B12 (Veg)</p>
-                <p className="text-2xl font-bold text-cyan-300">{b12Analysis.veg_avg_b12?.toFixed(2) || '0'}mcg</p>
-              </div>
+          {/* Key Stats */}
+          {nutrientSummary && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <Card className="p-6 glass-card transition-all hover:border-primary/50">
+                <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Total Foods</p>
+                <p className="text-3xl font-bold text-primary">{nutrientSummary.total_foods}</p>
+              </Card>
+              <Card className="p-6 glass-card">
+                <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Avg. Protein</p>
+                <p className="text-3xl font-bold text-chart-1">{(nutrientSummary.avg_nutrients?.protein || 0).toFixed(1)}g</p>
+              </Card>
+              <Card className="p-6 glass-card">
+                <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Avg. Iron</p>
+                <p className="text-3xl font-bold text-chart-4">{(nutrientSummary.avg_nutrients?.iron || 0).toFixed(1)}mg</p>
+              </Card>
+              <Card className="p-6 glass-card">
+                <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Avg. Calcium</p>
+                <p className="text-3xl font-bold text-chart-3">{Math.round(nutrientSummary.avg_nutrients?.calcium || 0)}mg</p>
+              </Card>
             </div>
-            {b12Analysis.top_sources && (
-              <div>
-                <p className="text-slate-300 text-sm mb-3">Top B12 Sources:</p>
-                <div className="space-y-2">
-                  {b12Analysis.top_sources.map((food: any, idx: number) => (
-                    <div key={idx} className="flex justify-between items-center p-2 bg-white/5 rounded text-sm">
-                      <span className="text-slate-300">{food['Food Name']}</span>
-                      <span className="text-purple-400 font-bold">{food['Vit B12 (mcg)']?.toFixed(2) || '0'}mcg</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+          )}
+
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {vegNonvegStats && (
+              <Card className="p-8 glass-card">
+                <DonutChart
+                  title="Diet Type"
+                  data={[
+                    { label: 'Veg', value: vegNonvegStats.vegetarian?.count || 0 },
+                    { label: 'Non-Veg', value: vegNonvegStats.non_vegetarian?.count || 0 }
+                  ]}
+                  colors={['#10b981', '#f59e0b']}
+                />
+              </Card>
+            )}
+            {calorieDistribution && (
+              <Card className="p-8 glass-card">
+                <DonutChart
+                  title="Calorie Density"
+                  data={[
+                    { label: 'Low', value: calorieDistribution.low_calorie || 0 },
+                    { label: 'Med', value: calorieDistribution.medium_calorie || 0 },
+                    { label: 'High', value: calorieDistribution.high_calorie || 0 }
+                  ]}
+                />
+              </Card>
+            )}
+            {giDistribution && (
+              <Card className="p-8 glass-card">
+                <DonutChart
+                  title="Glycemic Index"
+                  data={[
+                    { label: 'Low GI', value: giDistribution.low_gi || 0 },
+                    { label: 'Med GI', value: giDistribution.medium_gi || 0 },
+                    { label: 'High GI', value: giDistribution.high_gi || 0 }
+                  ]}
+                />
+              </Card>
             )}
           </div>
-        )}
+
+          {/* Leaderboards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20">
+            {proteinFoods.length > 0 && (
+              <Card className="p-8 glass-card">
+                <BarChart
+                  title="Top Protein Sources (per 100g)"
+                  data={proteinFoods.map((f: any) => ({
+                    label: f['Food Name'] || f.name,
+                    value: f['Protein (g)'] || f.protein
+                  }))}
+                  color="bg-primary"
+                  valueLabel="g"
+                />
+              </Card>
+            )}
+            {ironAnalysis?.top_iron_sources && (
+              <Card className="p-8 glass-card">
+                <BarChart
+                  title="Top Iron Sources (per 100g)"
+                  data={ironAnalysis.top_iron_sources.map((f: any) => ({
+                    label: f['Food Name'] || f.name,
+                    value: f['Iron (mg)'] || f.iron
+                  }))}
+                  color="bg-chart-4"
+                  valueLabel="mg"
+                />
+              </Card>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );
