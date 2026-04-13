@@ -130,24 +130,32 @@ class RAGService:
 
         return "\n".join(parts)
 
-    async def chat(self, query: str, user_profile: Optional[dict] = None) -> dict:
-        """Full RAG pipeline: retrieve → augment → generate."""
+    async def chat(self, query: str, user_profile: Optional[dict] = None, history: Optional[list] = None) -> dict:
+        """Full RAG pipeline with conversation memory."""
         # 1. Retrieve relevant chunks
         chunks = self.retrieve(query)
 
         # 2. Build augmented prompt
         context = self._build_context(chunks)
         user_ctx = self._build_user_context(user_profile)
+        
+        # Format chat history
+        history_str = ""
+        if history:
+            history_parts = ["CONVERSATION HISTORY:"]
+            for h in history[-5:]: # Last 5 turns for context
+                history_parts.append(f"USER: {h.get('user_message')}\nASSISTANT: {h.get('assistant_message')}")
+            history_str = "\n".join(history_parts) + "\n\n"
 
         prompt = f"""{user_ctx}
 
-RETRIEVED KNOWLEDGE (from IFCT 2017 database + ICMR-NIN 2024 RDA):
+{history_str}RETRIEVED KNOWLEDGE (from IFCT 2017 database + ICMR-NIN 2024 RDA):
 {context}
 
 USER QUESTION:
 {query}
 
-Please provide a detailed, evidence-based answer using the retrieved knowledge above. Cite sources."""
+Please provide a detailed, evidence-based answer using the retrieved knowledge above. Cite sources. If the user is following up on a previous question, use the conversation history context."""
 
         # 3. Generate response
         response_text, provider = await self.llm_router.generate(

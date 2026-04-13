@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, Bot, User as UserIcon, Sparkles } from "lucide-react";
+import { Send, Bot, User as UserIcon, Sparkles, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth-context";
 import { chatApi } from "@/lib/api";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   role: "user" | "assistant";
@@ -20,26 +20,53 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const scrollEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Load history
     chatApi.history().then((data: any) => {
       if (data.messages && data.messages.length > 0) {
-        setMessages(data.messages);
+        // Transform backend shape {user_message, assistant_message} → {role, content}
+        const transformed: Message[] = [];
+        for (const m of data.messages) {
+          if (m.user_message) {
+            transformed.push({ role: "user", content: m.user_message });
+          }
+          if (m.assistant_message) {
+            transformed.push({
+              role: "assistant",
+              content: m.assistant_message,
+              sources: m.sources || [],
+            });
+          }
+        }
+        if (transformed.length > 0) {
+          setMessages(transformed);
+          setSessionId(data.messages[0].session_id || null);
+        } else {
+          setMessages([{
+            role: "assistant",
+            content: "Hello! I'm your IFCT-grounded nutrition assistant. Ask me about Indian foods, nutrients, or meal ideas."
+          }]);
+        }
       } else {
         setMessages([{
           role: "assistant",
-          content: "Hello! I'm your IFCT-grounded nutrition assistant. How can I help you today?"
+          content: "Hello! I'm your IFCT-grounded nutrition assistant. Ask me about Indian foods, nutrients, or meal ideas."
         }]);
       }
-    }).catch(console.error);
+    }).catch(() => {
+      setMessages([{
+        role: "assistant",
+        content: "Hello! I'm your IFCT-grounded nutrition assistant. Ask me about Indian foods, nutrients, or meal ideas."
+      }]);
+    });
   }, []);
 
+  // Auto-scroll to bottom
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    scrollEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
   const handleSend = async (e: React.FormEvent) => {
@@ -47,12 +74,15 @@ export default function ChatPage() {
     if (!input.trim() || isLoading) return;
 
     const userMsg = input.trim();
+    const currentSessionId = sessionId;
     setInput("");
     setMessages(prev => [...prev, { role: "user", content: userMsg }]);
     setIsLoading(true);
 
     try {
-      const res = await chatApi.send(userMsg, user?.profile);
+      const res: any = await chatApi.send(userMsg, user?.profile, currentSessionId || undefined);
+      if (res.session_id) setSessionId(res.session_id);
+      
       setMessages(prev => [...prev, {
         role: "assistant",
         content: res.answer,
@@ -61,27 +91,45 @@ export default function ChatPage() {
     } catch (err) {
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: "Sorry, I encountered an error processing your request."
+        content: "Sorry, I encountered an error processing your request. Please try again."
       }]);
     } finally {
       setIsLoading(false);
+      // Refocus input after response
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
 
+  const handleNewChat = () => {
+    setMessages([{
+      role: "assistant",
+      content: "Hello! I'm your IFCT-grounded nutrition assistant. Ask me about Indian foods, nutrients, or meal ideas."
+    }]);
+    setInput("");
+    inputRef.current?.focus();
+  };
+
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] md:h-screen lg:max-w-4xl mx-auto p-4 md:p-8 fade-in">
-      <header className="mb-6 flex items-center gap-3">
-        <div className="p-2.5 rounded-lg bg-primary/10">
-          <Sparkles className="w-5 h-5 text-primary" />
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] md:h-screen max-w-4xl mx-auto p-4 md:p-8 fade-in">
+      <header className="mb-4 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-lg bg-primary/10">
+            <Sparkles className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold">Knowledge Chat</h1>
+            <p className="text-sm text-muted-foreground">Answers grounded in Indian Food Composition Tables</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-semibold">Knowledge Chat</h1>
-          <p className="text-sm text-muted-foreground">Answers grounded in Indian Food Composition Tables</p>
-        </div>
+        <Button variant="outline" size="sm" onClick={handleNewChat} className="gap-2">
+          <RotateCcw className="w-3.5 h-3.5" />
+          New Chat
+        </Button>
       </header>
 
       <div className="flex-1 glass-card overflow-hidden flex flex-col mb-4">
-        <ScrollArea className="flex-1 p-4 md:p-6" ref={scrollRef}>
+        {/* Messages area — plain div for reliable scrolling */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="space-y-6">
             {messages.map((msg, i) => (
               <div key={i} className={`flex gap-4 ${msg.role === "user" ? "justify-end" : ""}`}>
@@ -95,12 +143,12 @@ export default function ChatPage() {
                   <div className={`p-4 rounded-2xl ${
                     msg.role === "user" 
                       ? "bg-primary text-primary-foreground rounded-tr-sm" 
-                      : "bg-muted/50 rounded-tl-sm text-foreground prose prose-sm dark:prose-invert max-w-none"
+                      : "bg-muted/50 rounded-tl-sm text-foreground prose prose-sm dark:prose-invert max-w-none break-words"
                   }`}>
                     {msg.role === "user" ? (
                       msg.content
                     ) : (
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                     )}
                   </div>
                   
@@ -137,12 +185,15 @@ export default function ChatPage() {
                 </div>
               </div>
             )}
+            {/* Scroll anchor */}
+            <div ref={scrollEndRef} />
           </div>
-        </ScrollArea>
+        </div>
 
-        <div className="p-4 bg-background/50 border-t border-border">
+        <div className="p-4 bg-background/50 border-t border-border mt-auto">
           <form onSubmit={handleSend} className="relative flex items-center">
             <Input
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about protein sources, specific diseases, or meal ideas..."

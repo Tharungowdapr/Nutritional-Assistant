@@ -83,83 +83,72 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6 flex items-center justify-center">
-        <div className="text-white">Loading admin dashboard...</div>
+      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+        <div className="text-muted-foreground">Loading admin dashboard...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
-          <p className="text-slate-400">System statistics and user management</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
+          <p className="text-muted-foreground">System statistics and user management</p>
         </div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <div className="bg-white/10 backdrop-blur-xl rounded-lg p-6 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Total Users</p>
-                <p className="text-3xl font-bold text-white mt-2">{stats?.total_users || 0}</p>
-              </div>
-              <Users className="w-8 h-8 text-blue-400 opacity-50" />
+          <div className="bg-card rounded-lg p-6 border border-border flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-sm">Total Users</p>
+              <p className="text-3xl font-bold text-foreground mt-2">{stats?.total_users || 0}</p>
             </div>
+            <Users className="w-8 h-8 text-primary opacity-50" />
           </div>
 
-          <div className="bg-white/10 backdrop-blur-xl rounded-lg p-6 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Active (24h)</p>
-                <p className="text-3xl font-bold text-white mt-2">{stats?.active_users_24h || 0}</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-green-400 opacity-50" />
+          <div className="bg-card rounded-lg p-6 border border-border flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-sm">Active (24h)</p>
+              <p className="text-3xl font-bold text-foreground mt-2">{stats?.active_users_24h || 0}</p>
             </div>
+            <TrendingUp className="w-8 h-8 text-chart-2 opacity-50" />
           </div>
 
-          <div className="bg-white/10 backdrop-blur-xl rounded-lg p-6 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Total Chats</p>
-                <p className="text-3xl font-bold text-white mt-2">{stats?.total_chats || 0}</p>
-              </div>
-              <MessageSquare className="w-8 h-8 text-purple-400 opacity-50" />
+          <div className="bg-card rounded-lg p-6 border border-border flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-sm">Total Chats</p>
+              <p className="text-3xl font-bold text-foreground mt-2">{stats?.total_chats || 0}</p>
             </div>
+            <MessageSquare className="w-8 h-8 text-chart-4 opacity-50" />
           </div>
 
-          <div className="bg-white/10 backdrop-blur-xl rounded-lg p-6 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Chats (24h)</p>
-                <p className="text-3xl font-bold text-white mt-2">{stats?.chats_24h || 0}</p>
-              </div>
-              <MessageSquare className="w-8 h-8 text-amber-400 opacity-50" />
+          <div className="bg-card rounded-lg p-6 border border-border flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-sm">Chats (24h)</p>
+              <p className="text-3xl font-bold text-foreground mt-2">{stats?.chats_24h || 0}</p>
             </div>
+            <MessageSquare className="w-8 h-8 text-chart-5 opacity-50" />
           </div>
 
-          <div className="bg-white/10 backdrop-blur-xl rounded-lg p-6 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Avg Chats/User</p>
-                <p className="text-3xl font-bold text-white mt-2">{usageStats?.avg_chats_per_user.toFixed(1) || 0}</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-cyan-400 opacity-50" />
+          <div className="bg-card rounded-lg p-6 border border-border flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-sm">Avg Chats/User</p>
+              <p className="text-3xl font-bold text-foreground mt-2">{usageStats?.avg_chats_per_user.toFixed(1) || 0}</p>
             </div>
+            <TrendingUp className="w-8 h-8 text-chart-1 opacity-50" />
           </div>
         </div>
 
-        {/* Top Active Users */}
         {usageStats && usageStats.top_active_users.length > 0 && (
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 mb-8">
-            <h2 className="text-xl font-bold text-white mb-4">Top Active Users</h2>
+          <div className="bg-card rounded-2xl p-6 border border-border mb-8">
+            <h2 className="text-xl font-bold text-foreground mb-4">Top Active Users</h2>
             <div className="space-y-3">
               {usageStats.top_active_users.map((user, idx) => (
                 <div key={idx} className="flex items-center justify-between py-2">
-                  <span className="text-white font-medium">{user.name}</span>
-                  <span className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm">
+                  <span className="text-foreground font-medium">{user.name}</span>
+                  <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
                     {user.chats} chats
                   </span>
                 </div>
@@ -168,42 +157,41 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Users Table */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
-          <h2 className="text-xl font-bold text-white mb-4">Users Management</h2>
+        <div className="bg-card rounded-2xl p-6 border border-border">
+          <h2 className="text-xl font-bold text-foreground mb-4">Users Management</h2>
           
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-white/10">
+              <thead className="border-b border-border">
                 <tr>
-                  <th className="px-4 py-3 text-left text-slate-300">Name</th>
-                  <th className="px-4 py-3 text-left text-slate-300">Email</th>
-                  <th className="px-4 py-3 text-center text-slate-300">Admin</th>
-                  <th className="px-4 py-3 text-center text-slate-300">Verified</th>
-                  <th className="px-4 py-3 text-left text-slate-300">Last Login</th>
-                  <th className="px-4 py-3 text-center text-slate-300">Actions</th>
+                  <th className="px-4 py-3 text-left text-muted-foreground">Name</th>
+                  <th className="px-4 py-3 text-left text-muted-foreground">Email</th>
+                  <th className="px-4 py-3 text-center text-muted-foreground">Admin</th>
+                  <th className="px-4 py-3 text-center text-muted-foreground">Verified</th>
+                  <th className="px-4 py-3 text-left text-muted-foreground">Last Login</th>
+                  <th className="px-4 py-3 text-center text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr key={user.id} className="border-b border-white/5 hover:bg-white/5">
-                    <td className="px-4 py-3 text-white font-medium">{user.name}</td>
-                    <td className="px-4 py-3 text-slate-300">{user.email}</td>
+                  <tr key={user.id} className="border-b border-border hover:bg-muted/50">
+                    <td className="px-4 py-3 text-foreground font-medium">{user.name}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
                     <td className="px-4 py-3 text-center">
                       {user.is_admin ? (
-                        <span className="bg-red-500/20 text-red-300 px-2 py-1 rounded text-xs">Admin</span>
+                        <span className="bg-destructive/10 text-destructive px-2 py-1 rounded text-xs">Admin</span>
                       ) : (
-                        <span className="bg-slate-500/20 text-slate-300 px-2 py-1 rounded text-xs">User</span>
+                        <span className="bg-muted text-muted-foreground px-2 py-1 rounded text-xs">User</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       {user.email_verified ? (
-                        <span className="text-green-400">✓</span>
+                        <span className="text-chart-2">✓</span>
                       ) : (
-                        <span className="text-red-400">✗</span>
+                        <span className="text-destructive">✗</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-300">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {user.last_login_at ? new Date(user.last_login_at).toLocaleDateString() : 'Never'}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -258,29 +246,29 @@ export default function AdminPage() {
       {/* User Detail Modal */}
       {showUserDetail && selectedUser && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-900 rounded-2xl p-8 max-w-2xl w-full mx-4">
-            <h2 className="text-2xl font-bold text-white mb-6">User Details</h2>
+          <div className="bg-card border border-border rounded-2xl p-8 max-w-2xl w-full mx-4">
+            <h2 className="text-2xl font-bold text-foreground mb-6">User Details</h2>
             
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <p className="text-xs text-slate-400 mb-1">Name</p>
-                <p className="text-lg font-bold text-white">{selectedUser.name}</p>
+              <div className="bg-muted/50 rounded-lg p-4 border border-border">
+                <p className="text-xs text-muted-foreground mb-1">Name</p>
+                <p className="text-lg font-bold text-foreground">{selectedUser.name}</p>
               </div>
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <p className="text-xs text-slate-400 mb-1">Email</p>
-                <p className="text-lg font-bold text-white">{selectedUser.email}</p>
+              <div className="bg-muted/50 rounded-lg p-4 border border-border">
+                <p className="text-xs text-muted-foreground mb-1">Email</p>
+                <p className="text-lg font-bold text-foreground">{selectedUser.email}</p>
               </div>
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <p className="text-xs text-slate-400 mb-1">Admin Status</p>
-                <p className="text-lg font-bold text-white">{selectedUser.is_admin ? 'Yes' : 'No'}</p>
+              <div className="bg-muted/50 rounded-lg p-4 border border-border">
+                <p className="text-xs text-muted-foreground mb-1">Admin Status</p>
+                <p className="text-lg font-bold text-foreground">{selectedUser.is_admin ? 'Yes' : 'No'}</p>
               </div>
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <p className="text-xs text-slate-400 mb-1">Email Verified</p>
-                <p className="text-lg font-bold text-white">{selectedUser.email_verified ? 'Yes' : 'No'}</p>
+              <div className="bg-muted/50 rounded-lg p-4 border border-border">
+                <p className="text-xs text-muted-foreground mb-1">Email Verified</p>
+                <p className="text-lg font-bold text-foreground">{selectedUser.email_verified ? 'Yes' : 'No'}</p>
               </div>
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10 col-span-2">
-                <p className="text-xs text-slate-400 mb-1">Created</p>
-                <p className="text-lg font-bold text-white">{new Date(selectedUser.created_at).toLocaleDateString()}</p>
+              <div className="bg-muted/50 rounded-lg p-4 border border-border col-span-2">
+                <p className="text-xs text-muted-foreground mb-1">Created</p>
+                <p className="text-lg font-bold text-foreground">{new Date(selectedUser.created_at).toLocaleDateString()}</p>
               </div>
             </div>
 

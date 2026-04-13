@@ -1,9 +1,9 @@
-"""
-AaharAI NutriSync — API Routes: Analysis
-Data analysis and insights endpoints for nutrition trends.
-"""
-from fastapi import APIRouter
+from datetime import datetime, timedelta
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 from database.loader import db
+from auth.database import get_db, DailyLogDB
+from auth.dependencies import get_current_user
 
 router = APIRouter(prefix="/api/analysis", tags=["Analysis"])
 
@@ -152,3 +152,153 @@ async def get_nutrient_summary():
             "calcium": (db.food["Calcium (mg)"].mean() or 0),
         }
     }
+
+@router.get("/personal")
+async def get_personal_analysis(
+    user=Depends(get_current_user),
+    db_session: Session = Depends(get_db),
+):
+    """Deep dive analysis of the user's logged food vs RDA targets."""
+    if user is None:
+        return {"error": "Not logged in"}
+    
+    # Fetch last 14 days of logs
+    two_weeks_ago = (datetime.utcnow() - timedelta(days=14)).strftime("%Y-%m-%d")
+    
+    logs = (
+        db_session.query(DailyLogDB)
+        .filter(DailyLogDB.user_id == user.id)
+        .filter(DailyLogDB.log_date >= two_weeks_ago)
+        .all()
+    )
+    
+    if not logs:
+        return {"has_data": False, "message": "Log some meals to see your personalized analysis."}
+
+    # Aggregate by date
+    daily_stats = {}
+    for log in logs:
+        date = log.log_date
+        if date not in daily_stats:
+            daily_stats[date] = {"calories": 0, "protein": 0, "iron": 0, "fat": 0, "carbs": 0}
+        
+        daily_stats[date]["calories"] += log.calories or 0
+        daily_stats[date]["protein"] += log.protein_g or 0
+        daily_stats[date]["iron"] += log.iron_mg or 0
+        daily_stats[date]["fat"] += log.fat_g or 0
+        daily_stats[date]["carbs"] += log.carbs_g or 0
+
+    # Calculate averages
+    days_logged = len(daily_stats)
+    avg_nutrients = {
+        "calories": sum(d["calories"] for d in daily_stats.values()) / days_logged,
+        "protein": sum(d["protein"] for d in daily_stats.values()) / days_logged,
+        "iron": sum(d["iron"] for d in daily_stats.values()) / days_logged,
+        "fat": sum(d["fat"] for d in daily_stats.values()) / days_logged,
+        "carbs": sum(d["carbs"] for d in daily_stats.values()) / days_logged,
+    }
+
+    # Compare with RDA (Simplified logic for now)
+    profile = user.profile
+    
+    # Insights generation
+    insights = []
+    if avg_nutrients["protein"] < 50:
+        insights.append("Your protein intake is consistently below the 60g RDA. Try adding more pulses or dairy.")
+    if avg_nutrients["iron"] < 15:
+        insights.append("Iron levels are low. Consider green leafy vegetables or iron-fortified cereals.")
+    if avg_nutrients["calories"] > 2500:
+        insights.append("Energy intake is high relative to average requirements. Monitor portion sizes.")
+
+    return {
+        "has_data": True,
+        "avg_nutrients": avg_nutrients,
+        "days_logged": days_logged,
+        "daily_history": [
+            {"date": d, **v} for d, v in sorted(daily_stats.items())
+        ],
+        "insights": insights
+    }
+
+@router.get("/intelligence")
+async def get_database_intelligence():
+    """Get summarized intelligence from all 12 sheets for home page display."""
+    try:
+        if getattr(db, 'food', None) is None:
+            return {"error": "Database not loaded"}
+        
+        # Helper to get nunique safely
+        def get_nunique(df, col):
+            return df[col].nunique() if col in df.columns else 0
+
+        # 1. Food Stats
+        food_stats = {
+            "total": len(db.food),
+            "groups": get_nunique(db.food, "Food Group"),
+            "diet_types": db.food["Diet Type"].unique().tolist() if "Diet Type" in db.food.columns else []
+        }
+        
+        # 2. RDA Insight
+        rda_insight = {
+            "profiles": len(db.rda) if hasattr(db, 'rda') else 0,
+            "sample": db.rda["Profile"].iloc[0] if hasattr(db, 'rda') and not db.rda.empty else "N/A"
+        }
+        
+        # 3. Disease Insight
+        disease_insight = {
+            "conditions_count": get_nunique(db.disease, "Condition") if hasattr(db, 'disease') else 0,
+            "top_conditions": db.disease["Condition"].value_counts().head(3).index.tolist() if hasattr(db, 'disease') and "Condition" in db.disease.columns else []
+        }
+        
+        # 4. Regional Insight
+        regional_insight = {
+            "zones": get_nunique(db.region, "Zone") if hasattr(db, 'region') else 0,
+            "states": get_nunique(db.region, "State/UT") if hasattr(db, 'region') else 0
+        }
+        
+        # 5. Medicine Insight
+        medicine_insight = {
+            "interactions": len(db.medicine) if hasattr(db, 'medicine') else 0,
+            "sample_medicine": db.medicine["Brand Name (India)"].iloc[0] if hasattr(db, 'medicine') and not db.medicine.empty and "Brand Name (India)" in db.medicine.columns else "N/A"
+        }
+    
+        # 6. Profession Insight
+        prof_val = 0
+        if hasattr(db, 'profession') and not db.profession.empty and "Male Kcal/day (65kg ref)" in db.profession.columns:
+            try:
+                prof_val = abs(db.profession["Male Kcal/day (65kg ref)"].max() - db.profession["Male Kcal/day (65kg ref)"].min())
+            except:
+                pass
+
+        prof_insight = {
+            "categories": len(db.profession) if hasattr(db, 'profession') else 0,
+            "diff_kcal": float(prof_val)
+        }
+    
+        # 7. Life Stages / Physio
+        life_insight = len(db.lifestage) if hasattr(db, 'lifestage') else 0
+        physio_insight = len(db.physio) if hasattr(db, 'physio') else 0
+    
+        return {
+            "food": food_stats,
+            "rda": rda_insight,
+            "disease": disease_insight,
+            "region": regional_insight,
+            "medicine": medicine_insight,
+            "profession": prof_insight,
+            "life_stages": life_insight,
+            "physio_states": physio_insight
+        }
+    except Exception as e:
+        # Fallback to empty intel to avoid 500
+        return {
+            "error": str(e),
+            "food": {"total": 0, "groups": 0, "diet_types": []},
+            "rda": {"profiles": 0, "sample": "N/A"},
+            "disease": {"conditions_count": 0, "top_conditions": []},
+            "region": {"zones": 0, "states": 0},
+            "medicine": {"interactions": 0, "sample_medicine": "N/A"},
+            "profession": {"categories": 0, "diff_kcal": 0},
+            "life_stages": 0,
+            "physio_states": 0
+        }

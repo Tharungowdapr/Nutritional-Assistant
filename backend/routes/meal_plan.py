@@ -97,14 +97,12 @@ async def generate_grocery_list(request: GroceryRequest):
 
 @router.post("/recipe")
 async def generate_recipe(request: RecipeRequest):
-    """Generate a detailed recipe from ingredients."""
+    """Generate a detailed recipe from instructions."""
     from main import get_meal_agent
     agent = get_meal_agent()
     if agent is None:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Meal agent unavailable")
     result = await agent.generate_recipe(
-        meal_name=request.meal_name,
-        ingredients=request.ingredients,
-        servings=request.servings,
+        instructions=request.instructions
     )
     return result

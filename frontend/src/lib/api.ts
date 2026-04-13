@@ -140,6 +140,7 @@ export const nutritionApi = {
     query = "",
     dietType?: string,
     foodGroup?: string,
+    region?: string,
     page = 1,
     limit = 20,
     sortBy = "Food Name",
@@ -149,6 +150,7 @@ export const nutritionApi = {
     if (query) params.set("query", query);
     if (dietType) params.set("diet_type", dietType);
     if (foodGroup) params.set("food_group", foodGroup);
+    if (region) params.set("region", region);
     params.set("page", String(page));
     params.set("limit", String(limit));
     params.set("sort_by", sortBy);
@@ -185,7 +187,7 @@ export const mealPlanApi = {
       body: JSON.stringify({ meal_plan_text: mealPlanText, days }),
     }),
 
-  recipe: (data: { meal_name: string; ingredients: string[]; servings?: number }) =>
+  recipe: (data: { instructions: string }) =>
     apiFetch("/api/meal-plan/recipe", { method: "POST", body: JSON.stringify(data) }),
 };
 
@@ -221,7 +223,7 @@ export const trackerApi = {
   getDailySummary: (logDate: string) =>
     apiFetch(`/api/tracker/daily/${logDate}`),
 
-  getWeeklySummary: () => apiFetch("/api/tracker/weekly"),
+  getSummary: (days = 7) => apiFetch(`/api/tracker/summary?days=${days}`),
 
   deleteLog: (logId: number) =>
     apiFetch(`/api/tracker/logs/${logId}`, { method: "DELETE" }),
@@ -244,4 +246,6 @@ export const analysisApi = {
   getCalorieDistribution: () => apiFetch("/api/analysis/calorie-distribution"),
 
   getNutrientSummary: () => apiFetch("/api/analysis/nutrient-summary"),
+  getPersonalAnalysis: () => apiFetch("/api/analysis/personal"),
+  getIntelligence: () => apiFetch("/api/analysis/intelligence"),
 };

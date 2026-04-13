@@ -1,50 +1,50 @@
 "use client";
 
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, Lock, Palette, ShieldCheck, Settings2, Loader2, Sun, Moon, Monitor, Globe, Download, Save, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth-context";
+import { authApi } from "@/lib/api";
 import { toast } from "sonner";
-import { Lock, Bell, Eye, EyeOff, AlertCircle, Loader2, Moon, Sun, Settings2 } from "lucide-react";
-import Link from "next/link";
+import { useTheme } from "next-themes";
+import { SettingsLayout, SettingsCard } from "@/components/settings-layout";
+import { cn } from "@/lib/utils";
 
-export default function SettingsPage() {
+const SIDEBAR_ITEMS = [
+  { id: "account", label: "Account", icon: User },
+  { id: "security", label: "Security", icon: Lock },
+  { id: "preferences", label: "Preferences", icon: Palette },
+  { id: "privacy", label: "Privacy & Data", icon: ShieldCheck },
+];
+
+const LANGUAGES = [
+  { code: "en", name: "English" },
+  { code: "hi", name: "हिंदी" },
+  { code: "ta", name: "தமிழ்" },
+  { code: "te", name: "తెలుగు" },
+  { code: "bn", name: "বাংলা" },
+  { code: "mr", name: "मराठी" },
+];
+
+export default function RebuiltSettingsPage() {
   const { user, updateProfile } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState("account");
   const [isLoading, setIsLoading] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // Account Tab
+  
+  // Account Form
   const [nameForm, setNameForm] = useState(user?.name || "");
 
-  // Preferences Tab
-  const [preferences, setPreferences] = useState({
-    theme: "system" as "light" | "dark" | "system",
-    language: "en" as "en" | "hi",
-    units: "metric" as "metric" | "imperial",
-    mealPlanDays: 7,
-  });
-
-  // Notifications Tab
-  const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    mealReminders: true,
-    reminderTime: "08:00",
-    weeklySummary: true,
-  });
-
-  // Password Change
+  // Password Form
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
+  const [showPwd, setShowPwd] = useState({ current: false, new: false, confirm: false });
 
-  const handleUpdateName = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpdateName = async () => {
     if (!nameForm.trim()) {
       toast.error("Name cannot be empty");
       return;
@@ -62,18 +62,26 @@ export default function SettingsPage() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!passwordForm.currentPassword) {
+      toast.error("Please enter your current password");
+      return;
+    }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error("New passwords do not match");
       return;
     }
-    if (passwordForm.newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    if (passwordForm.newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters");
       return;
     }
+    
     setIsLoading(true);
     try {
-      // TODO: Call authApi.changePassword when backend endpoint is ready
-      toast.success("Password changed successfully (feature coming soon)");
+      await authApi.changePassword({
+        current_password: passwordForm.currentPassword,
+        new_password: passwordForm.newPassword,
+      });
+      toast.success("Password changed successfully");
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (err: any) {
       toast.error(err.message || "Failed to change password");
@@ -82,355 +90,183 @@ export default function SettingsPage() {
     }
   };
 
-  const handleDeleteAccount = () => {
-    if (confirm("Are you sure? This action cannot be undone. Type your email to confirm.")) {
-      const confirmation = prompt(`Type "${user?.email}" to confirm account deletion:`);
-      if (confirmation === user?.email) {
-        // TODO: Call authApi.deleteAccount when backend endpoint is ready
-        toast.error("Account deletion not yet implemented");
-      } else {
-        toast.error("Confirmation text did not match");
-      }
-    }
+  const handleExportData = () => {
+    const data = { user, exported_at: new Date().toISOString() };
+    const jsonString = JSON.stringify(data, null, 2);
+    const element = document.createElement("a");
+    element.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(jsonString));
+    element.setAttribute("download", `nutrisync-data-${Date.now()}.json`);
+    element.style.display = "none";
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    toast.success("Data exported successfully");
   };
 
+  if (!user) return null;
+
   return (
-    <div className="p-8 max-w-4xl mx-auto pb-20 fade-in">
-      <header className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Settings2 className="w-5 h-5 text-primary" />
-          </div>
-          Settings
-        </h1>
-        <p className="text-muted-foreground mt-2">Manage your account, preferences, and privacy</p>
-      </header>
-
-      <Tabs defaultValue="account" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-4 gap-2">
-          <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="preferences">Preferences</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="privacy">Privacy</TabsTrigger>
-        </TabsList>
-
-        {/* Account Tab */}
-        <TabsContent value="account" className="space-y-6">
-          <div className="glass-card p-6 space-y-6">
-            {/* Profile Section */}
+    <SettingsLayout
+      title="Settings"
+      description="Manage your account settings, security, and preferences."
+      sidebarItems={SIDEBAR_ITEMS}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    >
+      {/* ACCOUNT */}
+      {activeTab === "account" && (
+        <SettingsCard title="Profile Information" description="How you appear to the system.">
+          <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
-              <form onSubmit={handleUpdateName} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    value={nameForm}
-                    onChange={(e) => setNameForm(e.target.value)}
-                    className="bg-card"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    value={user?.email || ""}
-                    disabled
-                    className="bg-muted/40 cursor-not-allowed"
-                  />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed here. Contact support to update.</p>
-                </div>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Save Changes
-                </Button>
-              </form>
+              <label className="text-sm font-medium mb-2 block">Email Address</label>
+              <Input value={user.email} disabled className="bg-muted text-muted-foreground h-12" />
+              <p className="text-xs text-muted-foreground mt-2">Your email address is used for secure login and account recovery.</p>
             </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Full Name</label>
+              <div className="flex gap-3">
+                <Input 
+                  value={nameForm} 
+                  onChange={(e) => setNameForm(e.target.value)} 
+                  className="h-12"
+                  placeholder="Enter your full name"
+                />
+                <Button onClick={handleUpdateName} disabled={isLoading} className="px-6 h-12">
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </SettingsCard>
+      )}
 
-            {/* Password Section */}
-            <div className="border-t border-border pt-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Lock className="w-4 h-4" /> Change Password
-              </h3>
-              <form onSubmit={handleChangePassword} className="space-y-4 max-w-sm">
-                <div className="space-y-2">
-                  <Label htmlFor="current-password">Current Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="current-password"
-                      type={showCurrentPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={passwordForm.currentPassword}
-                      onChange={(e) =>
-                        setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
-                      }
-                      className="bg-card pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    >
-                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
+      {/* SECURITY */}
+      {activeTab === "security" && (
+        <SettingsCard title="Password" description="Ensure your account is protected with a strong password.">
+          <form onSubmit={handleChangePassword} className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Current Password</label>
+                <div className="relative">
+                  <Input 
+                    type={showPwd.current ? "text" : "password"}
+                    value={passwordForm.currentPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                    className="h-12 pr-12"
+                  />
+                  <button type="button" onClick={() => setShowPwd({...showPwd, current: !showPwd.current})} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground">
+                    {showPwd.current ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">New Password</label>
                   <div className="relative">
-                    <Input
-                      id="new-password"
-                      type={showNewPassword ? "text" : "password"}
-                      placeholder="••••••••"
+                    <Input 
+                      type={showPwd.new ? "text" : "password"}
                       value={passwordForm.newPassword}
-                      onChange={(e) =>
-                        setPasswordForm({ ...passwordForm, newPassword: e.target.value })
-                      }
-                      className="bg-card pr-10"
+                      onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                      className="h-12 pr-12"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    >
-                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    <button type="button" onClick={() => setShowPwd({...showPwd, new: !showPwd.new})} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showPwd.new ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm New Password</Label>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Confirm Password</label>
                   <div className="relative">
-                    <Input
-                      id="confirm-password"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="••••••••"
+                    <Input 
+                      type={showPwd.confirm ? "text" : "password"}
                       value={passwordForm.confirmPassword}
-                      onChange={(e) =>
-                        setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
-                      }
-                      className="bg-card pr-10"
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                      className="h-12 pr-12"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    <button type="button" onClick={() => setShowPwd({...showPwd, confirm: !showPwd.confirm})} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showPwd.confirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Update Password
-                </Button>
-              </form>
-            </div>
-          </div>
-        </TabsContent>
-
-        {/* Preferences Tab */}
-        <TabsContent value="preferences" className="space-y-6">
-          <div className="glass-card p-6 space-y-6">
-            <div className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="theme">Theme</Label>
-                  <select
-                    id="theme"
-                    value={preferences.theme}
-                    onChange={(e) =>
-                      setPreferences({ ...preferences, theme: e.target.value as any })
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground"
-                  >
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                    <option value="system">System</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="units">Units</Label>
-                  <select
-                    id="units"
-                    value={preferences.units}
-                    onChange={(e) =>
-                      setPreferences({ ...preferences, units: e.target.value as any })
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground"
-                  >
-                    <option value="metric">Metric (kg, cm)</option>
-                    <option value="imperial">Imperial (lbs, ft)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="language">Language</Label>
-                  <select
-                    id="language"
-                    value={preferences.language}
-                    onChange={(e) =>
-                      setPreferences({ ...preferences, language: e.target.value as any })
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground"
-                  >
-                    <option value="en">English</option>
-                    <option value="hi">हिंदी (Hindi)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="meal-plan-days">Default Meal Plan Days</Label>
-                  <Input
-                    id="meal-plan-days"
-                    type="number"
-                    min={1}
-                    max={30}
-                    value={preferences.mealPlanDays}
-                    onChange={(e) =>
-                      setPreferences({
-                        ...preferences,
-                        mealPlanDays: parseInt(e.target.value),
-                      })
-                    }
-                    className="bg-card"
-                  />
-                </div>
               </div>
-              <Button type="button" disabled={isLoading}>
-                Save Preferences
-              </Button>
             </div>
-          </div>
-        </TabsContent>
+            <Button type="submit" disabled={isLoading} className="h-12 px-8">
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
+              Update Password
+            </Button>
+          </form>
+        </SettingsCard>
+      )}
 
-        {/* Notifications Tab */}
-        <TabsContent value="notifications" className="space-y-6">
-          <div className="glass-card p-6 space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Bell className="w-4 h-4" /> Notification Settings
-              </h3>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/30">
-                  <div>
-                    <p className="font-medium">Email Notifications</p>
-                    <p className="text-sm text-muted-foreground">Receive important updates via email</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifications.emailNotifications}
-                    onChange={(e) =>
-                      setNotifications({
-                        ...notifications,
-                        emailNotifications: e.target.checked,
-                      })
-                    }
-                    className="w-5 h-5 rounded"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/30">
-                  <div>
-                    <p className="font-medium">Meal Reminders</p>
-                    <p className="text-sm text-muted-foreground">Get reminded to log your meals</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifications.mealReminders}
-                    onChange={(e) =>
-                      setNotifications({
-                        ...notifications,
-                        mealReminders: e.target.checked,
-                      })
-                    }
-                    className="w-5 h-5 rounded"
-                  />
-                </div>
-
-                {notifications.mealReminders && (
-                  <div className="space-y-2 ml-4">
-                    <Label htmlFor="reminder-time">Reminder Time</Label>
-                    <Input
-                      id="reminder-time"
-                      type="time"
-                      value={notifications.reminderTime}
-                      onChange={(e) =>
-                        setNotifications({
-                          ...notifications,
-                          reminderTime: e.target.value,
-                        })
-                      }
-                      className="bg-card max-w-xs"
-                    />
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/30">
-                  <div>
-                    <p className="font-medium">Weekly Summary</p>
-                    <p className="text-sm text-muted-foreground">Receive a weekly nutrition report</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifications.weeklySummary}
-                    onChange={(e) =>
-                      setNotifications({
-                        ...notifications,
-                        weeklySummary: e.target.checked,
-                      })
-                    }
-                    className="w-5 h-5 rounded"
-                  />
-                </div>
-              </div>
-
-              <Button type="button" disabled={isLoading}>
-                Save Notification Settings
-              </Button>
-            </div>
-          </div>
-        </TabsContent>
-
-        {/* Privacy Tab */}
-        <TabsContent value="privacy" className="space-y-6">
-          <div className="glass-card p-6 space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Data & Privacy</h3>
-
-              <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
-                <p className="text-sm text-foreground">
-                  <strong>Download Your Data</strong>
-                  <br />
-                  Export all your personal information and chat history as a JSON file.
-                </p>
-                <Button variant="outline" size="sm" className="mt-2">
-                  Download Data
-                </Button>
-              </div>
-
-              <div className="p-4 rounded-lg bg-destructive/5 border border-destructive/20">
-                <p className="text-sm text-foreground mb-2">
-                  <strong className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" /> Danger Zone
-                  </strong>
-                </p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Permanently delete your account and all associated data. This action cannot be undone.
-                </p>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleDeleteAccount}
+      {/* PREFERENCES */}
+      {activeTab === "preferences" && (
+        <div className="space-y-6">
+          <SettingsCard title="Appearance" description="Choose how NutriSync looks for you.">
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { id: "light", label: "Light", icon: Sun },
+                { id: "dark", label: "Dark", icon: Moon },
+                { id: "system", label: "System", icon: Monitor },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTheme(t.id)}
+                  className={cn(
+                    "p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3",
+                    theme === t.id ? "border-primary bg-primary/5 shadow-md" : "border-border hover:border-primary/40 bg-card"
+                  )}
                 >
-                  Delete Account
-                </Button>
-              </div>
+                  <t.icon className={cn("w-6 h-6", theme === t.id ? "text-primary" : "text-muted-foreground")} />
+                  <span className={cn("text-xs font-bold", theme === t.id ? "text-primary" : "text-muted-foreground")}>{t.label}</span>
+                </button>
+              ))}
             </div>
+          </SettingsCard>
+
+          <SettingsCard title="Language & Region" description="Select your preferred language.">
+            <div className="space-y-4">
+              <select className="w-full h-12 px-4 rounded-xl border border-border bg-background">
+                {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+              </select>
+              <p className="text-xs text-muted-foreground">Localized content for regional dialects is updated weekly.</p>
+            </div>
+          </SettingsCard>
+        </div>
+      )}
+
+      {/* PRIVACY */}
+      {activeTab === "privacy" && (
+        <div className="space-y-6">
+          <SettingsCard title="Data Policy" description="How we handle your personal information.">
+            <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 space-y-3">
+              {[
+                "Health data is encrypted at rest",
+                "Personal info is never sold to third parties",
+                "You have full control over your food logs",
+              ].map((p, i) => (
+                <div key={i} className="flex items-center gap-3 text-sm text-foreground/80">
+                  <ShieldCheck className="w-4 h-4 text-primary" />
+                  {p}
+                </div>
+              ))}
+            </div>
+          </SettingsCard>
+
+          <SettingsCard title="Export Your Data" description="Download a copy of your records in JSON format.">
+            <Button variant="outline" onClick={handleExportData} className="w-full h-14 rounded-2xl border-dashed border-2 hover:bg-primary/5 hover:border-primary hover:text-primary transition-all">
+              <Download className="w-5 h-5 mr-3" />
+              Download My NutriSync Data
+            </Button>
+          </SettingsCard>
+
+          <div className="pt-10 flex flex-col items-center">
+            <p className="text-xs text-muted-foreground mb-4 uppercase tracking-[0.2em]">Safety</p>
+            <Button variant="ghost" className="text-destructive hover:bg-destructive/5 hover:text-destructive text-xs font-bold uppercase tracking-widest px-8">
+              Delete NutriSync Account
+            </Button>
           </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+        </div>
+      )}
+    </SettingsLayout>
   );
 }

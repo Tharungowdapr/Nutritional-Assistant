@@ -101,22 +101,30 @@ class NutriSyncDB:
         return sorted(self.food["Diet Type"].unique().tolist()) if getattr(self, 'food', None) is not None else []
 
     def search_foods(self, query: str = "", diet_type: str = None,
-                     food_group: str = None):
+                     food_group: str = None, region: str = None):
         results = self.food.copy() if getattr(self, 'food', None) is not None else []
         if isinstance(results, list):
             return results
         if query:
-            results = results[results["Food Name"].str.contains(query, case=False, na=False)]
+            results = results[results["Food Name"].str.contains(query, case=False, na=False, regex=False)]
         if diet_type:
-            results = results[results["Diet Type"] == diet_type]
+            if "Diet Type" in results.columns:
+                results = results[results["Diet Type"].str.upper() == diet_type.upper()]
         if food_group:
-            results = results[results["Food Group"] == food_group]
+            results = results[results["Food Group"].str.upper() == food_group.upper()]
+        if region:
+            if "Region Availability" in results.columns:
+                results = results[results["Region Availability"].str.contains(region, case=False, na=False, regex=False)]
+            elif "Region" in results.columns:
+                results = results[results["Region"].str.contains(region, case=False, na=False, regex=False)]
         return results
 
     def get_food_by_name(self, name: str):
         if getattr(self, 'food', None) is None:
             return None
-        match = self.food[self.food["Food Name"].str.contains(name, case=False, na=False)]
+        match = self.food[self.food["Food Name"] == name]
+        if match.empty:
+            match = self.food[self.food["Food Name"].str.contains(name, case=False, na=False, regex=False)]
         if match.empty:
             return None
         return match.iloc[0].to_dict()

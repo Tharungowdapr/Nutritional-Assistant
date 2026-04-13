@@ -112,20 +112,22 @@ async def get_daily_summary(
     }
 
 
-@router.get("/weekly")
-async def get_weekly_summary(
+@router.get("/summary")
+async def get_summary(
+    days: int = 7,
     current_user: UserDB = Depends(require_user),
     db_session = Depends(get_db),
 ):
-    """Get last 7 days summary."""
-    # Filter by date range directly in the query
-    seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d")
+    """Get summary for the last X days."""
+    if days > 90:
+        raise HTTPException(400, "Maximum history range is 90 days")
+        
+    start_date = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
     logs = db_session.query(DailyLogDB).filter(
         DailyLogDB.user_id == current_user.id,
-        DailyLogDB.log_date >= seven_days_ago,
+        DailyLogDB.log_date >= start_date,
     ).order_by(DailyLogDB.log_date.desc()).all()
     
-    # Group by date
     daily_summary = {}
     for log in logs:
         if log.log_date not in daily_summary:
@@ -143,9 +145,31 @@ async def get_weekly_summary(
         daily_summary[log.log_date]["fat"] += log.fat_g or 0
         daily_summary[log.log_date]["meal_count"] += 1
     
+    # Generate list for frontend charts
+    chart_data = []
+    current = datetime.now(timezone.utc)
+    for i in range(days):
+        d_str = (current - timedelta(days=i)).strftime("%Y-%m-%d")
+        stats = daily_summary.get(d_str, {"calories": 0, "protein": 0, "carbs": 0, "fat": 0, "meal_count": 0})
+        chart_data.append({"date": d_str, **stats})
+
+    # Link Person Analysis: Contextual Insights
+    # Example: If protein is low for a Heavy Laborer, or iron is low for a pregnant woman
+    insight = "Great consistency! Keep logging to see long-term trends."
+    if current_user.profile:
+        # Simple rule-based insight for now
+        total_protein = sum(d["protein"] for d in daily_summary.values())
+        avg_protein = total_protein / max(len(daily_summary), 1)
+        if current_user.profile.get("activity_level") == "Heavy Labor" and avg_protein < 100:
+            insight = "Based on your Heavy Labor profile, you should aim for more protein (up to 1.5g per kg)."
+        elif current_user.profile.get("gender") == "Female" and avg_protein < 50:
+            insight = "Consider slightly increasing protein for better ICMR/NIN balance."
+
     return {
-        "days": daily_summary,
+        "range_days": days,
+        "daily_data": chart_data[::-1],  # Chronological order
         "avg_daily_calories": round(sum(d["calories"] for d in daily_summary.values()) / max(len(daily_summary), 1), 1) if daily_summary else 0,
+        "insight": insight
     }
 
 

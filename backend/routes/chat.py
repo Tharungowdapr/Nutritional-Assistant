@@ -41,7 +41,7 @@ async def chat(
             detail="Knowledge base not ready. Run: python -m rag.ingest"
         )
 
-    user_profile = data.user_profile.model_dump() if data.user_profile else None
+    user_profile = data.user_profile if data.user_profile else None
 
     # If logged in and no profile in request, use saved profile
     if user_profile is None and user is not None:
@@ -49,10 +49,28 @@ async def chat(
         if saved_profile:
             user_profile = saved_profile
 
-    result = await rag_service.chat(data.message, user_profile)
+    # Get session history
+    session_id = data.session_id or str(uuid.uuid4())
+    history = []
+    if session_id and db:
+        try:
+            prev_messages = (
+                db.query(ChatHistoryDB)
+                .filter(ChatHistoryDB.session_id == session_id)
+                .order_by(ChatHistoryDB.created_at.desc())
+                .limit(5)
+                .all()
+            )
+            history = [
+                {"user_message": m.user_message, "assistant_message": m.assistant_message}
+                for m in reversed(prev_messages)
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to fetch session history: {e}")
+
+    result = await rag_service.chat(data.message, user_profile, history=history)
 
     # Create or use existing session
-    session_id = data.session_id or str(uuid.uuid4())
 
     # Save to history if user is logged in
     if user is not None:
