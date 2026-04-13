@@ -136,7 +136,11 @@ class NutriSyncDB:
                     re.escape(region), case=False, na=False, regex=False)
         
         # Return view (not copy)
-        return self.food[mask]
+        res = self.food[mask]
+        # For safety in callers/tests: return empty list when no matches found
+        if getattr(res, 'empty', False):
+            return []
+        return res
 
     def get_food_by_name(self, name: str):
         import re

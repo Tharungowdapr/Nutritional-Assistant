@@ -130,8 +130,8 @@ async def send_chat_message(
     try:
         if rag_service is None:
             raise HTTPException(status_code=503, detail="Knowledge base not ready")
-        
-        rag_response = await rag_service.ask(message_data.message, user.profile)
+
+        rag_response = await rag_service.chat(message_data.message, user_profile=user.profile, history=None)
         assistant_message = rag_response.get("answer", "")
         sources = rag_response.get("sources", [])
         llm_provider = rag_response.get("llm_provider", "")

@@ -27,6 +27,7 @@ class MealPlanAgent:
         self.llm_router = llm_router
 
     async def generate_meal_plan(self, profile: dict, days: int = 7,
+                                  num_people: int = 1,
                                   budget_per_day: Optional[float] = None) -> dict:
         """Generate a complete meal plan for the given number of days."""
         # 1. Compute personalized nutrient targets
@@ -65,7 +66,7 @@ class MealPlanAgent:
 
         # 4. Generate meal plan using LLM
         meal_plan = await self._plan_meals_with_llm(
-            foods_str, targets, profile, days, budget_per_day, regional_info
+            foods_str, targets, profile, days, num_people, budget_per_day, regional_info
         )
 
         return {
@@ -75,7 +76,7 @@ class MealPlanAgent:
         }
 
     async def _plan_meals_with_llm(self, foods_str: str, targets: dict, profile: dict,
-                                     days: int, budget_per_day: float, regional_info: dict = None) -> dict:
+                                     days: int, num_people: int, budget_per_day: float, regional_info: dict = None) -> dict:
         """Use LLM to create a structured meal plan with verification."""
         budget_str = f"\nBudget constraint: ₹{budget_per_day}/day" if budget_per_day else ""
         
@@ -95,7 +96,7 @@ class MealPlanAgent:
         if profile.get('glp1_medication'):
             glp1_str = f"- GLP-1 User ({profile.get('glp1_medication')}). Prioritize nausea-safe foods, enforce protein."
 
-        prompt = f"""Create a {days}-day Indian meal plan using these nutritious foods:
+        prompt = f"""Create a {days}-day Indian meal plan for {num_people} people using these nutritious foods:
 
 {foods_str}
 
@@ -112,7 +113,7 @@ USER PROFILE:
 - Region: {profile.get('region_zone', 'South')} India
 {glp1_str}
 
-Day X:
+    Day X (per person):
 | Meal | Food Items | Portion/Quantity | Macros (P/F/C/Kcal) |
 | :--- | :--- | :--- | :--- |
 | Breakfast | Item 1, Item 2 | 1 bowl, 2 pcs | 10g / 5g / 40g / 250kcal |
@@ -122,7 +123,7 @@ Day X:
 
 After the daily tables, provide a "Nutritional Estimate" table for the week.
 
-Keep portions realistic (1 katori rice = 150g). Prioritize variety across the week. Ensure ALL DAILY MEALS ARE IN THE TABLE FORMAT SHOWN ABOVE. DO NOT USE BULLET POINTS FOR MEALS.
+    Keep portions realistic (1 katori rice = 150g). Scale quantities for {num_people} people. Prioritize variety across the week. Ensure ALL DAILY MEALS ARE IN THE TABLE FORMAT SHOWN ABOVE. DO NOT USE BULLET POINTS FOR MEALS.
 """
 
         system = "You are a certified Indian nutritionist creating personalized daily meal plans."
