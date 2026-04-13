@@ -8,6 +8,7 @@ interface User {
   email: string;
   name: string;
   profile: Record<string, any>;
+  profile_completion: number;
 }
 
 interface AuthContextType {

@@ -25,10 +25,12 @@ export default function MealPlanPage() {
   const [plans, setPlans] = useState<any[]>([]);
   const [activePlan, setActivePlan] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [activePlanTab, setActivePlanTab] = useState<"plan" | "recipes" | "grocery" | "cost">("plan");
 
   // Preferences form
   const [prefs, setPrefs] = useState({
     duration: 7,
+    num_people: 1,
     budget: 300,
     health_goal: "Weight Loss",
     meal_heaviness: "Medium",
@@ -83,7 +85,7 @@ export default function MealPlanPage() {
       toast.success("Meal plan generated successfully!");
       setStep(1);
       setPrefs({
-        duration: 7, budget: 300, health_goal: "Weight Loss",
+        duration: 7, num_people: 1, budget: 300, health_goal: "Weight Loss",
         meal_heaviness: "Medium", spice_tolerance: "Medium",
         cook_time_available: 30, meal_timings: ["Breakfast", "Lunch", "Dinner"],
         preferred_cuisines: ["North Indian"], allergies: [], foods_to_avoid: "",
@@ -166,6 +168,21 @@ export default function MealPlanPage() {
         {/* STEP 1: Duration, Budget, Health Goal */}
         {step === 1 && (
           <div className="space-y-6 bg-card p-6 rounded-lg border border-border">
+            <div>
+              <label className="block text-sm font-semibold mb-3 flex gap-2">
+                <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-bold">Required</span>
+                How many people are you planning for?
+              </label>
+              <Input
+                type="number"
+                value={prefs.num_people}
+                onChange={(e) => setPrefs({ ...prefs, num_people: Number(e.target.value) })}
+                min="1"
+                max="10"
+                className="w-full"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-semibold mb-3 flex gap-2">
                 <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-bold">Required</span>
@@ -486,26 +503,115 @@ export default function MealPlanPage() {
         Generate New Plan
       </Button>
 
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 border-b border-border">
+        {[
+          { id: "plan", label: "Plan" },
+          { id: "recipes", label: "Recipes" },
+          { id: "grocery", label: "Grocery List" },
+          { id: "cost", label: "Cost Breakdown" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActivePlanTab(tab.id as any)}
+            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
+              activePlanTab === tab.id
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
       <div className="bg-card p-6 md:p-8 rounded-2xl border border-border shadow-sm">
-        <ReactMarkdown 
-          remarkPlugins={[remarkGfm]}
-          components={{
-            table: ({ children }) => (
-              <div className="overflow-x-auto my-6 rounded-xl border border-border">
-                <table className="w-full text-sm border-collapse">{children}</table>
+        {activePlanTab === "plan" && (
+          <ReactMarkdown 
+            remarkPlugins={[remarkGfm]}
+            components={{
+              table: ({ children }) => (
+                <div className="overflow-x-auto my-6 rounded-xl border border-border">
+                  <table className="w-full text-sm border-collapse">{children}</table>
+                </div>
+              ),
+              thead: ({ children }) => <thead className="bg-muted/50">{children}</thead>,
+              th: ({ children }) => <th className="p-3 text-left font-bold text-foreground border-b border-border">{children}</th>,
+              td: ({ children }) => <td className="p-3 border-b border-border text-muted-foreground">{children}</td>,
+              h1: ({ children }) => <h1 className="text-2xl font-bold mt-8 mb-4">{children}</h1>,
+              h2: ({ children }) => <h2 className="text-xl font-bold mt-8 mb-4 text-primary">{children}</h2>,
+              h3: ({ children }) => <h3 className="text-lg font-bold mt-6 mb-3">{children}</h3>,
+              p: ({ children }) => <p className="leading-relaxed mb-4 text-muted-foreground">{children}</p>,
+            }}
+          >
+            {activePlan.plan_text}
+          </ReactMarkdown>
+        )}
+
+        {activePlanTab === "recipes" && (
+          <div className="space-y-4">
+            <p className="text-muted-foreground text-sm">
+              Recipes included in this meal plan will appear here. You can save individual recipes to your recipe collection.
+            </p>
+            <div className="bg-muted/30 p-4 rounded-lg border border-border text-center py-8">
+              <p className="text-sm text-muted-foreground">Recipe details will be extracted from the meal plan above</p>
+            </div>
+          </div>
+        )}
+
+        {activePlanTab === "grocery" && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Grocery list for {prefs.num_people} {prefs.num_people === 1 ? "person" : "people"} for {prefs.duration} days
+            </p>
+            <div className="bg-muted/30 p-4 rounded-lg border border-border">
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Sample Grocery Items:</p>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Rice - 2 kg</li>
+                  <li>• Lentils - 1 kg</li>
+                  <li>• Vegetables - as per meal plan</li>
+                  <li>• Spices - basic pantry items</li>
+                </ul>
               </div>
-            ),
-            thead: ({ children }) => <thead className="bg-muted/50">{children}</thead>,
-            th: ({ children }) => <th className="p-3 text-left font-bold text-foreground border-b border-border">{children}</th>,
-            td: ({ children }) => <td className="p-3 border-b border-border text-muted-foreground">{children}</td>,
-            h1: ({ children }) => <h1 className="text-2xl font-bold mt-8 mb-4">{children}</h1>,
-            h2: ({ children }) => <h2 className="text-xl font-bold mt-8 mb-4 text-primary">{children}</h2>,
-            h3: ({ children }) => <h3 className="text-lg font-bold mt-6 mb-3">{children}</h3>,
-            p: ({ children }) => <p className="leading-relaxed mb-4 text-muted-foreground">{children}</p>,
-          }}
-        >
-          {activePlan.plan_text}
-        </ReactMarkdown>
+              <div className="mt-4 p-3 bg-primary/5 rounded border border-primary/10">
+                <p className="text-sm"><strong>Estimated Budget:</strong> ₹{prefs.budget * prefs.duration * prefs.num_people}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activePlanTab === "cost" && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+                <p className="text-sm text-muted-foreground mb-1">Budget per day</p>
+                <p className="text-2xl font-bold">₹{prefs.budget}</p>
+              </div>
+              <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+                <p className="text-sm text-muted-foreground mb-1">Total duration</p>
+                <p className="text-2xl font-bold">{prefs.duration} days</p>
+              </div>
+              <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+                <p className="text-sm text-muted-foreground mb-1">Number of people</p>
+                <p className="text-2xl font-bold">{prefs.num_people}</p>
+              </div>
+              <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+                <p className="text-sm text-muted-foreground mb-1">Total estimated cost</p>
+                <p className="text-2xl font-bold text-green-600">₹{prefs.budget * prefs.duration * prefs.num_people}</p>
+              </div>
+            </div>
+            <div className="p-4 bg-accent/10 rounded-lg border border-accent/20 text-sm">
+              <p className="font-medium mb-2">Cost breakdown:</p>
+              <ul className="text-muted-foreground space-y-1">
+                <li>• Cost per person per day: ₹{prefs.budget}</li>
+                <li>• Cost per person for {prefs.duration} days: ₹{prefs.budget * prefs.duration}</li>
+                <li>• Total for all {prefs.num_people} {prefs.num_people === 1 ? "person" : "people"}: ₹{prefs.budget * prefs.duration * prefs.num_people}</li>
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

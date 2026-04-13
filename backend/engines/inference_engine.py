@@ -43,6 +43,10 @@ class InferenceEngine:
 
     def compute_targets(self, profile: dict) -> dict:
         """Full pipeline: profile → personalized nutrient targets."""
+        # IMP-002: Guard against unloaded database
+        if not getattr(db, '_loaded', False):
+            return self._default_targets(profile)
+        
         targets = self._get_base_rda(profile)
         targets = self._adjust_profession_calories(targets, profile)
         targets = self._apply_disease_overrides(targets, profile)
@@ -50,15 +54,41 @@ class InferenceEngine:
         targets = self._apply_physio_boosts(targets, profile)
         return targets
 
+    def _default_targets(self, profile: dict) -> dict:
+        """Fallback ICMR-NIN 2024 targets when database not loaded."""
+        sex = profile.get("sex", "Male")
+        age = profile.get("age", 30)
+        return {
+            "calories": 2000,
+            "protein_g": 55,
+            "iron_mg": 17 if sex == "Female" else 8,
+            "calcium_mg": 1000,
+            "zinc_mg": 12 if sex == "Male" else 10,
+            "folate_mcg": 400,
+            "vit_b12_mcg": 2.4,
+            "vit_d_mcg": 15,
+            "vit_c_mg": 80 if sex == "Female" else 90,
+            "magnesium_mg": 320 if sex == "Female" else 420,
+            "fat_g": 55,
+            "carbs_g": 275,
+            "fibre_g": 30,
+            "omega3_g": 1.6,
+            "life_stage": "Adult",
+        }
+
     def _get_base_rda(self, profile: dict) -> dict:
         """Step 1: Get base RDA from life-stage + sex."""
+        import re
         life_stage = profile.get("life_stage", "")
-        rda_match = db.rda[db.rda["Profile"].str.contains(life_stage, case=False, na=False)]
+        rda_match = db.rda[db.rda["Profile"].str.contains(
+            re.escape(life_stage), case=False, na=False, regex=False)]
 
         if rda_match.empty:
             # Default to sedentary adult
             sex = profile.get("sex", "Male")
-            rda_match = db.rda[db.rda["Profile"].str.contains(f"Sedentary.*{sex}", case=False, na=False)]
+            sedentary_pattern = f"Sedentary.*{re.escape(sex)}"
+            rda_match = db.rda[db.rda["Profile"].str.contains(
+                sedentary_pattern, case=False, na=False, regex=True)]
 
         if rda_match.empty:
             rda_match = db.rda.head(1)  # absolute fallback
@@ -84,8 +114,10 @@ class InferenceEngine:
 
     def _adjust_profession_calories(self, targets: dict, profile: dict) -> dict:
         """Step 2: Adjust calories based on profession PAL."""
+        import re
         prof = profile.get("profession", "Sedentary")
-        match = db.profession[db.profession["Profession Category"].str.contains(prof, case=False, na=False)]
+        match = db.profession[db.profession["Profession Category"].str.contains(
+            re.escape(prof), case=False, na=False, regex=False)]
 
         if not match.empty:
             row = match.iloc[0]

@@ -57,7 +57,8 @@ class Settings(BaseSettings):
     RAG_TOP_K: int = 5
     RAG_SCORE_THRESHOLD: float = 0.3
 
-    CORS_ORIGINS: list[str] = ["http://localhost:3001", "http://localhost:8000", "http://localhost:3000", "http://127.0.0.1:3001"]
+    # IMP-007: CORS Origins with environment override support
+    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:3001", "http://localhost:8000"]
 
     class Config:
         env_file = ".env"

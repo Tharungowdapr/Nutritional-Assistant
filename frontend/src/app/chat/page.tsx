@@ -25,6 +25,15 @@ export default function ChatPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // IMP-018: Gate history load behind authentication
+    if (!user) {
+      setMessages([{
+        role: "assistant",
+        content: "Hello! I'm your IFCT-grounded nutrition assistant. Ask me about Indian foods, nutrients, or meal ideas."
+      }]);
+      return;
+    }
+
     chatApi.history().then((data: any) => {
       if (data.messages && data.messages.length > 0) {
         // Transform backend shape {user_message, assistant_message} → {role, content}
@@ -56,13 +65,14 @@ export default function ChatPage() {
           content: "Hello! I'm your IFCT-grounded nutrition assistant. Ask me about Indian foods, nutrients, or meal ideas."
         }]);
       }
-    }).catch(() => {
+    }).catch((err) => {
+      console.debug('Chat history not available:', err);
       setMessages([{
         role: "assistant",
         content: "Hello! I'm your IFCT-grounded nutrition assistant. Ask me about Indian foods, nutrients, or meal ideas."
       }]);
     });
-  }, []);
+  }, [user]);
 
   // Auto-scroll to bottom
   useEffect(() => {

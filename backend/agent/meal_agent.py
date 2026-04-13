@@ -8,12 +8,14 @@ LangChain ReAct-style agent that autonomously:
 5. Creates recipes from available ingredients
 """
 import logging
+import re
 from typing import Optional
 
 from engines.inference_engine import inference_engine
 from rag.llm_router import LLMRouter
 from agent.tools.food_search import search_foods_tool
 from agent.tools.regional_filter import get_regional_foods
+from agent.tools.nutrition_analyzer import analyze_meal
 
 logger = logging.getLogger(__name__)
 
@@ -35,30 +37,58 @@ class MealPlanAgent:
         diet_type = profile.get("diet_type", "VEG")
         regional_info = get_regional_foods(zone)
         
-        # 3. Get generic base foods using search tool
-        base_foods = search_foods_tool(query="", diet_type=diet_type, limit=30)
+        # 3. Get generic base foods + nutrient-targeted foods (IMP-019: unified slicing)
+        FOOD_CONTEXT_LIMIT = 40
+        base_foods = search_foods_tool(query="", diet_type=diet_type, limit=FOOD_CONTEXT_LIMIT)
+        
+        # Also fetch high-protein and high-iron foods for diversity
+        high_protein = search_foods_tool(query="", diet_type=diet_type, 
+                                        food_group="Pulses" if diet_type == "VEG" else "Protein Sources",
+                                        limit=10) if hasattr(search_foods_tool, '__call__') else []
+        
+        # Combine and deduplicate
+        all_foods_dict = {}
+        for f in base_foods:
+            if f.get('name'):
+                all_foods_dict[f['name']] = f
+        for f in high_protein:
+            if f.get('name'):
+                all_foods_dict[f['name']] = f
+        
+        all_foods = list(all_foods_dict.values())[:FOOD_CONTEXT_LIMIT]
         
         # Build food context string
         foods_context = []
-        for f in base_foods[:25]:
+        for f in all_foods:
             foods_context.append(f"{f['name']} ({f['energy_kcal']} kcal, {f['protein_g']}g protein, {f['iron_mg']}mg iron)")
         foods_str = "\n".join(foods_context)
 
         # 4. Generate meal plan using LLM
         meal_plan = await self._plan_meals_with_llm(
-            foods_str, targets, profile, days, budget_per_day
+            foods_str, targets, profile, days, budget_per_day, regional_info
         )
 
         return {
             "targets": targets,
             "meal_plan": meal_plan,
-            "foods_used": [f["name"] for f in base_foods[:20]],
+            "foods_used": [f["name"] for f in all_foods[:FOOD_CONTEXT_LIMIT]],
         }
 
     async def _plan_meals_with_llm(self, foods_str: str, targets: dict, profile: dict,
-                                     days: int, budget_per_day: float) -> dict:
-        """Use LLM to create a structured meal plan."""
+                                     days: int, budget_per_day: float, regional_info: dict = None) -> dict:
+        """Use LLM to create a structured meal plan with verification."""
         budget_str = f"\nBudget constraint: ₹{budget_per_day}/day" if budget_per_day else ""
+        
+        # IMP-004: Build regional context from fetched data
+        regional_str = ""
+        if regional_info and regional_info.get('recommendations'):
+            rec = regional_info['recommendations'][0] if isinstance(regional_info['recommendations'], list) else regional_info['recommendations']
+            staples = rec.get('Staple Foods', '')
+            char = rec.get('Dietary Character', '')
+            zone = profile.get('region_zone', 'South')
+            regional_str = f"\nREGIONAL CONTEXT ({zone} India):"
+            regional_str += f"\n- Dietary character: {char}"
+            regional_str += f"\n- Staple foods: {staples}"
         
         # GLP-1 specifics
         glp1_str = ""
@@ -75,6 +105,7 @@ DAILY NUTRIENT TARGETS:
 - Iron: {targets.get('iron_mg', 17):.1f}mg
 - Calcium: {targets.get('calcium_mg', 1000):.0f}mg
 {budget_str}
+{regional_str}
 
 USER PROFILE:
 - Diet: {profile.get('diet_type', 'VEG')}
@@ -96,7 +127,34 @@ Keep portions realistic (1 katori rice = 150g). Prioritize variety across the we
 
         system = "You are a certified Indian nutritionist creating personalized daily meal plans."
         response, provider = await self.llm_router.generate(prompt, system, temperature=0.6)
-        return {"plan_text": response, "provider": provider}
+        
+        # IMP-009: Verify meal plan meets nutrient targets (optional warning)
+        analysis_warning = ""
+        try:
+            # Try to extract estimated macros from response
+            protein_match = re.search(r'Protein.*?(\d+(?:\.\d+)?)\s*g', response, re.IGNORECASE)
+            calorie_match = re.search(r'Calories?.*?(\d+(?:\.\d+)?)\s*(?:kcal|cal)', response, re.IGNORECASE)
+            
+            if protein_match and calorie_match:
+                est_protein = float(protein_match.group(1))
+                est_calories = float(calorie_match.group(1))
+                target_protein = targets.get('protein_g', 55)
+                target_calories = targets.get('calories', 2000)
+                
+                # Daily analysis
+                daily_protein = est_protein / max(int(response.count('Day')), 1)
+                daily_calories = est_calories / max(int(response.count('Day')), 1)
+                
+                if daily_protein < target_protein * 0.85:
+                    analysis_warning = f"⚠️ Estimated daily protein ({daily_protein:.0f}g) is below target ({target_protein:.0f}g). Consider adding more pulses or protein-rich foods."
+        except Exception as e:
+            logger.debug(f"Could not parse meal plan for validation: {e}")
+        
+        return {
+            "plan_text": response, 
+            "provider": provider,
+            "analysis_warning": analysis_warning
+        }
 
     async def generate_grocery_list(self, meal_plan_text: str, days: int = 7) -> dict:
         """Extract and aggregate grocery items from a meal plan."""

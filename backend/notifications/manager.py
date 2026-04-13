@@ -14,7 +14,14 @@ class NotificationManager:
     Manages all notification channels.
     Currently provides the interface — actual channel integrations
     (Resend, Twilio, FCM) are configured via environment variables.
+    
+    IMP-017: This is a STUB — notifications are not yet fully implemented.
+    See docs/implementation_plan.md for the integration roadmap.
+    Implemented channels: (none)
+    Stub channels: email, sms, whatsapp, push, inapp
     """
+
+    IMPLEMENTED = False  # Flag for conditional feature registration
 
     NOTIFICATION_TYPES = {
         "meal_reminder": {

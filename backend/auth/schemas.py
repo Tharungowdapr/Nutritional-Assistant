@@ -28,6 +28,7 @@ class UserResponse(BaseModel):
     email: str
     name: str
     profile: dict = {}
+    profile_completion: int = 0  # 0-100%
 
 
 class ProfileUpdateRequest(BaseModel):

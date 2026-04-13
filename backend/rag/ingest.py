@@ -121,7 +121,9 @@ def chunk_documents(docs: list[dict], chunk_size: int = 512,
 
 
 def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
-    """Embed chunks and store in ChromaDB using default embeddings."""
+    """Embed chunks and store in ChromaDB."""
+    import chromadb.utils.embedding_functions as ef
+    
     chroma_path = settings.CHROMA_DB_PATH
     chroma_path.mkdir(parents=True, exist_ok=True)
     client = chromadb.PersistentClient(path=str(chroma_path))
@@ -133,11 +135,37 @@ def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
     except Exception:
         pass
 
-    # Create collection with default embedding function (all-MiniLM-L6-v2)
-    collection = client.create_collection(
-        name=collection_name,
-        metadata={"hnsw:space": "cosine"},
-    )
+    # IMP-003: Try to use configured Ollama embedding model, fall back to default
+    embed_fn = None
+    try:
+        import requests
+        # Test if Ollama is available
+        health_url = f"{settings.OLLAMA_BASE_URL}/api/tags"
+        resp = requests.get(health_url, timeout=2)
+        if resp.status_code == 200:
+            embed_fn = ef.OllamaEmbeddingFunction(
+                url=settings.OLLAMA_BASE_URL + "/api/embeddings",
+                model_name=settings.OLLAMA_EMBED_MODEL,
+            )
+            logger.info(f"🧠 Using Ollama embeddings: {settings.OLLAMA_EMBED_MODEL}")
+        else:
+            logger.warning(f"⚠️ Ollama not responding ({resp.status_code}), using default embeddings")
+    except Exception as e:
+        logger.warning(f"⚠️ Ollama unavailable ({e}), using default embeddings")
+
+    # Create collection with embedding function
+    if embed_fn:
+        collection = client.create_collection(
+            name=collection_name,
+            embedding_function=embed_fn,
+            metadata={"hnsw:space": "cosine"},
+        )
+    else:
+        # Use ChromaDB default (all-MiniLM-L6-v2)
+        collection = client.create_collection(
+            name=collection_name,
+            metadata={"hnsw:space": "cosine"},
+        )
 
     # Batch insert
     batch_size = 100

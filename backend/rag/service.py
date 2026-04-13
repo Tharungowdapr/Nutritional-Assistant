@@ -71,10 +71,20 @@ class RAGService:
         chunks = []
         if results and results["documents"] and results["documents"][0]:
             for i in range(len(results["documents"][0])):
+                distance = results["distances"][0][i] if results.get("distances") else None
+                
+                # IMP-015: Apply score threshold filter
+                # ChromaDB cosine distance: lower = more similar
+                # Convert threshold (0-1) to distance: distance <= (1.0 - threshold)
+                if distance is not None:
+                    similarity = 1.0 - distance
+                    if similarity < settings.RAG_SCORE_THRESHOLD:
+                        continue  # Skip low-confidence results
+                
                 chunks.append({
                     "text": results["documents"][0][i],
                     "metadata": results["metadatas"][0][i] if results.get("metadatas") else {},
-                    "distance": results["distances"][0][i] if results.get("distances") else None,
+                    "distance": distance,
                 })
 
         return chunks

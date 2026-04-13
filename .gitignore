@@ -42,7 +42,9 @@ frontend/node_modules/
 htmlcov/
 .pytest_cache/
 
-# Docker
+# Temp and debug files (IMP-012)
+backend/temp_*.py
+nohup.out
 *.log
 .env.local
 frontend/.env.local
