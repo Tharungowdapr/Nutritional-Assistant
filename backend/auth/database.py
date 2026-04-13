@@ -116,6 +116,65 @@ class DailyLogDB(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class RecipeDB(Base):
+    """Saved user recipes."""
+    __tablename__ = "recipes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=True, index=True)
+    title = Column(String(255), nullable=False)
+    ingredients = Column(Text, nullable=False)  # JSON array of {"name": "...", "quantity": "...", "unit": "..."}
+    instructions = Column(Text, nullable=False)  # JSON array of step strings
+    cook_time_minutes = Column(Integer, nullable=True)
+    difficulty = Column(String(20), default="Medium")  # "Easy", "Medium", "Hard"
+    servings = Column(Integer, default=1)
+    
+    # Nutrition facts per serving
+    calories = Column(Float, nullable=True)
+    protein_g = Column(Float, nullable=True)
+    fat_g = Column(Float, nullable=True)
+    carbs_g = Column(Float, nullable=True)
+    fibre_g = Column(Float, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class RecipeHistoryDB(Base):
+    """Track recipe usage/history."""
+    __tablename__ = "recipe_history"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=True, index=True)
+    recipe_id = Column(Integer, nullable=True, index=True)
+    recipe_title = Column(String(255), nullable=False)
+    viewed_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ChatSessionDB(Base):
+    """Chat sessions for multi-chat support in RAG."""
+    __tablename__ = "chat_sessions"
+
+    id = Column(String(36), primary_key=True)  # UUID
+    user_id = Column(Integer, nullable=True, index=True)
+    title = Column(String(255), default="New Chat")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class MealPlanHistoryDB(Base):
+    """Track meal plan generation history."""
+    __tablename__ = "meal_plan_history"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=True, index=True)
+    num_people = Column(Integer, default=1)
+    duration_days = Column(Integer, default=7)
+    cost_estimate = Column(Float, nullable=True)
+    plan_json = Column(Text, nullable=False)  # Full plan data
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 def init_db():
     """Create all tables."""
     Base.metadata.create_all(bind=engine)
@@ -126,5 +185,9 @@ def get_db() -> Session:
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        # IMP-020: Rollback on exception before closing
+        db.rollback()
+        raise
     finally:
         db.close()

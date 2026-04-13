@@ -17,6 +17,7 @@ from auth.schemas import (
     ForgotPasswordRequest, ResetPasswordRequest, ChangePasswordRequest
 )
 from auth.dependencies import require_user
+from utils import calculate_profile_completion
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 limiter = Limiter(key_func=get_remote_address)
@@ -42,7 +43,10 @@ async def signup(request: Request, data: SignupRequest, db: Session = Depends(ge
     token = create_access_token(data={"sub": str(user.id)})
     return TokenResponse(
         access_token=token,
-        user=UserResponse(id=user.id, email=user.email, name=user.name, profile=user.profile),
+        user=UserResponse(
+            id=user.id, email=user.email, name=user.name, profile=user.profile,
+            profile_completion=calculate_profile_completion(user.profile)
+        ),
     )
 
 
@@ -57,7 +61,10 @@ async def login(request: Request, data: LoginRequest, db: Session = Depends(get_
     token = create_access_token(data={"sub": str(user.id)})
     return TokenResponse(
         access_token=token,
-        user=UserResponse(id=user.id, email=user.email, name=user.name, profile=user.profile),
+        user=UserResponse(
+            id=user.id, email=user.email, name=user.name, profile=user.profile,
+            profile_completion=calculate_profile_completion(user.profile)
+        ),
     )
 
 
@@ -68,7 +75,10 @@ async def refresh_token(user: UserDB = Depends(require_user), db: Session = Depe
     new_token = create_access_token(data={"sub": str(user.id)})
     return TokenResponse(
         access_token=new_token,
-        user=UserResponse(id=user.id, email=user.email, name=user.name, profile=user.profile),
+        user=UserResponse(
+            id=user.id, email=user.email, name=user.name, profile=user.profile,
+            profile_completion=calculate_profile_completion(user.profile)
+        ),
     )
 
 
@@ -105,6 +115,7 @@ async def reset_password(request: Request, data: ResetPasswordRequest, db: Sessi
     user.reset_token = None
     user.reset_token_expires = None
     db.commit()
+    db.refresh(user)
     return {"message": "Password updated successfully"}
 
 
@@ -121,13 +132,19 @@ async def change_password(
     user.hashed_password = hash_password(data.new_password)
     db.commit()
     db.refresh(user)
-    return UserResponse(id=user.id, email=user.email, name=user.name, profile=user.profile)
+    return UserResponse(
+        id=user.id, email=user.email, name=user.name, profile=user.profile,
+        profile_completion=calculate_profile_completion(user.profile)
+    )
 
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(user: UserDB = Depends(require_user)):
     """Get current user profile."""
-    return UserResponse(id=user.id, email=user.email, name=user.name, profile=user.profile)
+    return UserResponse(
+        id=user.id, email=user.email, name=user.name, profile=user.profile,
+        profile_completion=calculate_profile_completion(user.profile)
+    )
 
 
 @router.put("/profile", response_model=UserResponse)
@@ -148,4 +165,7 @@ async def update_profile(
 
     db.commit()
     db.refresh(user)
-    return UserResponse(id=user.id, email=user.email, name=user.name, profile=user.profile)
+    return UserResponse(
+        id=user.id, email=user.email, name=user.name, profile=user.profile,
+        profile_completion=calculate_profile_completion(user.profile)
+    )

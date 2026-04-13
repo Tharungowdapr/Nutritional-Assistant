@@ -1,7 +1,7 @@
 """
 AaharAI NutriSync — API Routes: Nutrition
 """
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Query
 from pydantic import BaseModel
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -11,6 +11,10 @@ from engines.inference_engine import inference_engine
 
 router = APIRouter(prefix="/api/nutrition", tags=["Nutrition"])
 limiter = Limiter(key_func=get_remote_address)
+
+# IMP-014: Define valid sort columns
+ALLOWED_SORT_COLS = {"Food Name", "Energy (kcal)", "Protein (g)",
+                     "Fat (g)", "Carbs (g)", "Iron (mg)"}
 
 
 class CompareRequest(BaseModel):
@@ -33,20 +37,25 @@ async def search_foods(
     diet_type: str = None,
     food_group: str = None,
     region: str = None,
-    page: int = 1,
-    limit: int = 20,
+    page: int = Query(default=1, ge=1, le=1000),
+    limit: int = Query(default=20, ge=1, le=100),
     sort_by: str = "Food Name",
     sort_order: str = "asc"
 ):
     """Search and filter foods from the database with pagination and sorting."""
     results = db.search_foods(query, diet_type, food_group, region)
     
-    # Apply sorting
+    # IMP-014: Validate sort_by and handle exceptions properly
     if hasattr(results, 'sort_values'):
         ascending = sort_order.lower() == "asc"
+        if sort_by not in ALLOWED_SORT_COLS:
+            raise HTTPException(400, f'Invalid sort_by. Allowed: {ALLOWED_SORT_COLS}')
         try:
             results = results.sort_values(by=sort_by, ascending=ascending)
-        except:
+        except ValueError as e:
+            # Log the error and return unsorted results
+            import logging
+            logging.warning(f"Sort failed: {e}")
             pass
     
     # Apply pagination

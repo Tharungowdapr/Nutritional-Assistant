@@ -6,6 +6,7 @@ application can start even when optional data files or packages are not present.
 """
 from pathlib import Path
 import logging
+import threading
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -15,11 +16,14 @@ class NutriSyncDB:
     """Loads and holds all 12 sheets from the AaharAI NutriSync Enhanced Excel."""
 
     _instance = None
+    _lock = threading.Lock()  # IMP-016: Thread safety for load method
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._loaded = False
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._instance._loaded = False
         return cls._instance
 
     def load(self):
@@ -29,68 +33,70 @@ class NutriSyncDB:
         Excel file is not present or when pandas is not installed. It logs warnings
         rather than raising so the API can start in a degraded mode.
         """
-        if self._loaded:
-            return
+        # IMP-016: Use lock to prevent race conditions
+        with self._lock:
+            if self._loaded:
+                return
 
-        try:
-            import pandas as pd
-        except Exception as e:
-            logger.warning(f"Pandas not available: {e}. Skipping Excel data load.")
-            return
+            try:
+                import pandas as pd
+            except Exception as e:
+                logger.warning(f"Pandas not available: {e}. Skipping Excel data load.")
+                return
 
-        f = Path(settings.EXCEL_PATH)
-        if not f.exists():
-            logger.warning(f"NutriSync Excel file not found at {f}. Skipping data load.")
-            return
+            f = Path(settings.EXCEL_PATH)
+            if not f.exists():
+                logger.warning(f"NutriSync Excel file not found at {f}. Skipping data load.")
+                return
 
-        try:
-            # ── Load all 12 sheets ──
-            self.food = pd.read_excel(str(f), sheet_name="Food Composition (IFCT 2017)", header=1)
-            self.food = self.food.dropna(subset=["Food Name"])
-            self.food = self.food[
-                self.food["IFCT Code"].notna()
-                & ~self.food["IFCT Code"].astype(str).str.startswith("Source")
-            ]
+            try:
+                # ── Load all 12 sheets ──
+                self.food = pd.read_excel(str(f), sheet_name="Food Composition (IFCT 2017)", header=1)
+                self.food = self.food.dropna(subset=["Food Name"])
+                self.food = self.food[
+                    self.food["IFCT Code"].notna()
+                    & ~self.food["IFCT Code"].astype(str).str.startswith("Source")
+                ]
 
-            self.rda = pd.read_excel(str(f), sheet_name="ICMR-NIN RDA Targets", header=1).dropna(subset=["Profile"])
-            self.disease = pd.read_excel(str(f), sheet_name="Disease Nutrition Protocols", header=1).dropna(subset=["Condition"])
-            self.medicine = pd.read_excel(str(f), sheet_name="Medicine Nutrition Impacts", header=1).dropna(subset=["Brand Name (India)"])
-            self.region = pd.read_excel(str(f), sheet_name="Regional Food Culture", header=1).dropna(subset=["Zone"])
-            self.profession = pd.read_excel(str(f), sheet_name="Profession Calorie Guide", header=1).dropna(subset=["Profession Category"])
-            self.portion = pd.read_excel(str(f), sheet_name="Indian Portion Conversions", header=1).dropna(subset=["Portion Description"])
-            self.glp1 = pd.read_excel(str(f), sheet_name="GLP-1 Nutrition Protocol", header=1).dropna(subset=["Medication"])
-            self.physio = pd.read_excel(str(f), sheet_name="Physio-State Nutrient Map", header=1).dropna(subset=["Physiological State"])
-            self.lifestage = pd.read_excel(str(f), sheet_name="Life-Stage Nutrient Priorities", header=1).dropna(subset=["Life Stage"])
-            self.context_rules = pd.read_excel(str(f), sheet_name="Context Resolver Rules", header=1).dropna(subset=["Conflict Scenario"])
-            self.micronutrient = pd.read_excel(str(f), sheet_name="Micronutrient-Food Matrix", header=1).dropna(subset=["Nutrient"])
+                self.rda = pd.read_excel(str(f), sheet_name="ICMR-NIN RDA Targets", header=1).dropna(subset=["Profile"])
+                self.disease = pd.read_excel(str(f), sheet_name="Disease Nutrition Protocols", header=1).dropna(subset=["Condition"])
+                self.medicine = pd.read_excel(str(f), sheet_name="Medicine Nutrition Impacts", header=1).dropna(subset=["Brand Name (India)"])
+                self.region = pd.read_excel(str(f), sheet_name="Regional Food Culture", header=1).dropna(subset=["Zone"])
+                self.profession = pd.read_excel(str(f), sheet_name="Profession Calorie Guide", header=1).dropna(subset=["Profession Category"])
+                self.portion = pd.read_excel(str(f), sheet_name="Indian Portion Conversions", header=1).dropna(subset=["Portion Description"])
+                self.glp1 = pd.read_excel(str(f), sheet_name="GLP-1 Nutrition Protocol", header=1).dropna(subset=["Medication"])
+                self.physio = pd.read_excel(str(f), sheet_name="Physio-State Nutrient Map", header=1).dropna(subset=["Physiological State"])
+                self.lifestage = pd.read_excel(str(f), sheet_name="Life-Stage Nutrient Priorities", header=1).dropna(subset=["Life Stage"])
+                self.context_rules = pd.read_excel(str(f), sheet_name="Context Resolver Rules", header=1).dropna(subset=["Conflict Scenario"])
+                self.micronutrient = pd.read_excel(str(f), sheet_name="Micronutrient-Food Matrix", header=1).dropna(subset=["Nutrient"])
 
-            # ── Parse numeric columns in food sheet ──
-            NUM_COLS = [
-                "Energy (kcal)", "Protein (g)", "Fat (g)", "Carbs (g)", "Fibre (g)",
-                "Iron (mg)", "Calcium (mg)", "Zinc (mg)", "Folate (mcg)", "Vit B12 (mcg)",
-                "Vit D (mcg)", "Vit C (mg)", "Vit A (mcg RAE)", "Magnesium (mg)",
-                "Potassium (mg)", "Omega-3 (g)", "GI (Glycaemic Index)",
-            ]
-            for c in NUM_COLS:
-                if c in self.food.columns:
-                    self.food[c] = pd.to_numeric(self.food[c], errors="coerce")
+                # ── Parse numeric columns in food sheet ──
+                NUM_COLS = [
+                    "Energy (kcal)", "Protein (g)", "Fat (g)", "Carbs (g)", "Fibre (g)",
+                    "Iron (mg)", "Calcium (mg)", "Zinc (mg)", "Folate (mcg)", "Vit B12 (mcg)",
+                    "Vit D (mcg)", "Vit C (mg)", "Vit A (mcg RAE)", "Magnesium (mg)",
+                    "Potassium (mg)", "Omega-3 (g)", "GI (Glycaemic Index)",
+                ]
+                for c in NUM_COLS:
+                    if c in self.food.columns:
+                        self.food[c] = pd.to_numeric(self.food[c], errors="coerce")
 
-            # ── Parse numeric columns in RDA sheet ──
-            for c in ["Energy (kcal)", "Protein (g)", "Iron (mg)", "Calcium (mg)",
-                       "Zinc (mg)", "Folate (mcg)", "Vit B12 (mcg)", "Vit D (mcg)",
-                       "Vit C (mg)", "Magnesium (mg)"]:
-                if c in self.rda.columns:
-                    self.rda[c] = pd.to_numeric(self.rda[c], errors="coerce")
+                # ── Parse numeric columns in RDA sheet ──
+                for c in ["Energy (kcal)", "Protein (g)", "Iron (mg)", "Calcium (mg)",
+                           "Zinc (mg)", "Folate (mcg)", "Vit B12 (mcg)", "Vit D (mcg)",
+                           "Vit C (mg)", "Magnesium (mg)"]:
+                    if c in self.rda.columns:
+                        self.rda[c] = pd.to_numeric(self.rda[c], errors="coerce")
 
-            # ── Parse profession numeric columns ──
-            for c in ["Male Kcal/day (65kg ref)", "Female Kcal/day (55kg ref)", "Protein g/day"]:
-                if c in self.profession.columns:
-                    self.profession[c] = pd.to_numeric(self.profession[c], errors="coerce")
+                # ── Parse profession numeric columns ──
+                for c in ["Male Kcal/day (65kg ref)", "Female Kcal/day (55kg ref)", "Protein g/day"]:
+                    if c in self.profession.columns:
+                        self.profession[c] = pd.to_numeric(self.profession[c], errors="coerce")
 
-            self._loaded = True
-        except Exception as e:
-            logger.warning(f"Failed to load Excel sheets: {e}")
-            return
+                self._loaded = True
+            except Exception as e:
+                logger.warning(f"Failed to load Excel sheets: {e}")
+                return
 
     @property
     def food_groups(self) -> list[str]:
@@ -102,37 +108,54 @@ class NutriSyncDB:
 
     def search_foods(self, query: str = "", diet_type: str = None,
                      food_group: str = None, region: str = None):
-        results = self.food.copy() if getattr(self, 'food', None) is not None else []
-        if isinstance(results, list):
-            return results
+        # IMP-006: Avoid unnecessary copy - use boolean masking instead
+        if getattr(self, 'food', None) is None:
+            return []
+        
+        import re
+        import pandas as pd
+        
+        # Use boolean masking (creates view, not copy)
+        mask = [True] * len(self.food)
+        mask = pd.Series(mask, index=self.food.index)
+        
         if query:
-            results = results[results["Food Name"].str.contains(query, case=False, na=False, regex=False)]
+            mask &= self.food["Food Name"].str.contains(
+                re.escape(query), case=False, na=False, regex=False)
         if diet_type:
-            if "Diet Type" in results.columns:
-                results = results[results["Diet Type"].str.upper() == diet_type.upper()]
+            if "Diet Type" in self.food.columns:
+                mask &= (self.food["Diet Type"].str.upper() == diet_type.upper())
         if food_group:
-            results = results[results["Food Group"].str.upper() == food_group.upper()]
+            mask &= (self.food["Food Group"].str.upper() == food_group.upper())
         if region:
-            if "Region Availability" in results.columns:
-                results = results[results["Region Availability"].str.contains(region, case=False, na=False, regex=False)]
-            elif "Region" in results.columns:
-                results = results[results["Region"].str.contains(region, case=False, na=False, regex=False)]
-        return results
+            if "Region Availability" in self.food.columns:
+                mask &= self.food["Region Availability"].str.contains(
+                    re.escape(region), case=False, na=False, regex=False)
+            elif "Region" in self.food.columns:
+                mask &= self.food["Region"].str.contains(
+                    re.escape(region), case=False, na=False, regex=False)
+        
+        # Return view (not copy)
+        return self.food[mask]
 
     def get_food_by_name(self, name: str):
+        import re
         if getattr(self, 'food', None) is None:
             return None
         match = self.food[self.food["Food Name"] == name]
         if match.empty:
-            match = self.food[self.food["Food Name"].str.contains(name, case=False, na=False, regex=False)]
+            match = self.food[self.food["Food Name"].str.contains(
+                re.escape(name), case=False, na=False, regex=False)]
         if match.empty:
             return None
         return match.iloc[0].to_dict()
 
     def get_rda(self, profile: str):
+        import re
         if getattr(self, 'rda', None) is None:
             return None
-        match = self.rda[self.rda["Profile"].str.contains(profile, case=False, na=False)]
+        match = self.rda[self.rda["Profile"].str.contains(
+            re.escape(profile), case=False, na=False, regex=False)]
         if match.empty:
             return None
         return match.iloc[0].to_dict()

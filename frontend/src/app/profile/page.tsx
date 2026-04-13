@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { User, Activity, Heart, Briefcase, Zap, Save, Loader2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,8 @@ export default function RebuiltProfilePage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [formData, setFormData] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -56,6 +58,34 @@ export default function RebuiltProfilePage() {
       });
     }
   }, [user]);
+
+  // Auto-save debounce effect
+  useEffect(() => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    
+    // Debounce auto-save for 1 second
+    saveTimeoutRef.current = setTimeout(() => {
+      if (formData && Object.keys(formData).length > 0) {
+        handleAutoSave();
+      }
+    }, 1000);
+
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [formData]);
+
+  const handleAutoSave = async () => {
+    try {
+      setAutoSaveStatus("saving");
+      await updateProfile(formData);
+      setAutoSaveStatus("saved");
+      setTimeout(() => setAutoSaveStatus("idle"), 2000);
+    } catch (e: any) {
+      console.error("Auto-save failed:", e);
+      setAutoSaveStatus("idle");
+    }
+  };
 
   const handleChange = (key: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [key]: value }));
@@ -139,13 +169,25 @@ export default function RebuiltProfilePage() {
               <div className="relative w-20 h-20">
                 <svg className="w-full h-full" viewBox="0 0 100 100">
                   <circle className="text-muted/30 stroke-current" strokeWidth="8" fill="transparent" r="40" cx="50" cy="50" />
-                  <circle className="text-primary stroke-current" strokeWidth="8" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * 0.75)} strokeLinecap="round" fill="transparent" r="40" cx="50" cy="50" />
+                  <circle className="text-primary stroke-current" strokeWidth="8" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * (user?.profile_completion || 0) / 100)} strokeLinecap="round" fill="transparent" r="40" cx="50" cy="50" />
                 </svg>
-                <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">75%</div>
+                <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">{user?.profile_completion || 0}%</div>
               </div>
-              <div>
-                <p className="text-sm font-medium">Almost there!</p>
-                <p className="text-xs text-muted-foreground mt-1">Complete your Lifestyle and Wellness tabs to reach 100%.</p>
+              <div className="flex-1">
+                <p className="text-sm font-medium">{user && user.profile_completion === 100 ? "Profile Complete! 🎉" : "Almost there!"}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {user?.profile_completion === 100 
+                    ? "Your profile is fully complete for optimal AI recommendations."
+                    : `Complete ${100 - (user?.profile_completion || 0)}% more to unlock all features.`}
+                </p>
+                {autoSaveStatus === "saving" && (
+                  <p className="text-xs text-primary mt-2 flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin" /> Saving...
+                  </p>
+                )}
+                {autoSaveStatus === "saved" && (
+                  <p className="text-xs text-green-600 mt-2">✓ Auto-saved</p>
+                )}
               </div>
             </div>
           </SettingsCard>

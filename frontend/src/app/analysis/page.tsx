@@ -130,17 +130,8 @@ export default function AnalysisPage() {
   const loadAnalysisData = async () => {
     try {
       setLoading(true);
-      const [
-        summary, 
-        stats, 
-        veg, 
-        protein, 
-        iron, 
-        b12, 
-        calDist, 
-        giDist, 
-        personal
-      ] = await Promise.all([
+      // IMP-010: Use Promise.allSettled for resilience — each request resolves independently
+      const results = await Promise.allSettled([
         analysisApi.getNutrientSummary(),
         analysisApi.getFoodGroupStats(),
         analysisApi.getVegNonvegStats(),
@@ -148,20 +139,35 @@ export default function AnalysisPage() {
         analysisApi.getIronAnalysis(),
         analysisApi.getB12Analysis(),
         analysisApi.getCalorieDistribution(),
-        analysisApi.getGIDistribution().catch(() => ({})),
-        analysisApi.getPersonalAnalysis().catch(() => null),
+        analysisApi.getGIDistribution(),
+        analysisApi.getPersonalAnalysis(),
       ]);
 
-      setNutrientSummary(summary);
-      setFoodStats(stats);
-      setVegNonvegStats(veg);
+      // Extract values, handling both fulfilled and rejected results
+      const [
+        summary,
+        stats,
+        veg,
+        protein,
+        iron,
+        b12,
+        calDist,
+        giDist,
+        personal
+      ] = results.map(r => r.status === 'fulfilled' ? r.value : null);
+
+      // Set states with fallbacks for null values
+      setNutrientSummary(summary || {});
+      setFoodStats(stats || {});
+      setVegNonvegStats(veg || {});
       setProteinFoods(protein?.foods || []);
-      setIronAnalysis(iron);
-      setB12Analysis(b12);
-      setCalorieDistribution(calDist);
-      setGIDistribution(giDist);
-      setPersonalAnalysis(personal);
+      setIronAnalysis(iron || {});
+      setB12Analysis(b12 || {});
+      setCalorieDistribution(calDist || {});
+      setGIDistribution(giDist || {});
+      setPersonalAnalysis(personal || null);
     } catch (error) {
+      console.error('Error loading analysis data:', error);
       toast.error('Failed to load analysis data');
     } finally {
       setLoading(false);

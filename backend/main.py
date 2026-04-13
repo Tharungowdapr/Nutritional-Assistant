@@ -125,6 +125,8 @@ from routes.meal_plan import router as meal_plan_router
 from routes.admin import router as admin_router
 from routes.tracker import router as tracker_router
 from routes.analysis import router as analysis_router
+from routes.recipes import router as recipes_router
+from routes.chat_sessions import router as chat_sessions_router
 
 app.include_router(auth_router)
 app.include_router(chat_router)
@@ -133,6 +135,8 @@ app.include_router(meal_plan_router)
 app.include_router(admin_router)
 app.include_router(tracker_router)
 app.include_router(analysis_router)
+app.include_router(recipes_router)
+app.include_router(chat_sessions_router)
 
 
 @app.get("/api/health", response_model=HealthCheckResponse)
