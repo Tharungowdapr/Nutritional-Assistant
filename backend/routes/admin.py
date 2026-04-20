@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/admin", tags=["Admin"])
 def require_admin(current_user: UserDB = Depends(require_user)) -> UserDB:
     """Dependency to require admin role."""
     if not getattr(current_user, 'is_admin', False):
-        raise HTTPException(403, "Admin access required")
+        raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
 
@@ -57,6 +57,8 @@ async def list_users(
     db: Session = Depends(get_db),
 ):
     """List all users with pagination."""
+    # BUG-025: Pagination guard
+    limit = min(limit, 100)
     total = db.query(func.count(UserDB.id)).scalar()
     skip = (page - 1) * limit
     
@@ -92,7 +94,7 @@ async def get_user_activity(
     """Get activity for a specific user."""
     user = db.query(UserDB).filter(UserDB.id == user_id).first()
     if not user:
-        raise HTTPException(404, "User not found")
+        raise HTTPException(status_code=404, detail="User not found")
     
     # Get chat count
     chat_count = db.query(func.count(ChatHistoryDB.id)).filter(
@@ -114,7 +116,8 @@ async def get_user_activity(
         "recent_chats": [
             {
                 "id": chat.id,
-                "message": chat.user_message[:100] if chat.user_message else "",
+                # BUG-027: Mask message content for privacy
+                "message": "[Message Masked for Privacy]" if chat.user_message else "",
                 "created_at": chat.created_at,
             }
             for chat in recent_chats
@@ -160,9 +163,16 @@ async def toggle_admin(
     """Toggle admin status for a user."""
     user = db.query(UserDB).filter(UserDB.id == user_id).first()
     if not user:
-        raise HTTPException(404, "User not found")
+        raise HTTPException(status_code=404, detail="User not found")
     
-    user.is_admin = not (user.is_admin or False)
+    is_currently_admin = user.is_admin or False
+
+    if user.id == current_user.id and is_currently_admin:
+        admin_count = db.query(func.count(UserDB.id)).filter(UserDB.is_admin == True).scalar()
+        if admin_count <= 1:
+            raise HTTPException(status_code=400, detail="Cannot demote the last remaining admin")
+
+    user.is_admin = not is_currently_admin
     db.commit()
     
     return {

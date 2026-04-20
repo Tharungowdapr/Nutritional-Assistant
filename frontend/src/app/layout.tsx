@@ -4,7 +4,8 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/lib/auth-context";
-import { Sidebar } from "@/components/sidebar";
+import { ChatProvider } from "@/lib/chat-context";
+import { Navbar } from "@/components/navbar";
 import { ProtectedRoute } from "@/components/protected-route";
 
 const inter = Inter({
@@ -26,14 +27,15 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans luxury-bg min-h-screen`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
-            <ProtectedRoute>
-              <Sidebar />
-              {/* Main content offset for sidebar on desktop, bottom tab bar padding on mobile */}
-              <main className="md:ml-[260px] pt-14 md:pt-0 pb-16 md:pb-0 min-h-screen">
-                {children}
-              </main>
-            </ProtectedRoute>
-            <Toaster position="top-right" />
+            <ChatProvider>
+              <ProtectedRoute>
+                <Navbar />
+                <main className="pt-14 min-h-screen">
+                  {children}
+                </main>
+              </ProtectedRoute>
+              <Toaster position="top-right" />
+            </ChatProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

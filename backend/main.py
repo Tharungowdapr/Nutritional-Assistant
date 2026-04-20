@@ -82,18 +82,35 @@ async def lifespan(app: FastAPI):
         logger.warning(f"Could not initialize RAGService: {e}")
         _rag_service = None
 
-    # 4. Initialize Meal Agent (lazy import)
+    # 4. Initialize Meal Agent (LangGraph orchestrated)
     try:
-        from agent.meal_agent import MealPlanAgent
+        from agent.langgraph_meal_agent import LangGraphMealAgent
 
-        _meal_agent = MealPlanAgent(llm_router=_llm_router)
+        _meal_agent = LangGraphMealAgent(llm_router=_llm_router)
     except Exception as e:
-        logger.warning(f"Could not initialize MealPlanAgent: {e}")
+        logger.warning(f"Could not initialize LangGraphMealAgent: {e}")
         _meal_agent = None
 
     logger.info("✅ AaharAI NutriSync API ready!")
     yield
+    # BUG-029: Cleanup logic for resource management
     logger.info("Shutting down NutriSync...")
+    try:
+        if _llm_router:
+            if hasattr(_llm_router, 'close'):
+                await _llm_router.close()
+            _llm_router = None
+        if _rag_service:
+            if hasattr(_rag_service, 'close'):
+                await _rag_service.close()
+            _rag_service = None
+        if _meal_agent:
+            if hasattr(_meal_agent, 'close'):
+                await _meal_agent.close()
+            _meal_agent = None
+        logger.info("✅ Resources cleaned up")
+    except Exception as e:
+        logger.error(f"Cleanup failed: {e}")
 
 
 # ── Create FastAPI app ──
@@ -142,11 +159,12 @@ app.include_router(chat_sessions_router)
 @app.get("/api/health", response_model=HealthCheckResponse)
 async def health_check():
     """Health check — reports status of all components."""
+    router_status = _llm_router.status if _llm_router else {}
     return HealthCheckResponse(
         status="healthy",
         database_loaded=db._loaded,
-        ollama_available=bool(_llm_router._ollama_available) if _llm_router else False,
-        groq_available=bool(_llm_router._groq_available) if _llm_router else False,
+        ollama_available=router_status.get("ollama_available", False),
+        groq_available=router_status.get("groq_available", False),
         chroma_ready=bool(_rag_service.is_ready) if _rag_service else False,
         db_stats=db.stats() if db._loaded else {},
     )

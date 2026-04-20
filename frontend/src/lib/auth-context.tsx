@@ -9,6 +9,7 @@ interface User {
   name: string;
   profile: Record<string, any>;
   profile_completion: number;
+  is_admin?: boolean;
 }
 
 interface AuthContextType {
@@ -61,10 +62,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateProfile = async (profileData: Record<string, any>) => {
-    const data: any = await authApi.updateProfile(profileData);
-    // Profile endpoint returns UserResponse directly (not wrapped in .user like login/signup)
-    const user: User = data as User;
-    setUser(user);
+    console.log("updateProfile called with:", profileData);
+    try {
+      const data: any = await authApi.updateProfile(profileData);
+      console.log("updateProfile response:", data);
+      // Profile endpoint returns UserResponse directly (not wrapped in .user like login/signup)
+      const user: User = data as User;
+      setUser(user);
+      console.log("User state updated:", user);
+    } catch (error: any) {
+      console.error("updateProfile error:", error);
+      throw error;
+    }
   };
 
   return (

@@ -1,613 +1,490 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { nutritionApi } from '@/lib/api';
-import { toast } from 'sonner';
-import { ChevronDown, Search, BarChart3, X, Plus, Minus, Check, TrendingUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect, useMemo } from "react";
+import { 
+  Search, Filter, Download, ChevronUp, ChevronDown, ChevronLeft, 
+  ChevronRight, X, Eye, EyeOff, ArrowUpDown, RefreshCw
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
-interface Food {
-  'Food Name'?: string;
-  'Food Group'?: string;
-  'Energy (kcal)'?: number;
-  'Protein (g)'?: number;
-  'Fat (g)'?: number;
-  'Carbs (g)'?: number;
-  'Fibre (g)'?: number;
-  'Iron (mg)'?: number;
-  'Calcium (mg)'?: number;
-  'IFCT Code'?: string;
-  [key: string]: any;
+interface FoodData {
+  [key: string]: string | number | null;
 }
 
-interface APIResponse {
-  foods: Food[];
-  total: number;
-  page: number;
-  limit: number;
-  pages: number;
+interface ColumnDef {
+  key: string;
+  label: string;
+  type: "text" | "number" | "category";
+  sortable: boolean;
+  filterable: boolean;
+  width?: string;
 }
 
-const REGIONS = ['North', 'South', 'East', 'West', 'Central'];
-const DIET_TYPES = ['Veg', 'Non-Veg', 'Vegan'];
-const NUTRIENT_KEYS = [
-  'Energy (kcal)', 'Protein (g)', 'Fat (g)', 'Carbs (g)', 'Fibre (g)',
-  'Iron (mg)', 'Calcium (mg)', 'Zinc (mg)', 'Sodium (mg)', 'Potassium (mg)',
-  'Magnesium (mg)', 'Phosphorus (mg)', 'Vitamin A (µg)', 'Vitamin B12 (µg)',
-  'Vitamin C (mg)', 'Folate (µg)', 'Vitamin D (µg)', 'Cholesterol (mg)',
-  'Water (g)', 'Ash (g)'
+interface FilterState {
+  [key: string]: {
+    type: "text" | "range" | "category";
+    value: string | { min: number; max: number } | string[];
+  };
+}
+
+const DEFAULT_COLUMNS: ColumnDef[] = [
+  { key: "Food Name", label: "Food Name", type: "text", sortable: true, filterable: true },
+  { key: "Food Group", label: "Food Group", type: "category", sortable: true, filterable: true },
+  { key: "Diet Type", label: "Diet Type", type: "category", sortable: true, filterable: true },
+  { key: "Region Availability", label: "Region", type: "category", sortable: true, filterable: true },
+  { key: "Energy (kcal)", label: "Energy (kcal)", type: "number", sortable: true, filterable: true, width: "100px" },
+  { key: "Protein (g)", label: "Protein (g)", type: "number", sortable: true, filterable: true, width: "90px" },
+  { key: "Fat (g)", label: "Fat (g)", type: "number", sortable: true, filterable: true, width: "80px" },
+  { key: "Carbs (g)", label: "Carbs (g)", type: "number", sortable: true, filterable: true, width: "90px" },
+  { key: "Fibre (g)", label: "Fibre (g)", type: "number", sortable: true, filterable: true, width: "80px" },
+  { key: "Iron (mg)", label: "Iron (mg)", type: "number", sortable: true, filterable: true, width: "80px" },
+  { key: "Calcium (mg)", label: "Calcium (mg)", type: "number", sortable: true, filterable: true, width: "90px" },
+  { key: "Vitamin C (mg)", label: "Vit C (mg)", type: "number", sortable: true, filterable: true, width: "90px" },
 ];
 
-// Pure SVG Macro Donut
-function MacroDonut({ protein = 20, fat = 15, carbs = 65 }: { protein: number; fat: number; carbs: number }) {
-  const total = protein + fat + carbs;
-  const pPct = (protein / total) * 100;
-  const fPct = (fat / total) * 100;
-  const cPct = (carbs / total) * 100;
+const API_URL = "http://localhost:8000/api";
+const MAX_API_LIMIT = 100;
 
-  const circumference = 2 * Math.PI * 45;
-  const pOffset = (100 - pPct) * (circumference / 100);
-  const fOffset = pOffset - (fPct * (circumference / 100));
-  const cOffset = fOffset - (cPct * (circumference / 100));
-
-  return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="relative w-40 h-40">
-        <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-          <circle cx="50" cy="50" r="40" className="stroke-muted/30 fill-none" strokeWidth="8" />
-          {/* Fat segment */}
-          <circle
-            cx="50" cy="50" r="40" className="stroke-red-500 fill-none transition-all duration-700"
-            strokeWidth="8" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * (fat / total))}
-            strokeLinecap="round"
-          />
-          {/* Protein segment */}
-          <circle
-            cx="50" cy="50" r="40" className="stroke-blue-500 fill-none transition-all duration-700"
-            strokeWidth="8" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * (protein / total))}
-            style={{ transform: `rotate(${(fat / total) * 360}deg)`, transformOrigin: 'center' }}
-            strokeLinecap="round"
-          />
-          {/* Carbs segment */}
-          <circle
-            cx="50" cy="50" r="40" className="stroke-green-500 fill-none transition-all duration-700"
-            strokeWidth="8" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * (carbs / total))}
-            style={{ transform: `rotate(${((fat + protein) / total) * 360}deg)`, transformOrigin: 'center' }}
-            strokeLinecap="round"
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none">Ratio</span>
-          <span className="text-lg font-black text-foreground">{total.toFixed(0)}<span className="text-[10px] font-normal ml-0.5 mt-1">g</span></span>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 gap-2 w-full max-w-[140px]">
-        {[
-          { label: 'Prot.', val: pPct, color: 'bg-blue-500' },
-          { label: 'Fat', val: fPct, color: 'bg-red-500' },
-          { label: 'Carbs', val: cPct, color: 'bg-green-500' }
-        ].map(item => (
-          <div key={item.label} className="flex items-center justify-between text-[11px] font-medium">
-            <div className="flex items-center gap-2">
-              <span className={cn("w-2 h-2 rounded-full", item.color)} />
-              <span className="text-muted-foreground">{item.label}</span>
-            </div>
-            <span>{item.val.toFixed(0)}%</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Nutrient category helper
-function getNutrientCategory(name: string) {
-  const minerals = ['Iron', 'Calcium', 'Zinc', 'Sodium', 'Potassium', 'Magnesium', 'Phosphorus'];
-  const vitamins = ['Vitamin A', 'Vitamin B12', 'Vitamin C', 'Folate', 'Vitamin D'];
-  if (minerals.some(m => name.includes(m))) return 'Minerals';
-  if (vitamins.some(v => name.includes(v))) return 'Vitamins';
-  return 'Other';
-}
-
-// Nutrient grid for detail modal
-function NutrientGrid({ food }: { food: Food }) {
-  const nutrients = NUTRIENT_KEYS.filter(key => food[key] != null && food[key] !== 0);
+export default function FoodsDataPage() {
+  const [allData, setAllData] = useState<FoodData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const categorized = nutrients.reduce((acc: any, key) => {
-    const name = key.split('(')[0].trim();
-    const cat = getNutrientCategory(name);
-    if (!acc[cat]) acc[cat] = [];
-    acc[cat].push(key);
-    return acc;
-  }, {});
-
-  return (
-    <div className="space-y-8">
-      {Object.entries(categorized).map(([cat, keys]: [string, any]) => (
-        <div key={cat}>
-          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-4 border-b border-primary/10 pb-1">{cat}</h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-y-5 gap-x-8">
-            {keys.map((key: string) => {
-              const val = Number(food[key]) || 0;
-              const unit = key.split('(')[1]?.replace(')', '') || '';
-              const name = key.split('(')[0].trim();
-              return (
-                <div key={key} className="flex flex-col border-l border-border pl-3 group transition-colors hover:border-primary/50">
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">{name}</span>
-                  <span className="text-sm font-bold text-foreground">
-                    {val.toFixed(val < 1 ? 2 : 1)} <span className="text-[10px] font-normal text-muted-foreground ml-0.5">{unit}</span>
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Food detail modal
-function FoodDetailModal({
-  food,
-  open,
-  onOpenChange,
-}: {
-  food: Food | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  if (!open || !food) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[92vh] p-0 overflow-hidden border-none shadow-2xl rounded-3xl bg-background text-foreground">
-        <ScrollArea className="max-h-[92vh] w-full">
-          <DialogHeader className="p-6 md:p-8 pb-4 md:pb-6 bg-background/80 backdrop-blur-md sticky top-0 z-20 border-b border-border/50">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest rounded-full">
-                  {food['Food Group']}
-                </span>
-                {food['IFCT Code'] && (
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest bg-muted/50 px-2 py-0.5 rounded-full">
-                    ID: {food['IFCT Code']}
-                  </span>
-                )}
-              </div>
-              <DialogTitle className="text-3xl md:text-5xl font-black text-foreground tracking-tight leading-tight">
-                {food['Food Name']}
-              </DialogTitle>
-            </div>
-          </DialogHeader>
-
-          <div className="p-6 md:p-10">
-            <div className="flex flex-col lg:flex-row gap-10 items-start">
-              {/* Left Column: Visuals & Macro Ratio */}
-              <div className="w-full lg:w-[280px] space-y-8 flex-shrink-0">
-                <div className="bg-card p-6 md:p-8 rounded-[32px] border border-border/50 shadow-sm relative overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <MacroDonut
-                    protein={Number(food['Protein (g)']) || 0}
-                    fat={Number(food['Fat (g)']) || 0}
-                    carbs={Number(food['Carbs (g)']) || 0}
-                  />
-                </div>
-                
-                <div className="bg-primary/5 p-6 md:p-8 rounded-[32px] border border-primary/10 relative overflow-hidden">
-                   <div className="flex items-center justify-between mb-4">
-                     <span className="text-[10px] font-black uppercase tracking-widest text-primary">Energy Density</span>
-                     <TrendingUp className="w-4 h-4 text-primary opacity-60" />
-                   </div>
-                   <p className="text-4xl font-black text-foreground">{Math.round(food['Energy (kcal)'] || 0)}</p>
-                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">KCALS PER 100G</p>
-                </div>
-              </div>
-
-              {/* Right Column: Detailed Nutrient Profile */}
-              <div className="flex-1 w-full min-w-0">
-                <div className="flex items-center gap-4 mb-8">
-                   <div className="h-[1px] flex-1 bg-border" />
-                   <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground whitespace-nowrap">Nutritional Profile</h3>
-                   <div className="h-[1px] flex-1 bg-border" />
-                </div>
-                
-                <NutrientGrid food={food} />
-              </div>
-            </div>
-
-            <div className="mt-16 text-center border-t border-border/50 pt-8">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold opacity-30">
-                Data grounded in ICMR-NIN 2024 & IFCT 2017 &bull; Accuracy check active
-              </p>
-            </div>
-          </div>
-          
-          <div className="p-6 bg-muted/20 border-t border-border/50 md:hidden">
-             <Button onClick={() => onOpenChange(false)} className="w-full h-12 rounded-xl text-xs font-black uppercase tracking-widest">
-                Dismiss
-             </Button>
-          </div>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// Comparison Modal
-function ComparisonModal({
-  foods,
-  open,
-  onOpenChange,
-}: {
-  foods: Food[];
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  if (!open || foods.length < 2) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <div className="fixed inset-0 z-50 bg-black/50 flex flex-col items-center justify-center p-4">
-        <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col bg-background border-border">
-          <div className="flex justify-between items-center p-6 border-b border-border shrink-0">
-            <h2 className="text-2xl font-bold">Food Comparison</h2>
-            <button onClick={() => onOpenChange(false)} className="p-2 hover:bg-muted rounded-md text-muted-foreground">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <ScrollArea className="flex-1 p-6">
-            <div className="overflow-x-auto pb-4">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr>
-                    <th className="p-3 border-b border-border font-medium text-muted-foreground">Nutrient (per 100g)</th>
-                    {foods.map((f, i) => (
-                      <th key={i} className="p-3 border-b border-border font-bold min-w-[150px]">
-                        {f['Food Name']}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { key: 'Energy (kcal)', label: 'Energy (kcal)' },
-                    { key: 'Protein (g)', label: 'Protein (g)' },
-                    { key: 'Fat (g)', label: 'Fat (g)' },
-                    { key: 'Carbs (g)', label: 'Carbs (g)' },
-                    { key: 'Fibre (g)', label: 'Fibre (g)' },
-                    { key: 'Iron (mg)', label: 'Iron (mg)' },
-                    { key: 'Calcium (mg)', label: 'Calcium (mg)' },
-                  ].map((nutrient, idx) => (
-                    <tr key={idx} className="even:bg-muted/30">
-                      <td className="p-3 border-b border-border font-medium">{nutrient.label}</td>
-                      {foods.map((f, i) => {
-                        const val = Number(f[nutrient.key]) || 0;
-                        const maxVal = Math.max(...foods.map(food => Number(food[nutrient.key]) || 0));
-                        const isHighest = val === maxVal && val > 0;
-                        return (
-                          <td key={i} className={`p-3 border-b border-border ${isHighest ? 'text-primary font-bold' : ''}`}>
-                            {val.toFixed(1)}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {foods.map((f, i) => (
-                <div key={i} className="p-4 border border-border rounded-lg bg-card">
-                  <h3 className="font-bold mb-4">{f['Food Name']} Macros</h3>
-                  <MacroDonut
-                    protein={Number(f['Protein (g)']) || 0}
-                    fat={Number(f['Fat (g)']) || 0}
-                    carbs={Number(f['Carbs (g)']) || 0}
-                  />
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </Card>
-      </div>
-    </Dialog>
-  );
-}
-
-export default function FoodsPage() {
-  const [foods, setFoods] = useState<Food[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortColumn, setSortColumn] = useState("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [foodGroups, setFoodGroups] = useState<string[]>([]);
-  const [selectedGroup, setSelectedGroup] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('');
-  const [selectedDietType, setSelectedDietType] = useState('');
-  const [compareMode, setCompareMode] = useState(false);
-  const [selectedForCompare, setSelectedForCompare] = useState<Food[]>([]);
-  const [showCompare, setShowCompare] = useState(false);
-  const [selectedFood, setSelectedFood] = useState<Food | null>(null);
-  const [showDetail, setShowDetail] = useState(false);
+  const [pageSize, setPageSize] = useState(25);
+  const [showFilters, setShowFilters] = useState(false);
+  const [showColumns, setShowColumns] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
+    new Set(DEFAULT_COLUMNS.map(c => c.key))
+  );
+  const [filters, setFilters] = useState<FilterState>({});
 
-  // Load food groups
-  useEffect(() => {
-    const loadGroups = async () => {
-      try {
-        const data = await nutritionApi.foodGroups();
-        setFoodGroups(data.food_groups || []);
-      } catch (error) {
-        console.error('Failed to load food groups', error);
-      }
-    };
-    loadGroups();
-  }, []);
-
-  // Reset page on filter changes
-  useEffect(() => {
-    setPage(1);
-  }, [search, selectedGroup, selectedDietType, selectedRegion]);
-
-  // Load foods with debounce
-  useEffect(() => {
-    const loadFoods = async () => {
-      setLoading(true);
-      try {
-        const data: APIResponse = await nutritionApi.searchFoods(
-          search,
-          selectedDietType || undefined,
-          selectedGroup || undefined,
-          selectedRegion || undefined,
-          page,
-          20
-        );
-        setFoods(data.foods);
-        setTotal(data.total);
-        setTotalPages(data.pages);
-      } catch (error) {
-        toast.error('Failed to load foods');
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const timer = setTimeout(() => {
-      loadFoods();
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [search, selectedGroup, selectedDietType, selectedRegion, page]);
-
-  const toggleCompare = useCallback((food: Food) => {
-    setSelectedForCompare((prev) => {
-      if (prev.some(f => f['Food Name'] === food['Food Name'])) {
-        return prev.filter(f => f['Food Name'] !== food['Food Name']);
-      } else if (prev.length < 4) {
-        return [...prev, food];
-      } else {
-        toast.error('Maximum 4 foods can be compared');
-        return prev;
-      }
+  const categoricalOptions = useMemo(() => {
+    const options: { [key: string]: Set<string> } = {};
+    DEFAULT_COLUMNS.filter(c => c.type === "category").forEach(col => {
+      const values = new Set<string>();
+      allData.forEach(row => {
+        const val = row[col.key];
+        if (val) values.add(String(val));
+      });
+      options[col.key] = values;
     });
-  }, []);
+    return options;
+  }, [allData]);
 
-  const handleCompare = async () => {
-    if (selectedForCompare.length < 2) {
-      toast.error('Select at least 2 foods to compare');
-      return;
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const url = `${API_URL}/nutrition/foods?page=1&limit=${MAX_API_LIMIT}`;
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Failed to load: ${res.status} - ${text}`);
+      }
+      
+      const data = await res.json();
+      
+      if (!data.foods || !Array.isArray(data.foods)) {
+        throw new Error("Invalid data format: foods array not found");
+      }
+      
+      setAllData(data.foods);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setError(message);
+      console.error("Load error:", message);
+    } finally {
+      setLoading(false);
     }
-    // We don't really need the API to compare if we already have the full food objects in state!
-    // Just show the modal
-    setShowCompare(true);
   };
 
-  return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto pb-20 fade-in">
-      {/* Header */}
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Food Database</h1>
-        <p className="text-muted-foreground">Explore 7000+ Indian foods with complete nutritional profiles</p>
-      </header>
+  useEffect(() => {
+    loadData();
+  }, []);
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div>
-          <label className="block text-sm font-medium mb-2">Search</label>
-          <Input
-            placeholder="Rice, Paneer, Chai..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-background"
-          />
-        </div>
+  const filteredData = useMemo(() => {
+    let result = [...allData];
 
-        <div>
-          <label className="block text-sm font-medium mb-2">Food Group</label>
-          <select
-            value={selectedGroup}
-            onChange={(e) => setSelectedGroup(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md text-sm bg-background"
-          >
-            <option value="">All Groups</option>
-            {foodGroups.map((group) => (
-              <option key={group} value={group}>
-                {group}
-              </option>
-            ))}
-          </select>
-        </div>
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(row => 
+        Object.values(row).some(val => 
+          val !== null && String(val).toLowerCase().includes(query)
+        )
+      );
+    }
 
-        <div>
-          <label className="block text-sm font-medium mb-2">Region</label>
-          <select
-            value={selectedRegion}
-            onChange={(e) => setSelectedRegion(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md text-sm bg-background"
-          >
-            <option value="">All Regions</option>
-            {REGIONS.map((region) => (
-              <option key={region} value={region}>
-                {region}
-              </option>
-            ))}
-          </select>
-        </div>
+    Object.entries(filters).forEach(([colKey, filter]) => {
+      if (filter.type === "text" && filter.value) {
+        const query = String(filter.value).toLowerCase();
+        result = result.filter(row => 
+          row[colKey] && String(row[colKey]).toLowerCase().includes(query)
+        );
+      } else if (filter.type === "range" && filter.value) {
+        const range = filter.value as { min: number; max: number };
+        result = result.filter(row => {
+          const val = Number(row[colKey]);
+          return !isNaN(val) && val >= range.min && val <= range.max;
+        });
+      } else if (filter.type === "category" && filter.value && (filter.value as string[]).length > 0) {
+        result = result.filter(row => 
+          (filter.value as string[]).includes(String(row[colKey]))
+        );
+      }
+    });
 
-        <div>
-          <label className="block text-sm font-medium mb-2">Diet Type</label>
-          <select
-            value={selectedDietType}
-            onChange={(e) => setSelectedDietType(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md text-sm bg-background"
-          >
-            <option value="">All Types</option>
-            {DIET_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
+    return result;
+  }, [allData, searchQuery, filters]);
+
+  const sortedData = useMemo(() => {
+    if (!sortColumn) return filteredData;
+    
+    return [...filteredData].sort((a, b) => {
+      const aVal = a[sortColumn];
+      const bVal = b[sortColumn];
+      
+      if (aVal === null || aVal === undefined) return 1;
+      if (bVal === null || bVal === undefined) return -1;
+      
+      let comparison = 0;
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        comparison = aVal - bVal;
+      } else {
+        comparison = String(aVal).localeCompare(String(bVal));
+      }
+      
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [filteredData, sortColumn, sortDirection]);
+
+  const paginatedData = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return sortedData.slice(start, start + pageSize);
+  }, [sortedData, page, pageSize]);
+
+  const totalPages = Math.ceil(sortedData.length / pageSize);
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+    setPage(1);
+  };
+
+  const handleFilterChange = (column: string, type: "text" | "range" | "category", value: any) => {
+    setFilters(prev => ({
+      ...prev,
+      [column]: { type, value }
+    }));
+    setPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilters({});
+    setSearchQuery("");
+    setPage(1);
+  };
+
+  const toggleColumn = (key: string) => {
+    setVisibleColumns(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
+  };
+
+  const exportData = (includeFilters: boolean) => {
+    const dataToExport = includeFilters ? sortedData : allData;
+    const headers = Array.from(visibleColumns);
+    const csvContent = [
+      headers.join(","),
+      ...dataToExport.map(row => 
+        headers.map(h => {
+          const val = row[h];
+          return typeof val === "string" && val.includes(",") ? `"${val}"` : val ?? "";
+        }).join(",")
+      )
+    ].join("\n");
+    
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `foods_export_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading food data...</p>
+          <Button variant="outline" className="mt-4" onClick={loadData}>
+            Retry
+          </Button>
         </div>
       </div>
+    );
+  }
 
-      {/* Compare Mode Toggle */}
-      <div className="flex items-center gap-4 mb-6 p-4 bg-muted/30 rounded-lg border border-border">
-        <button
-          onClick={() => { setCompareMode(!compareMode); if (compareMode) setSelectedForCompare([]); }}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
-            compareMode
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-card text-foreground border border-border'
-          }`}
-        >
-          {compareMode ? 'Cancel Compare' : 'Enable Compare Mode'}
-        </button>
-        {compareMode && (
-          <div className="flex items-center gap-4 ml-auto">
-            <span className="text-sm font-medium text-muted-foreground">
-              Selected: {selectedForCompare.length}/4
-            </span>
-            {selectedForCompare.length >= 2 && (
-              <Button onClick={handleCompare} size="default" variant="default" className="shadow-md">
-                Compare Selected ({selectedForCompare.length})
-              </Button>
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center p-8">
+          <p className="text-destructive mb-4">{error}</p>
+          <Button onClick={loadData}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-[calc(100vh-4rem)] flex flex-col">
+      {/* Toolbar */}
+      <div className="shrink-0 border-b border-border bg-background p-4 space-y-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search all columns..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+              className="pl-9"
+            />
+            {searchQuery && (
+              <button onClick={() => { setSearchQuery(""); setPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+              </button>
             )}
+          </div>
+
+          <Button variant={showFilters ? "default" : "outline"} size="sm" onClick={() => setShowFilters(!showFilters)}>
+            <Filter className="w-4 h-4 mr-2" />
+            Filters {Object.keys(filters).length > 0 && `(${Object.keys(filters).length})`}
+          </Button>
+
+          <Button variant="outline" size="sm" onClick={() => setShowColumns(!showColumns)}>
+            <Eye className="w-4 h-4 mr-2" />
+            Columns
+          </Button>
+
+          <div className="relative group">
+            <Button variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+            <div className="absolute right-0 top-full mt-1 bg-background border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <button onClick={() => exportData(false)} className="block w-full px-4 py-2 text-left text-sm hover:bg-muted whitespace-nowrap">
+                Export All ({allData.length})
+              </button>
+              <button onClick={() => exportData(true)} className="block w-full px-4 py-2 text-left text-sm hover:bg-muted whitespace-nowrap">
+                Export Filtered ({sortedData.length})
+              </button>
+            </div>
+          </div>
+
+          <span className="ml-auto text-sm text-muted-foreground">
+            {sortedData.length} rows
+          </span>
+        </div>
+
+        {showFilters && (
+          <div className="flex flex-wrap gap-4 p-3 bg-muted/30 rounded-lg border border-border">
+            {DEFAULT_COLUMNS.filter(c => c.filterable).map(col => (
+              <div key={col.key} className="min-w-[150px]">
+                <label className="text-xs font-medium text-muted-foreground block mb-1">{col.label}</label>
+                {col.type === "text" && (
+                  <Input
+                    placeholder={`Filter...`}
+                    value={(filters[col.key]?.value as string) || ""}
+                    onChange={(e) => handleFilterChange(col.key, "text", e.target.value)}
+                    className="h-8 text-sm"
+                  />
+                )}
+                {col.type === "number" && (
+                  <div className="flex gap-1">
+                    <Input
+                      type="number"
+                      placeholder="Min"
+                      value={(filters[col.key]?.value as any)?.min ?? ""}
+                      onChange={(e) => handleFilterChange(col.key, "range", { min: parseFloat(e.target.value) || 0, max: (filters[col.key]?.value as any)?.max ?? 999999 })}
+                      className="h-8 text-sm w-20"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Max"
+                      value={(filters[col.key]?.value as any)?.max ?? ""}
+                      onChange={(e) => handleFilterChange(col.key, "range", { min: (filters[col.key]?.value as any)?.min ?? 0, max: parseFloat(e.target.value) || 999999 })}
+                      className="h-8 text-sm w-20"
+                    />
+                  </div>
+                )}
+                {col.type === "category" && categoricalOptions[col.key] && (
+                  <select
+                    value={(filters[col.key]?.value as string[])?.[0] || ""}
+                    onChange={(e) => handleFilterChange(col.key, "category", e.target.value ? [e.target.value] : [])}
+                    className="h-8 text-sm px-2 rounded border border-input bg-background w-full"
+                  >
+                    <option value="">All</option>
+                    {Array.from(categoricalOptions[col.key]).sort().map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            ))}
+            <div className="flex items-end">
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="w-4 h-4 mr-1" />
+                Clear
+              </Button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Foods Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {foods.map((food) => (
-          <Card
-            key={food['Food Name']}
-            className={`p-4 cursor-pointer hover:shadow-lg transition relative group ${selectedForCompare.some(f => f['Food Name'] === food['Food Name']) ? 'ring-2 ring-primary border-primary' : ''}`}
-          >
-            {compareMode && (
+      {showColumns && (
+        <div className="shrink-0 p-4 bg-muted/30 border-b border-border">
+          <div className="flex flex-wrap gap-2">
+            {DEFAULT_COLUMNS.map(col => (
               <button
-                onClick={(e) => { e.stopPropagation(); toggleCompare(food); }}
-                className={`absolute top-2 right-2 p-2 rounded-lg transition z-10 shadow-sm ${
-                  selectedForCompare.some(f => f['Food Name'] === food['Food Name'])
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
-              >
-                {selectedForCompare.some(f => f['Food Name'] === food['Food Name']) ? (
-                  <Check className="w-5 h-5" />
-                ) : (
-                  <Plus className="w-5 h-5" />
+                key={col.key}
+                onClick={() => toggleColumn(col.key)}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border transition-colors",
+                  visibleColumns.has(col.key) ? "bg-primary/10 border-primary text-primary" : "bg-background border-border text-muted-foreground"
                 )}
+              >
+                {visibleColumns.has(col.key) ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                {col.label}
               </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Table */}
+      <div className="flex-1 overflow-auto">
+        <table className="w-full border-collapse">
+          <thead className="sticky top-0 z-10 bg-background">
+            <tr className="border-b border-border">
+              <th className="w-12 p-2 text-center text-xs font-medium text-muted-foreground">#</th>
+              {DEFAULT_COLUMNS.filter(c => visibleColumns.has(c.key)).map(col => (
+                <th
+                  key={col.key}
+                  className="p-2 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:bg-muted/50"
+                  style={{ width: col.width }}
+                  onClick={() => col.sortable && handleSort(col.key)}
+                >
+                  <div className="flex items-center gap-1">
+                    {col.label}
+                    {col.sortable && (
+                      <span className="ml-1">
+                        {sortColumn === col.key ? (
+                          sortDirection === "asc" ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />
+                        ) : (
+                          <ArrowUpDown className="w-3.5 h-3.5 opacity-30" />
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedData.map((row, idx) => (
+              <tr key={idx} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                <td className="p-2 text-center text-xs text-muted-foreground">
+                  {(page - 1) * pageSize + idx + 1}
+                </td>
+                {DEFAULT_COLUMNS.filter(c => visibleColumns.has(c.key)).map(col => (
+                  <td
+                    key={col.key}
+                    className={cn("p-2 text-sm", col.type === "number" ? "text-right font-mono" : "", col.width && "whitespace-nowrap")}
+                    style={{ maxWidth: col.width }}
+                  >
+                    {row[col.key] !== null && row[col.key] !== undefined
+                      ? col.type === "number" && typeof row[col.key] === "number"
+                        ? Number(row[col.key]).toLocaleString(undefined, { maximumFractionDigits: 2 })
+                        : String(row[col.key])
+                      : "—"}
+                  </td>
+                ))}
+              </tr>
+            ))}
+            {paginatedData.length === 0 && (
+              <tr>
+                <td colSpan={DEFAULT_COLUMNS.filter(c => visibleColumns.has(c.key)).length + 1} className="p-8 text-center text-muted-foreground">
+                  No data found
+                </td>
+              </tr>
             )}
-
-            <div onClick={() => {
-              if (compareMode) {
-                toggleCompare(food);
-              } else {
-                setSelectedFood(food);
-                setShowDetail(true);
-              }
-            }}>
-              <h3 className="font-bold text-lg mb-1 pr-10">{food['Food Name']}</h3>
-              <p className="text-xs text-muted-foreground mb-4">{food['Food Group']}</p>
-
-              <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
-                <div className="p-2 bg-muted/50 rounded">
-                  <span className="block text-xs text-muted-foreground">Energy</span>
-                  <span className="font-bold text-chart-4">{food['Energy (kcal)']?.toFixed(0) || 0} kcal</span>
-                </div>
-                <div className="p-2 bg-muted/50 rounded">
-                  <span className="block text-xs text-muted-foreground">Protein</span>
-                  <span className="font-bold text-chart-1">{food['Protein (g)']?.toFixed(1) || 0}g</span>
-                </div>
-                <div className="p-2 bg-muted/50 rounded">
-                  <span className="block text-xs text-muted-foreground">Fat</span>
-                  <span className="font-bold text-destructive">{food['Fat (g)']?.toFixed(1) || 0}g</span>
-                </div>
-                <div className="p-2 bg-muted/50 rounded">
-                  <span className="block text-xs text-muted-foreground">Carbs</span>
-                  <span className="font-bold text-primary">{food['Carbs (g)']?.toFixed(1) || 0}g</span>
-                </div>
-              </div>
-
-              {food['IFCT Code'] && (
-                <p className="text-xs text-muted-foreground">Code: {food['IFCT Code']}</p>
-              )}
-            </div>
-          </Card>
-        ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Loading state */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-muted-foreground">Loading foods...</div>
-        </div>
-      )}
-
-      {/* No results */}
-      {!loading && foods.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground mb-2">No foods found</p>
-          <p className="text-xs text-muted-foreground/60">Try adjusting your filters</p>
-        </div>
-      )}
-
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-            variant="outline"
+      <div className="shrink-0 flex items-center justify-between p-4 border-t border-border bg-background">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Rows:</span>
+          <select
+            value={pageSize}
+            onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+            className="h-8 px-2 rounded border border-input bg-background text-sm"
           >
-            Previous
-          </Button>
-          <span className="text-sm">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            variant="outline"
-          >
-            Next
-          </Button>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
         </div>
-      )}
 
-      {/* Modals */}
-      <FoodDetailModal food={selectedFood} open={showDetail} onOpenChange={setShowDetail} />
-      <ComparisonModal foods={selectedForCompare} open={showCompare} onOpenChange={setShowCompare} />
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Page {page} of {totalPages || 1}
+          </span>
+          <div className="flex gap-1">
+            <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(1)}>
+              <ChevronLeft className="w-4 h-4" /><ChevronLeft className="w-4 h-4 -ml-3" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => setPage(totalPages)}>
+              <ChevronRight className="w-4 h-4" /><ChevronRight className="w-4 h-4 -ml-3" />
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

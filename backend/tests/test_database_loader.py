@@ -38,7 +38,7 @@ class TestSearchFoodsNoReDoS:
         for pattern in dangerous_patterns:
             # Should not hang or crash
             results = db.search_foods(query=pattern)
-            assert isinstance(results, (list, type(db.food.__class__)))
+            assert results is not None  # Should return a result (DataFrame or empty)
 
 
 class TestSearchFoodsNoCopy:

@@ -10,14 +10,14 @@ from datetime import datetime, timezone
 
 from auth.database import get_db, RecipeDB, RecipeHistoryDB, UserDB
 from auth.dependencies import require_user
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api/recipes", tags=["Recipes"])
 
 
 class RecipeIngredient(BaseModel):
     name: str
-    quantity: float
+    quantity: float = Field(..., ge=0)
     unit: str
 
 
@@ -103,11 +103,15 @@ async def save_recipe(
 
 @router.get("/list", response_model=list[RecipeResponse])
 async def list_recipes(
+    page: int = 1,
+    limit: int = 20,
     user: UserDB = Depends(require_user),
     db: Session = Depends(get_db),
 ):
-    """List all recipes for the user."""
-    recipes = db.query(RecipeDB).filter(RecipeDB.user_id == user.id).order_by(RecipeDB.created_at.desc()).all()
+    """List all recipes for the user with pagination."""
+    limit = min(limit, 100)
+    skip = (page - 1) * limit
+    recipes = db.query(RecipeDB).filter(RecipeDB.user_id == user.id).order_by(RecipeDB.created_at.desc()).offset(skip).limit(limit).all()
     
     result = []
     for recipe in recipes:
@@ -173,13 +177,17 @@ async def get_recipe(
 
 @router.get("/history/list")
 async def get_recipe_history(
+    page: int = 1,
+    limit: int = 20,
     user: UserDB = Depends(require_user),
     db: Session = Depends(get_db),
 ):
-    """Get user's recipe viewing history."""
+    """Get user's recipe viewing history with pagination."""
+    limit = min(limit, 100)
+    skip = (page - 1) * limit
     history = db.query(RecipeHistoryDB).filter(
         RecipeHistoryDB.user_id == user.id
-    ).order_by(RecipeHistoryDB.viewed_at.desc()).limit(20).all()
+    ).order_by(RecipeHistoryDB.viewed_at.desc()).offset(skip).limit(limit).all()
     
     return [
         RecipeHistoryResponse(

@@ -3,10 +3,23 @@ AaharAI NutriSync — SQLAlchemy Database Models & Engine
 SQLite (development) or PostgreSQL (production) persistence for users, profiles, and meal plan history.
 """
 import json
-from datetime import datetime
+import logging
+from datetime import datetime, timezone
 from sqlalchemy import create_engine, Column, Integer, String, Float, Text, DateTime, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from config import settings
+
+logger = logging.getLogger(__name__)
+
+
+def utc_now() -> datetime:
+    """Return current UTC time (timezone-aware). Replaces deprecated datetime.utcnow()."""
+    return datetime.now(timezone.utc)
+
+
+def utc_now_default():
+    """Callable for SQLAlchemy default - returns current UTC time."""
+    return datetime.now(timezone.utc)
 
 # Determine database URL: PostgreSQL if configured, otherwise SQLite
 if settings.DATABASE_URL:
@@ -37,7 +50,7 @@ class UserDB(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
     name = Column(String(255), default="")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_default)
     is_active = Column(Boolean, default=True)
     
     # Password reset
@@ -75,7 +88,7 @@ class MealPlanDB(Base):
     targets_json = Column(Text, default="{}")
     days = Column(Integer, default=7)
     budget = Column(Float, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_default)
 
 
 class ChatHistoryDB(Base):
@@ -89,7 +102,7 @@ class ChatHistoryDB(Base):
     assistant_message = Column(Text, nullable=True)
     sources_json = Column(Text, default="[]")
     llm_provider = Column(String(50), default="")
-    created_at = Column(DateTime, default=lambda: __import__('datetime').datetime.now(__import__('datetime').timezone.utc))
+    created_at = Column(DateTime, default=utc_now_default)
 
 
 class DailyLogDB(Base):
@@ -112,8 +125,8 @@ class DailyLogDB(Base):
     iron_mg = Column(Float, nullable=True)
     calcium_mg = Column(Float, nullable=True)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_default)
+    updated_at = Column(DateTime, default=utc_now_default, onupdate=utc_now_default)
 
 
 class RecipeDB(Base):
@@ -136,8 +149,8 @@ class RecipeDB(Base):
     carbs_g = Column(Float, nullable=True)
     fibre_g = Column(Float, nullable=True)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_default)
+    updated_at = Column(DateTime, default=utc_now_default, onupdate=utc_now_default)
 
 
 class RecipeHistoryDB(Base):
@@ -158,8 +171,8 @@ class ChatSessionDB(Base):
     id = Column(String(36), primary_key=True)  # UUID
     user_id = Column(Integer, nullable=True, index=True)
     title = Column(String(255), default="New Chat")
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_default)
+    updated_at = Column(DateTime, default=utc_now_default, onupdate=utc_now_default)
 
 
 class MealPlanHistoryDB(Base):
@@ -172,7 +185,7 @@ class MealPlanHistoryDB(Base):
     duration_days = Column(Integer, default=7)
     cost_estimate = Column(Float, nullable=True)
     plan_json = Column(Text, nullable=False)  # Full plan data
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now_default)
 
 
 def init_db():
@@ -185,8 +198,8 @@ def get_db() -> Session:
     db = SessionLocal()
     try:
         yield db
-    except Exception:
-        # IMP-020: Rollback on exception before closing
+    except Exception as e:
+        logger.error(f"Database error: {e}")
         db.rollback()
         raise
     finally:

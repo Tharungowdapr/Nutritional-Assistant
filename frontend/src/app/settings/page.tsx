@@ -32,6 +32,7 @@ export default function RebuiltSettingsPage() {
   const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState("account");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState(user?.profile?.language || "en");
   
   // Account Form
   const [nameForm, setNameForm] = useState(user?.name || "");
@@ -225,9 +226,21 @@ export default function RebuiltSettingsPage() {
 
           <SettingsCard title="Language & Region" description="Select your preferred language.">
             <div className="space-y-4">
-              <select className="w-full h-12 px-4 rounded-xl border border-border bg-background">
+              <select 
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+                className="w-full h-12 px-4 rounded-xl border border-border bg-background"
+              >
                 {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
               </select>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => updateProfile({ language: selectedLanguage })}
+                className="mt-2"
+              >
+                Save Language Preference
+              </Button>
               <p className="text-xs text-muted-foreground">Localized content for regional dialects is updated weekly.</p>
             </div>
           </SettingsCard>

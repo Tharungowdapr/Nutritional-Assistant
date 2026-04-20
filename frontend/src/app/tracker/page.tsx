@@ -57,6 +57,19 @@ export default function TrackerPage() {
     loadHistory(historyRange);
   }, [historyRange]);
 
+  // IMP-005: Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (foodSearch.length >= 2) {
+        handleSearchFoods(foodSearch);
+      } else {
+        setFoodResults([]);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [foodSearch]);
+
   const loadHistory = async (days: number) => {
     setLoadingHistory(true);
     try {
@@ -357,10 +370,7 @@ export default function TrackerPage() {
                     <Input 
                       placeholder="e.g. Masala Dosa, Paneer..."
                       value={foodSearch}
-                      onChange={e => {
-                        setFoodSearch(e.target.value);
-                        handleSearchFoods(e.target.value);
-                      }}
+                      onChange={e => setFoodSearch(e.target.value)}
                       className="pl-12 h-14 bg-muted/40 border-none transition-all focus:ring-1 ring-primary/50 text-base"
                     />
                  </div>

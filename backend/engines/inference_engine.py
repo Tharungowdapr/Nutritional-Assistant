@@ -46,7 +46,7 @@ class InferenceEngine:
     def compute_targets(self, profile: dict) -> dict:
         """Full pipeline: profile → personalized nutrient targets."""
         # IMP-002: If RDA table unavailable, fall back to defaults for base targets
-        db_has_rda = getattr(db, '_loaded', False) and getattr(db, 'rda', None) is not None
+        db_has_rda = getattr(db, '_instance', None) is not None and getattr(db, '_loaded', False) and getattr(db, 'rda', None) is not None
         targets = self._get_base_rda(profile) if db_has_rda else self._default_targets(profile)
 
         # Profession adjustment may be skipped if profession table is missing

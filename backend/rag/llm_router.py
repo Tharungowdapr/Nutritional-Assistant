@@ -104,6 +104,31 @@ class LLMRouter:
 
         return "I'm sorry, no LLM provider is currently available. Please ensure Ollama is running.", "none"
 
+    async def stream_generate(self, prompt: str, system: str = "",
+                              temperature: float = 0.7):
+        """Streaming version of generate."""
+        await self._maybe_retry_ollama()
+
+        if self._active_provider == "ollama":
+            try:
+                async for token in self._stream_ollama(prompt, system, temperature):
+                    yield token
+                return
+            except Exception as e:
+                logger.warning(f"Ollama stream failed: {e}. Falling back.")
+                self._ollama_available = False
+                self._active_provider = "groq" if self._groq_available else "none"
+
+        if self._active_provider == "groq":
+            try:
+                async for token in self._stream_groq(prompt, system, temperature):
+                    yield token
+                return
+            except Exception as e:
+                logger.error(f"Groq stream failed: {e}")
+
+        yield "LLM Provider Unavailable."
+
     async def _generate_ollama(self, prompt: str, system: str,
                                 temperature: float) -> str:
         """Call Ollama's /api/generate endpoint."""
@@ -121,19 +146,35 @@ class LLMRouter:
                 resp.raise_for_status()
                 assembled = ""
                 async for raw_line in resp.aiter_lines():
-                    if not raw_line:
-                        continue
+                    if not raw_line: continue
                     try:
                         part = json.loads(raw_line)
+                        if "response" in part and part["response"]:
+                            assembled += part["response"]
+                        if part.get("done"): break
+                    except Exception: continue
+                return assembled
+
+    async def _stream_ollama(self, prompt: str, system: str, temperature: float):
+        payload = {
+            "model": self.ollama_model,
+            "prompt": prompt,
+            "system": system,
+            "stream": True,
+            "options": {"temperature": temperature},
+        }
+        async with httpx.AsyncClient(timeout=180) as client:
+            async with client.stream("POST", f"{self.ollama_url}/api/generate", json=payload) as resp:
+                resp.raise_for_status()
+                async for raw_line in resp.aiter_lines():
+                    if not raw_line: continue
+                    try:
+                        part = json.loads(raw_line)
+                        if "response" in part:
+                            yield part["response"]
+                        if part.get("done"): break
                     except Exception:
                         continue
-                    # Concatenate incremental `response` tokens
-                    if "response" in part and part["response"]:
-                        assembled += part["response"]
-                    # If the stream indicates completion, stop
-                    if part.get("done"):
-                        break
-                return assembled
 
     async def _generate_groq(self, prompt: str, system: str,
                               temperature: float) -> str:
@@ -160,6 +201,33 @@ class LLMRouter:
             )
             resp.raise_for_status()
             return resp.json()["choices"][0]["message"]["content"]
+
+    async def _stream_groq(self, prompt: str, system: str, temperature: float):
+        messages = []
+        if system: messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+        
+        payload = {
+            "model": self.groq_model,
+            "messages": messages,
+            "temperature": temperature,
+            "stream": True,
+        }
+        async with httpx.AsyncClient(timeout=30) as client:
+            async with client.stream(
+                "POST", "https://api.groq.com/openai/v1/chat/completions",
+                json=payload,
+                headers={"Authorization": f"Bearer {self.groq_api_key}"}
+            ) as resp:
+                resp.raise_for_status()
+                async for line in resp.aiter_lines():
+                    if not line.startswith("data: "): continue
+                    if "[DONE]" in line: break
+                    try:
+                        part = json.loads(line[6:])
+                        delta = part["choices"][0]["delta"].get("content", "")
+                        if delta: yield delta
+                    except: continue
 
     @property
     def active_provider(self) -> str:

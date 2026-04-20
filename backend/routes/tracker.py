@@ -20,13 +20,14 @@ async def log_food(
     current_user: UserDB = Depends(require_user),
     db_session = Depends(get_db),
 ):
-    """Log a food item for today."""
-    today = datetime.utcnow().strftime("%Y-%m-%d")
+    """Log a food item for a specific date (defaults to today)."""
+    # BUG-026: Allow explicit date to fix UTC drift for international users
+    today = request.log_date if hasattr(request, 'log_date') and request.log_date else datetime.now(timezone.utc).strftime("%Y-%m-%d")
     
     # Get food nutritional data
     food_data = db.get_food_by_name(request.food_name)
     if not food_data:
-        raise HTTPException(404, f"Food '{request.food_name}' not found in database")
+        raise HTTPException(status_code=404, detail=f"Food '{request.food_name}' not found in database")
     
     # Calculate macros for the given quantity
     quantity_multiplier = request.quantity_g / 100.0
@@ -120,7 +121,7 @@ async def get_summary(
 ):
     """Get summary for the last X days."""
     if days > 90:
-        raise HTTPException(400, "Maximum history range is 90 days")
+        raise HTTPException(status_code=400, detail="Maximum history range is 90 days")
         
     start_date = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
     logs = db_session.query(DailyLogDB).filter(
@@ -186,7 +187,7 @@ async def delete_log(
     ).first()
     
     if not log:
-        raise HTTPException(404, "Log not found")
+        raise HTTPException(status_code=404, detail="Log not found")
     
     db_session.delete(log)
     db_session.commit()

@@ -157,9 +157,9 @@ After the daily tables, provide a "Nutritional Estimate" table for the week.
             "analysis_warning": analysis_warning
         }
 
-    async def generate_grocery_list(self, meal_plan_text: str, days: int = 7) -> dict:
+    async def generate_grocery_list(self, meal_plan_text: str, days: int = 7, num_people: int = 1) -> dict:
         """Extract and aggregate grocery items from a meal plan."""
-        prompt = f"""From this meal plan, create a consolidated grocery list for {days} days:
+        prompt = f"""From this meal plan, create a consolidated grocery list for {days} days and {num_people} {'person' if num_people == 1 else 'people'}:
 
 {meal_plan_text}
 
@@ -167,7 +167,7 @@ FORMAT:
 Category: [Cereals/Pulses/Vegetables/Dairy/Spices/etc.]
 - Item: quantity needed (in kg/g/L/units)
 
-At the end, estimate total cost in ₹ (use typical Indian market prices)."""
+At the end, estimate total cost in ₹ (use typical Indian market prices for {num_people} people)."""
 
         system = "You are a practical Indian kitchen manager creating efficient shopping lists."
         response, provider = await self.llm_router.generate(prompt, system, temperature=0.4)

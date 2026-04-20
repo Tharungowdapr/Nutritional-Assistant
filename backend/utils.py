@@ -5,37 +5,21 @@ Utility functions for profile, meal plans, recipes, and data processing.
 def calculate_profile_completion(profile: dict) -> int:
     """
     Calculate profile completion percentage (0-100).
-    Based on essential and optional fields.
+    Based on 6 essential fields: age, sex, weight_kg, height_cm, diet_type, life_stage.
     """
     essential_fields = {
-        'name': profile.get('name'),
         'age': profile.get('age'),
         'sex': profile.get('sex'),
         'weight_kg': profile.get('weight_kg'),
         'height_cm': profile.get('height_cm'),
         'diet_type': profile.get('diet_type'),
-    }
-    
-    optional_fields = {
         'life_stage': profile.get('life_stage'),
-        'region_zone': profile.get('region_zone'),
-        'conditions': profile.get('conditions'),
-        'allergies': profile.get('allergies'),
-        'physical_activity': profile.get('physical_activity'),
-        'sleep_hours': profile.get('sleep_hours'),
-        'goals': profile.get('goals'),
-        'glp1_medication': profile.get('glp1_medication'),
     }
     
-    # Essential fields count as more weight
-    essential_filled = sum(1 for v in essential_fields.values() if v)
-    essential_pct = (essential_filled / len(essential_fields)) * 60  # 60% from essentials
-    
-    # Optional fields add remaining
-    optional_filled = sum(1 for v in optional_fields.values() if v)
-    optional_pct = (optional_filled / len(optional_fields)) * 40  # 40% from optional
-    
-    total = int(essential_pct + optional_pct)
+    # Count how many essential fields are filled
+    filled_count = sum(1 for v in essential_fields.values() if v is not None and v != '')
+    # Calculate percentage (0-100)
+    total = int((filled_count / len(essential_fields)) * 100)
     return min(100, max(0, total))
 
 

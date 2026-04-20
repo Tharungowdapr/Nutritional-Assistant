@@ -3,12 +3,17 @@ AaharAI NutriSync — RAG Service
 Orchestrates: user query → retrieve relevant chunks → augment prompt → generate response.
 """
 import logging
-from typing import Optional
+from typing import Optional, List, Dict, Any
+from datetime import datetime
 
 import chromadb
 
 from config import settings
 from rag.llm_router import LLMRouter
+from agent.tools.gap_analyzer import gap_analyzer
+from engines.glp1_engine import glp1_engine
+from agent.tools.citation_verifier import citation_verifier
+from agent.tools.semantic_substitution import semantic_substitution
 
 logger = logging.getLogger(__name__)
 
@@ -34,21 +39,39 @@ class RAGService:
         self.llm_router = llm_router
         self._collection = None
 
-    def _get_collection(self):
-        """Lazy-load ChromaDB collection."""
-        if self._collection is None:
+    def _get_client(self):
+        try:
+            return chromadb.PersistentClient(path=str(settings.CHROMA_DB_PATH))
+        except Exception:
+            return None
+
+    def _get_collection(self, name="nutrisync"):
+        """Lazy-load ChromaDB collection with configured embedding function."""
+        try:
+            client = self._get_client()
+            if not client: return None
+            
+            # IMP-003: Explicitly provide the embedding function for retrieval consistency
+            import chromadb.utils.embedding_functions as ef
+            embed_fn = ef.OllamaEmbeddingFunction(
+                url=settings.OLLAMA_BASE_URL + "/api/embeddings",
+                model_name=settings.OLLAMA_EMBED_MODEL,
+            )
+            
+            return client.get_collection(name, embedding_function=embed_fn)
+        except Exception as e:
+            logger.warning(f"ChromaDB collection {name} not found or embedding mismatch: {e}")
+            # Fallback to default if Ollama fails
             try:
-                client = chromadb.PersistentClient(path=str(settings.CHROMA_DB_PATH))
-                self._collection = client.get_collection("nutrisync")
-            except Exception as e:
-                logger.warning(f"ChromaDB collection not found: {e}. Run 'python -m rag.ingest' first.")
+                return client.get_client().get_collection(name)
+            except:
                 return None
-        return self._collection
 
     def retrieve(self, query: str, top_k: int = None,
+                 collection_name: str = "nutrisync",
                  source_filter: Optional[str] = None) -> list[dict]:
-        """Retrieve relevant chunks from ChromaDB."""
-        collection = self._get_collection()
+        """Retrieve relevant chunks from a specific ChromaDB collection."""
+        collection = self._get_collection(collection_name)
         if collection is None:
             return []
 
@@ -117,6 +140,24 @@ class RAGService:
         if not user_profile:
             return ""
 
+        # Phase 3: Add Digital Twin Context
+        clinical_ctx = ""
+        if user_profile and user_profile.get("medications"):
+            # If user is on GLP-1, add pharmacokinetic context
+            glp1_meds = [m for m in user_profile["medications"] if any(x in m.get("name", "") for x in ["Sema", "Lira", "Tirze"])]
+            if glp1_meds:
+                # Assuming simple dummy data for demo
+                status = glp1_engine.simulate_state(glp1_meds[0]["name"], 0.5, datetime.now()) # simplified
+                clinical_ctx += f"DIGITAL TWIN (GLP-1): {status['clinical_advice']}\n"
+        
+        # Add GAP analysis summary
+        if user_profile and user_profile.get("id"):
+            # Mocking intake logs for gap analysis
+            logs = [{"iron_mg": 5.0, "vit_b12_mcg": 0.5}] # Mocked 
+            targets = {"iron_mg": 18.0, "vit_b12_mcg": 2.4}
+            analysis = gap_analyzer.analyze_gaps(logs, targets)
+            clinical_ctx += f"NUTRIENT GAP: {analysis['summary']}\n"
+
         parts = ["USER PROFILE:"]
         field_map = {
             "life_stage": "Life stage",
@@ -133,17 +174,40 @@ class RAGService:
 
         if user_profile.get("conditions"):
             parts.append(f"  Conditions: {', '.join(user_profile['conditions'])}")
-        if user_profile.get("energy_score"):
-            parts.append(f"  Energy: {user_profile['energy_score']}/5 | "
-                         f"Sleep: {user_profile.get('sleep_hours', '?')}h | "
-                         f"Focus: {user_profile.get('focus_score', '?')}/5")
-
+        
         return "\n".join(parts)
 
+    async def classify_intent(self, query: str) -> str:
+        """Classify user query into: FOOD_SEARCH, CLINICAL_ADVICE, GENERAL_CHAT."""
+        prompt = f"""Classify the intent of this query: "{query}"
+        
+        Options:
+        - FOOD_SEARCH: Query about specific food nutrients, calories, or comparisons.
+        - CLINICAL_ADVICE: Query about health conditions (Diabetes, PCOS, etc.) or GLP-1.
+        - GENERAL_CHAT: Greetings, general talk, or non-nutritional queries.
+        
+        Reply with only the option name."""
+        
+        intent, _ = await self.llm_router.generate(prompt, "You are an Intent Classifier.", temperature=0)
+        intent = intent.strip().upper()
+        if "FOOD_SEARCH" in intent: return "FOOD_SEARCH"
+        if "CLINICAL_ADVICE" in intent: return "CLINICAL_ADVICE"
+        return "GENERAL_CHAT"
+
     async def chat(self, query: str, user_profile: Optional[dict] = None, history: Optional[list] = None) -> dict:
-        """Full RAG pipeline with conversation memory."""
-        # 1. Retrieve relevant chunks
-        chunks = self.retrieve(query)
+        """Enhanced RAG pipeline with intent routing and tool use."""
+        # 1. Classify intent
+        intent = await self.classify_intent(query)
+        logger.info(f"RAG Intent: {intent}")
+
+        # 2. Route retrieval based on intent
+        collection_map = {
+            "FOOD_SEARCH": "nutrisync_foods",
+            "CLINICAL_ADVICE": "nutrisync_clinical",
+            "GENERAL_CHAT": "nutrisync"
+        }
+        col_name = collection_map.get(intent, "nutrisync")
+        chunks = self.retrieve(query, collection_name=col_name)
 
         # 2. Build augmented prompt
         context = self._build_context(chunks)
@@ -207,6 +271,50 @@ Please provide a detailed, evidence-based answer using the retrieved knowledge a
             "sources": sources,
             "llm_provider": provider,
         }
+
+    async def chat_stream(self, query: str, user_profile: Optional[dict] = None):
+        """Streaming RAG pipeline."""
+        intent = await self.classify_intent(query)
+        collection_map = {
+            "FOOD_SEARCH": "nutrisync_foods",
+            "CLINICAL_ADVICE": "nutrisync_clinical",
+            "GENERAL_CHAT": "nutrisync"
+        }
+        col_name = collection_map.get(intent, "nutrisync")
+        chunks = self.retrieve(query, collection_name=col_name)
+        context = self._build_context(chunks)
+        user_ctx = self._build_user_context(user_profile)
+
+        source_prompt = "RETRIEVED KNOWLEDGE (" + ("IFCT 2017" if intent == "FOOD_SEARCH" else "Medical Guidelines") + "):"
+        
+        prompt = f"""{user_ctx}
+
+{source_prompt}
+{context}
+
+USER QUESTION:
+{query}
+
+Provide a concise, evidence-based answer. Respond token-by-token."""
+
+        full_answer = ""
+        async for token in self.llm_router.stream_generate(prompt, SYSTEM_PROMPT):
+            full_answer += token
+            yield token
+        
+        # Post-generation: Verification & Swaps (appended to stream)
+        v_result = citation_verifier.verify(full_answer, chunks)
+        if v_result["status"] != "VERIFIED":
+            yield f"\n\n> [!CAUTION]\n> {v_result['alerts'][0]}"
+        
+        # Auto-suggestion for unhealthy items mentioned
+        unhealthy_items = ["white rice", "maida", "potato"]
+        for item in unhealthy_items:
+            if item in query.lower() or item in full_answer.lower():
+                swaps = semantic_substitution.suggest(item)
+                if swaps:
+                    yield f"\n\n**NutriSync Swap Suggestion:** Try **{swaps[0]['name']}** instead of {item}. *Reason: {swaps[0]['reason']}*"
+                    break
 
     @property
     def is_ready(self) -> bool:
