@@ -1,6 +1,6 @@
 """
 AaharAI NutriSync — RAG Service
-Orchestrates: user query → retrieve relevant chunks → augment prompt → generate response.
+Orchestrates: user query → hybrid search → rerank → augment prompt → generate response.
 """
 import logging
 from typing import Optional, List, Dict, Any
@@ -10,10 +10,8 @@ import chromadb
 
 from config import settings
 from rag.llm_router import LLMRouter
-from agent.tools.gap_analyzer import gap_analyzer
-from engines.glp1_engine import glp1_engine
-from agent.tools.citation_verifier import citation_verifier
-from agent.tools.semantic_substitution import semantic_substitution
+from rag.hybrid import create_hybrid_retriever
+from rag.reranker import rerank_documents
 
 logger = logging.getLogger(__name__)
 
@@ -70,12 +68,34 @@ class RAGService:
     def retrieve(self, query: str, top_k: int = None,
                  collection_name: str = "nutrisync",
                  source_filter: Optional[str] = None) -> list[dict]:
-        """Retrieve relevant chunks from a specific ChromaDB collection."""
+        """Retrieve relevant chunks using hybrid search + reranking."""
+        top_k = top_k or settings.RAG_TOP_K
+        
+        # Try hybrid search + reranking first
+        try:
+            hybrid = create_hybrid_retriever(collection_name)
+            candidates = hybrid.get_documents_for_rerank(query, k=8)
+            
+            if candidates:
+                reranked = rerank_documents(query, candidates, top_k=top_k)
+                texts = [r["text"] for r in reranked]
+                
+                chunks = []
+                for i, text in enumerate(texts):
+                    chunks.append({
+                        "text": text,
+                        "metadata": {"rank": i + 1, "source": "hybrid"},
+                        "rerank_score": reranked[i].get("score", 0)
+                    })
+                
+                return chunks
+        except Exception as e:
+            logger.warning(f"Hybrid search failed, falling back to vector: {e}")
+        
+        # Fallback to vector-only
         collection = self._get_collection(collection_name)
         if collection is None:
             return []
-
-        top_k = top_k or settings.RAG_TOP_K
 
         where = None
         if source_filter:
@@ -96,13 +116,10 @@ class RAGService:
             for i in range(len(results["documents"][0])):
                 distance = results["distances"][0][i] if results.get("distances") else None
                 
-                # IMP-015: Apply score threshold filter
-                # ChromaDB cosine distance: lower = more similar
-                # Convert threshold (0-1) to distance: distance <= (1.0 - threshold)
                 if distance is not None:
                     similarity = 1.0 - distance
                     if similarity < settings.RAG_SCORE_THRESHOLD:
-                        continue  # Skip low-confidence results
+                        continue
                 
                 chunks.append({
                     "text": results["documents"][0][i],
