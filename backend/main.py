@@ -14,8 +14,8 @@ from slowapi.errors import RateLimitExceeded
 from config import settings
 from database.loader import db
 from database.models import HealthCheckResponse
-from rag.llm_router import LLMRouter
 from auth.database import init_db
+from rag.llm_router import LLMRouter
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
