@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { href: "/", label: "Home", icon: LayoutDashboard },
   { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/tracker", label: "Track", icon: TrendingUp },
-  { href: "/foods", label: "Foods", icon: Salad },
+  { href: "/meal-plan", label: "Meals", icon: CalendarDays },
   { href: "/profile", label: "Profile", icon: UserCircle },
 ];
 
@@ -53,7 +53,8 @@ function NavContent({ onNavigate, items = DESKTOP_NAV_ITEMS }: { onNavigate?: ()
       {/* Nav Links */}
       <nav className="flex-1 px-3 space-y-1">
         {items.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || 
+            (item.href !== "/" && pathname.startsWith(item.href));
           return (
             <Link key={item.href} href={item.href} onClick={onNavigate}>
               <div

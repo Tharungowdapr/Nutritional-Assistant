@@ -1,18 +1,24 @@
+import functools
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database.loader import db
 from auth.database import get_db, DailyLogDB
-from auth.dependencies import get_current_user
+from auth.dependencies import get_current_user, require_user
 
 router = APIRouter(prefix="/api/analysis", tags=["Analysis"])
 
 
+def _check_db_loaded():
+    return {"error": "Database not loaded"}
+
+
 @router.get("/food-group-stats")
-async def get_food_group_stats():
+async def get_food_group_stats(user=Depends(require_user)):
     """Get distribution of foods by group and key nutrients."""
+    # BUG-022: Ensure database is loaded before processing
     if getattr(db, 'food', None) is None:
-        return {"error": "Database not loaded"}
+        return _check_db_loaded()
     
     stats = []
     for group in db.food["Food Group"].unique():
@@ -28,10 +34,10 @@ async def get_food_group_stats():
 
 
 @router.get("/veg-nonveg")
-async def get_veg_nonveg_stats():
+async def get_veg_nonveg_stats(user=Depends(require_user)):
     """Compare vegetarian vs non-vegetarian foods."""
     if getattr(db, 'food', None) is None:
-        return {"error": "Database not loaded"}
+        return _check_db_loaded()
     
     veg = db.food[db.food["Diet Type"] == "VEG"]
     nonveg = db.food[db.food["Diet Type"] == "NON-VEG"]
@@ -53,10 +59,10 @@ async def get_veg_nonveg_stats():
 
 
 @router.get("/top-protein-foods")
-async def get_top_protein_foods(limit: int = 10):
+async def get_top_protein_foods(limit: int = 10, user=Depends(require_user)):
     """Get top protein sources."""
     if getattr(db, 'food', None) is None:
-        return {"error": "Database not loaded"}
+        return _check_db_loaded()
     
     top = db.food.nlargest(limit, "Protein (g)")[
         ["Food Name", "Protein (g)", "Diet Type", "Food Group"]
@@ -66,10 +72,10 @@ async def get_top_protein_foods(limit: int = 10):
 
 
 @router.get("/iron-analysis")
-async def get_iron_analysis():
+async def get_iron_analysis(user=Depends(require_user)):
     """Analyze iron content across foods - India's #1 deficiency."""
     if getattr(db, 'food', None) is None:
-        return {"error": "Database not loaded"}
+        return _check_db_loaded()
     
     veg = db.food[db.food["Diet Type"] == "VEG"]["Iron (mg)"].describe().to_dict()
     nonveg = db.food[db.food["Diet Type"] == "NON-VEG"]["Iron (mg)"].describe().to_dict()
@@ -84,10 +90,10 @@ async def get_iron_analysis():
 
 
 @router.get("/b12-analysis")
-async def get_b12_analysis():
+async def get_b12_analysis(user=Depends(require_user)):
     """Analyze B12 content - vegetarian crisis."""
     if getattr(db, 'food', None) is None:
-        return {"error": "Database not loaded"}
+        return _check_db_loaded()
     
     veg = db.food[db.food["Diet Type"] == "VEG"]
     nonveg = db.food[db.food["Diet Type"] == "NON-VEG"]
@@ -103,10 +109,10 @@ async def get_b12_analysis():
 
 
 @router.get("/gi-distribution")
-async def get_gi_distribution():
+async def get_gi_distribution(user=Depends(require_user)):
     """Get Glycaemic Index distribution."""
     if getattr(db, 'food', None) is None:
-        return {"error": "Database not loaded"}
+        return _check_db_loaded()
     
     food_clean = db.food.dropna(subset=["GI (Glycaemic Index)"])
     
@@ -118,10 +124,10 @@ async def get_gi_distribution():
 
 
 @router.get("/calorie-distribution")
-async def get_calorie_distribution():
+async def get_calorie_distribution(user=Depends(require_user)):
     """Get food distribution by caloric density."""
     if getattr(db, 'food', None) is None:
-        return {"error": "Database not loaded"}
+        return _check_db_loaded()
     
     food_clean = db.food.dropna(subset=["Energy (kcal)"])
     
@@ -134,10 +140,10 @@ async def get_calorie_distribution():
 
 
 @router.get("/nutrient-summary")
-async def get_nutrient_summary():
+async def get_nutrient_summary(user=Depends(require_user)):
     """Get overall nutrient statistics."""
     if getattr(db, 'food', None) is None:
-        return {"error": "Database not loaded"}
+        return _check_db_loaded()
     
     return {
         "total_foods": len(db.food),
@@ -163,7 +169,7 @@ async def get_personal_analysis(
         return {"error": "Not logged in"}
     
     # Fetch last 14 days of logs
-    two_weeks_ago = (datetime.utcnow() - timedelta(days=14)).strftime("%Y-%m-%d")
+    two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).strftime("%Y-%m-%d")
     
     logs = (
         db_session.query(DailyLogDB)
@@ -221,7 +227,7 @@ async def get_personal_analysis(
     }
 
 @router.get("/intelligence")
-async def get_database_intelligence():
+async def get_database_intelligence(user=Depends(require_user)):
     """Get summarized intelligence from all 12 sheets for home page display."""
     try:
         if getattr(db, 'food', None) is None:

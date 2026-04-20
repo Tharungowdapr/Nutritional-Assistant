@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { adminApi } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import { Users, MessageSquare, TrendingUp, Settings, LogOut } from 'lucide-react';
 
@@ -32,6 +33,7 @@ interface UsageStats {
 }
 
 export default function AdminPage() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
@@ -40,6 +42,25 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserDetail, setShowUserDetail] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  // F2: Check if user is admin
+  useEffect(() => {
+    if (user && !user.is_admin) {
+      setAccessDenied(true);
+    }
+  }, [user]);
+
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Access Denied</h2>
+          <p className="text-muted-foreground">You need admin privileges to access this page.</p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     loadData();

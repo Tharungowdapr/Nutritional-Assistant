@@ -9,7 +9,7 @@ from typing import Optional
 class UserProfile(BaseModel):
     """User profile submitted during onboarding."""
     age: int = Field(..., ge=1, le=120)
-    sex: str = Field(..., pattern="^(Male|Female)$")
+    sex: str = Field(..., pattern="^(Male|Female|Other)$")
     weight_kg: float = Field(..., ge=10, le=300)
     height_cm: float = Field(..., ge=50, le=250)
     life_stage: str  # e.g. "Teen (Girl)", "Pregnant T2", "Elderly Male"
@@ -42,12 +42,14 @@ class ChatResponse(BaseModel):
 class MealPlanRequest(BaseModel):
     user_profile: UserProfile
     days: int = Field(7, ge=1, le=30)
+    num_people: int = Field(1, ge=1, le=10)
     budget_per_day_inr: Optional[float] = None
 
 
 class GroceryRequest(BaseModel):
     meal_plan_text: str
     days: int = Field(7, ge=1, le=30)
+    num_people: int = Field(1, ge=1, le=10)
 
 
 class GroceryListResponse(BaseModel):
@@ -89,7 +91,8 @@ class HealthCheckResponse(BaseModel):
 class LogFoodRequest(BaseModel):
     meal_slot: str = Field(..., pattern="^(Breakfast|Lunch|Dinner|Snack)$")
     food_name: str
-    quantity_g: float = 100.0
+    quantity_g: float = Field(100.0, ge=1, le=5000)
+    log_date: Optional[str] = None
 
 
 class DailyLogResponse(BaseModel):

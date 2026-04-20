@@ -13,7 +13,8 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from database.models import ChatRequest, ChatResponse
-from auth.database import get_db, ChatHistoryDB
+from fastapi.responses import StreamingResponse
+from auth.database import get_db, ChatHistoryDB, ChatSessionDB
 from auth.dependencies import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -68,9 +69,8 @@ async def chat(
         except Exception as e:
             logger.warning(f"Failed to fetch session history: {e}")
 
+    # streaming logic (simplified for standard chat)
     result = await rag_service.chat(data.message, user_profile, history=history)
-
-    # Create or use existing session
 
     # Save to history if user is logged in
     if user is not None:
@@ -93,6 +93,34 @@ async def chat(
         llm_provider=result["llm_provider"],
         session_id=session_id,
     )
+
+@router.post("/stream")
+async def chat_stream(
+    request: Request,
+    data: ChatRequest,
+    user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Streaming RAG-powered chat."""
+    from main import get_rag_service
+    rag_service = get_rag_service()
+    
+    if rag_service is None:
+        raise HTTPException(status_code=503, detail="RAG Service unavailable")
+
+    async def event_generator():
+        try:
+            if hasattr(rag_service, 'chat_stream'):
+                async for token in rag_service.chat_stream(data.message, data.user_profile):
+                    yield f"data: {json.dumps({'token': token})}\n\n"
+            else:
+                res = await rag_service.chat(data.message, data.user_profile)
+                yield f"data: {json.dumps({'token': res['answer'], 'final': True})}\n\n"
+        except Exception as e:
+            logger.error(f"Streaming error: {e}")
+            yield f"data: {json.dumps({'error': str(e), 'final': True})}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @router.get("/history")

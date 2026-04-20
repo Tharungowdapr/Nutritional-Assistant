@@ -112,12 +112,10 @@ class NutriSyncDB:
         if getattr(self, 'food', None) is None:
             return []
         
+        # Use boolean masking (creates view, not copy)
         import re
         import pandas as pd
-        
-        # Use boolean masking (creates view, not copy)
-        mask = [True] * len(self.food)
-        mask = pd.Series(mask, index=self.food.index)
+        mask = pd.Series([True] * len(self.food), index=self.food.index)
         
         if query:
             mask &= self.food["Food Name"].str.contains(
@@ -135,18 +133,13 @@ class NutriSyncDB:
                 mask &= self.food["Region"].str.contains(
                     re.escape(region), case=False, na=False, regex=False)
         
-        # Return view (not copy)
-        res = self.food[mask]
-        # For safety in callers/tests: return empty list when no matches found
-        if getattr(res, 'empty', False):
-            return []
-        return res
+        return self.food[mask]
 
     def get_food_by_name(self, name: str):
         import re
         if getattr(self, 'food', None) is None:
             return None
-        match = self.food[self.food["Food Name"] == name]
+        match = self.food[self.food["Food Name"].str.lower() == name.lower()]  # Case-insensitive exact match
         if match.empty:
             match = self.food[self.food["Food Name"].str.contains(
                 re.escape(name), case=False, na=False, regex=False)]

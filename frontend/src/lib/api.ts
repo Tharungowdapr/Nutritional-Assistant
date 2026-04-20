@@ -4,6 +4,7 @@
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+export { API_BASE };
 
 /** Get stored JWT token */
 function getToken(): string | null {
@@ -22,7 +23,7 @@ export function clearToken() {
 }
 
 /** Core fetch wrapper with automatic token refresh on 401 */
-async function apiFetch<T = any>(
+export async function apiFetch<T = any>(
   path: string,
   options: RequestInit = {},
   retry = true
@@ -128,21 +129,34 @@ export const chatApi = {
 
   listSessions: (limit = 20) => apiFetch(`/api/chat/sessions?limit=${limit}`),
 
-  getSession: (sessionId: string) => apiFetch(`/api/chat/sessions/${sessionId}`),
-
   deleteSession: (sessionId: string) =>
     apiFetch(`/api/chat/sessions/${sessionId}`, { method: "DELETE" }),
+
+  stream: (message: string, userProfile?: any, sessionId?: string) => {
+    const token = getToken();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    return fetch(`${API_BASE}/api/chat/stream`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ message, user_profile: userProfile, session_id: sessionId }),
+    });
+  },
 };
 
 // ── Nutrition ──
 export const nutritionApi = {
-  searchFoods: (
+  // Main search function (for spreadsheet)
+  search: (
     query = "",
     dietType?: string,
     foodGroup?: string,
     region?: string,
     page = 1,
-    limit = 20,
+    limit = 500,
     sortBy = "Food Name",
     sortOrder = "asc"
   ) => {
@@ -157,6 +171,18 @@ export const nutritionApi = {
     params.set("sort_order", sortOrder);
     return apiFetch(`/api/nutrition/foods?${params}`);
   },
+
+  // Legacy alias for tracker compatibility
+  searchFoods: (
+    query = "",
+    dietType?: string,
+    foodGroup?: string,
+    region?: string,
+    page = 1,
+    limit = 20,
+    sortBy = "Food Name",
+    sortOrder = "asc"
+  ) => nutritionApi.search(query, dietType, foodGroup, region, page, limit, sortBy, sortOrder),
 
   getFood: (name: string) => apiFetch(`/api/nutrition/foods/${encodeURIComponent(name)}`),
 
@@ -181,14 +207,29 @@ export const mealPlanApi = {
 
   history: (limit = 10) => apiFetch(`/api/meal-plan/history?limit=${limit}`),
 
-  grocery: (mealPlanText: string, days = 7) =>
+  grocery: (mealPlanText: string, days = 7, numPeople = 1) =>
     apiFetch("/api/meal-plan/grocery", {
       method: "POST",
-      body: JSON.stringify({ meal_plan_text: mealPlanText, days }),
+      body: JSON.stringify({ meal_plan_text: mealPlanText, days, num_people: numPeople }),
     }),
 
   recipe: (data: { instructions: string }) =>
     apiFetch("/api/meal-plan/recipe", { method: "POST", body: JSON.stringify(data) }),
+};
+
+// ── Recipes ──
+export const recipesApi = {
+  save: (recipe: any) =>
+    apiFetch("/api/recipes/save", { method: "POST", body: JSON.stringify(recipe) }),
+
+  list: (limit = 20) => apiFetch(`/api/recipes/list?limit=${limit}`),
+
+  get: (id: string | number) => apiFetch(`/api/recipes/${id}`),
+
+  delete: (id: number) =>
+    apiFetch(`/api/recipes/${id}`, { method: "DELETE" }),
+
+  history: (limit = 10) => apiFetch(`/api/recipes/history/list?limit=${limit}`),
 };
 
 // ── Health ──

@@ -12,7 +12,6 @@ from engines.inference_engine import inference_engine
 router = APIRouter(prefix="/api/nutrition", tags=["Nutrition"])
 limiter = Limiter(key_func=get_remote_address)
 
-# IMP-014: Define valid sort columns
 ALLOWED_SORT_COLS = {"Food Name", "Energy (kcal)", "Protein (g)",
                      "Fat (g)", "Carbs (g)", "Iron (mg)"}
 
@@ -44,25 +43,21 @@ async def search_foods(
 ):
     """Search and filter foods from the database with pagination and sorting."""
     results = db.search_foods(query, diet_type, food_group, region)
-    
-    # IMP-014: Validate sort_by and handle exceptions properly
+
     if hasattr(results, 'sort_values'):
         ascending = sort_order.lower() == "asc"
         if sort_by not in ALLOWED_SORT_COLS:
-            raise HTTPException(400, f'Invalid sort_by. Allowed: {ALLOWED_SORT_COLS}')
+            raise HTTPException(status_code=400, detail=f'Invalid sort_by. Allowed: {ALLOWED_SORT_COLS}')
         try:
             results = results.sort_values(by=sort_by, ascending=ascending)
-        except ValueError as e:
-            # Log the error and return unsorted results
+        except Exception as e:
             import logging
-            logging.warning(f"Sort failed: {e}")
-            pass
-    
-    # Apply pagination
+            logging.error(f"Failed to sort foods by '{sort_by}': {e}")
+
     total = len(results) if hasattr(results, '__len__') else 0
     skip = (page - 1) * limit
     foods = results.iloc[skip:skip + limit].to_dict(orient="records") if hasattr(results, 'iloc') else []
-    
+
     return {
         "foods": foods,
         "total": total,
@@ -72,33 +67,36 @@ async def search_foods(
     }
 
 
-@router.get("/foods/{food_name}")
-async def get_food(food_name: str):
-    """Get full nutrient profile for a specific food."""
-    food = db.get_food_by_name(food_name)
-    if not food:
-        raise HTTPException(404, f"Food '{food_name}' not found")
-    return {"food": food}
-
-
 @router.post("/foods/compare")
 async def compare_foods(request: CompareRequest):
-    """Compare nutritional profiles of 2-4 foods."""
+    """Compare nutritional profiles of 2-4 foods.
+
+    NOTE: This route is registered BEFORE /foods/{food_name} so FastAPI
+    matches /foods/compare correctly rather than treating 'compare' as a food_name.
+    """
     food_names = request.food_names
     if not food_names or len(food_names) > 4:
-        raise HTTPException(400, "Please provide 2-4 food names")
-    
+        raise HTTPException(status_code=400, detail="Please provide 2-4 food names")
+
     foods = []
     for name in food_names:
         food = db.get_food_by_name(name)
         if food:
             foods.append(food)
-    
+
     if not foods:
-        raise HTTPException(404, "No foods found")
-    
+        raise HTTPException(status_code=404, detail="No foods found")
+
     return {"foods": foods}
 
+
+@router.get("/foods/{food_name}")
+async def get_food(food_name: str):
+    """Get full nutrient profile for a specific food."""
+    food = db.get_food_by_name(food_name)
+    if not food:
+        raise HTTPException(status_code=404, detail=f"Food '{food_name}' not found")
+    return {"food": food}
 
 
 @router.get("/food-groups")
@@ -112,7 +110,7 @@ async def get_rda(profile_name: str):
     """Get RDA targets for a specific life stage profile."""
     rda = db.get_rda(profile_name)
     if not rda:
-        raise HTTPException(404, f"RDA profile '{profile_name}' not found")
+        raise HTTPException(status_code=404, detail=f"RDA profile '{profile_name}' not found")
     return {"rda": rda}
 
 

@@ -49,6 +49,8 @@ class ProfileUpdateRequest(BaseModel):
     sleep_hours: Optional[float] = None
     focus_score: Optional[int] = None
     daily_budget_inr: Optional[float] = None
+    physical_activity: Optional[str] = None
+    goals: Optional[str] = None
 
 
 class ForgotPasswordRequest(BaseModel):

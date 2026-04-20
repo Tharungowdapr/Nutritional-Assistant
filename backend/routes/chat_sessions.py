@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from auth.database import get_db, ChatSessionDB, ChatHistoryDB, UserDB
 from auth.dependencies import require_user
 
-router = APIRouter(prefix="/api/chat", tags=["Chat"])
+router = APIRouter(prefix="/api/chat/sessions", tags=["Chat Sessions"])
 
 
 class ChatSessionCreate(BaseModel):
@@ -39,7 +39,7 @@ class ChatMessageResponse(BaseModel):
     llm_provider: str
 
 
-@router.post("/sessions", response_model=ChatSessionResponse)
+@router.post("/", response_model=ChatSessionResponse)
 async def create_chat_session(
     user: UserDB = Depends(require_user),
     db: Session = Depends(get_db),
@@ -62,7 +62,7 @@ async def create_chat_session(
     )
 
 
-@router.get("/sessions", response_model=list[ChatSessionResponse])
+@router.get("/", response_model=list[ChatSessionResponse])
 async def list_chat_sessions(
     user: UserDB = Depends(require_user),
     db: Session = Depends(get_db),
@@ -83,7 +83,7 @@ async def list_chat_sessions(
     ]
 
 
-@router.get("/sessions/{session_id}", response_model=ChatSessionResponse)
+@router.get("/{session_id}", response_model=ChatSessionResponse)
 async def get_chat_session(
     session_id: str,
     user: UserDB = Depends(require_user),
@@ -106,7 +106,7 @@ async def get_chat_session(
     )
 
 
-@router.post("/sessions/{session_id}/messages", response_model=ChatMessageResponse)
+@router.post("/{session_id}/messages", response_model=ChatMessageResponse)
 async def send_chat_message(
     session_id: str,
     message_data: ChatMessageRequest,
@@ -162,7 +162,7 @@ async def send_chat_message(
     )
 
 
-@router.get("/sessions/{session_id}/history")
+@router.get("/{session_id}/history")
 async def get_session_history(
     session_id: str,
     user: UserDB = Depends(require_user),
@@ -196,7 +196,7 @@ async def get_session_history(
     ]
 
 
-@router.delete("/sessions/{session_id}")
+@router.delete("/{session_id}")
 async def delete_chat_session(
     session_id: str,
     user: UserDB = Depends(require_user),
@@ -223,7 +223,7 @@ async def delete_chat_session(
     return {"message": "Chat session deleted"}
 
 
-@router.put("/sessions/{session_id}/title")
+@router.put("/{session_id}/title")
 async def update_session_title(
     session_id: str,
     title_data: dict,
