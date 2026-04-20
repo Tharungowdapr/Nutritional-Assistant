@@ -125,6 +125,21 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# ── Global Exception Handler ──
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    logger.error(f"Global exception: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "error": str(exc) if settings.DEBUG else "Internal server error",
+            "data": None
+        }
+    )
+
 # ── CORS ──
 app.add_middleware(
     CORSMiddleware,

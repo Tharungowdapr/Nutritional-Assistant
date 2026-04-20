@@ -67,6 +67,9 @@ class OrchestratorAgent:
             conversation_history=conversation_history,
         )
         
+        # Validate and structure output
+        response_text = self._validate_response(response_text)
+        
         # Extract sources
         sources = []
         for chunk in knowledge[:3]:
@@ -75,10 +78,32 @@ class OrchestratorAgent:
             if source not in sources:
                 sources.append(source)
         
+        return self._standard_response(
+            answer=response_text,
+            sources=sources,
+            intent=intent_analysis["intent"],
+            analysis={"knowledge": knowledge, "meal_analysis": meal_analysis},
+        )
+    
+    def _validate_response(self, output: str) -> str:
+        """Validate and sanitize agent output."""
+        if not output or len(output.strip()) == 0:
+            return "I couldn't process that request. Please try again."
+        if len(output) > 10000:  # Max response length
+            return output[:10000] + "... (truncated)"
+        return output.strip()
+    
+    def _standard_response(self, answer: str, sources: list, intent: str, analysis: dict = None) -> dict:
+        """Standard response format for all agents."""
         return {
-            "answer": response_text,
-            "sources": sources,
-            "intent": intent_analysis["intent"],
+            "success": True,
+            "data": {
+                "answer": answer,
+                "sources": sources,
+                "intent": intent,
+                "analysis": analysis,
+            },
+            "error": None,
             "llm_provider": "ollama" if self.llm_router else "unknown",
         }
     
