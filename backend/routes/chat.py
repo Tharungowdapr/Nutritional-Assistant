@@ -69,8 +69,11 @@ async def chat(
         except Exception as e:
             logger.warning(f"Failed to fetch session history: {e}")
 
+    # Get user_id for memory
+    user_id = user.id if user else None
+    
     # streaming logic (simplified for standard chat)
-    result = await rag_service.chat(data.message, user_profile, history=history)
+    result = await rag_service.chat(data.message, user_profile, history=history, user_id=user_id)
 
     # Save to history if user is logged in
     if user is not None:
