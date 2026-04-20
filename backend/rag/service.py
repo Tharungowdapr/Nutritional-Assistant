@@ -135,29 +135,38 @@ class RAGService:
 
         return "\n\n---\n\n".join(context_parts)
 
-    def _build_user_context(self, user_profile: Optional[dict]) -> str:
-        """Format user profile into context string."""
-        if not user_profile:
+    def _build_user_context(self, user_profile: Optional[dict], user_id: int = None) -> str:
+        """Format user profile and meal memory into context string."""
+        if not user_profile and not user_id:
             return ""
 
-        # Phase 3: Add Digital Twin Context
-        clinical_ctx = ""
-        if user_profile and user_profile.get("medications"):
-            # If user is on GLP-1, add pharmacokinetic context
-            glp1_meds = [m for m in user_profile["medications"] if any(x in m.get("name", "") for x in ["Sema", "Lira", "Tirze"])]
-            if glp1_meds:
-                # Assuming simple dummy data for demo
-                status = glp1_engine.simulate_state(glp1_meds[0]["name"], 0.5, datetime.now()) # simplified
-                clinical_ctx += f"DIGITAL TWIN (GLP-1): {status['clinical_advice']}\n"
-        
-        # Add GAP analysis summary
-        if user_profile and user_profile.get("id"):
-            # Mocking intake logs for gap analysis
-            logs = [{"iron_mg": 5.0, "vit_b12_mcg": 0.5}] # Mocked 
-            targets = {"iron_mg": 18.0, "vit_b12_mcg": 2.4}
-            analysis = gap_analyzer.analyze_gaps(logs, targets)
-            clinical_ctx += f"NUTRIENT GAP: {analysis['summary']}\n"
+        # Import memory functions
+        try:
+            from memory.user_memory import format_user_profile
+            from memory.meal_memory import format_recent_meals, analyze_diet_pattern
+        except ImportError:
+            pass
 
+        parts = []
+
+        # Add user profile
+        if user_profile:
+            profile_text = format_user_profile(user_profile) if 'format_user_profile' in dir() else self._format_profile(user_profile)
+            parts.append(profile_text)
+
+        # Add meal memory (last 3 days)
+        if user_id:
+            try:
+                meal_text = format_recent_meals(user_id, days=3)
+                if meal_text:
+                    parts.append(f"\n{meal_text}")
+            except Exception as e:
+                logger.debug(f"Could not load meal memory: {e}")
+
+        return "\n\n".join(parts) if parts else ""
+
+    def _format_profile(self, user_profile: dict) -> str:
+        """Fallback profile formatter."""
         parts = ["USER PROFILE:"]
         field_map = {
             "life_stage": "Life stage",
@@ -194,7 +203,7 @@ class RAGService:
         if "CLINICAL_ADVICE" in intent: return "CLINICAL_ADVICE"
         return "GENERAL_CHAT"
 
-    async def chat(self, query: str, user_profile: Optional[dict] = None, history: Optional[list] = None) -> dict:
+    async def chat(self, query: str, user_profile: Optional[dict] = None, history: Optional[list] = None, user_id: int = None) -> dict:
         """Enhanced RAG pipeline with intent routing and tool use."""
         # 1. Classify intent
         intent = await self.classify_intent(query)
@@ -211,7 +220,7 @@ class RAGService:
 
         # 2. Build augmented prompt
         context = self._build_context(chunks)
-        user_ctx = self._build_user_context(user_profile)
+        user_ctx = self._build_user_context(user_profile, user_id)
         
         # Format chat history
         history_str = ""
