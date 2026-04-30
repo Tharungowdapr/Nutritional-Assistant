@@ -20,9 +20,12 @@ async def log_food(
     current_user: UserDB = Depends(require_user),
     db_session = Depends(get_db),
 ):
-    """Log a food item for a specific date (defaults to today)."""
-    # BUG-026: Allow explicit date to fix UTC drift for international users
-    today = request.log_date if hasattr(request, 'log_date') and request.log_date else datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    """Log a food item for a specific date (defaults to today in IST)."""
+    # Fix: accept explicit IST date from frontend to avoid UTC midnight drift
+    # At 00:00-05:30 IST, UTC gives yesterday's date — always pass date from client
+    from zoneinfo import ZoneInfo
+    ist = ZoneInfo("Asia/Kolkata")
+    today = request.log_date if hasattr(request, 'log_date') and request.log_date else datetime.now(ist).strftime("%Y-%m-%d")
     
     # Get food nutritional data
     food_data = db.get_food_by_name(request.food_name)
@@ -60,6 +63,9 @@ async def log_food(
         "protein_g": log.protein_g,
         "carbs_g": log.carbs_g,
         "fat_g": log.fat_g,
+        "iron_mg": log.iron_mg,
+        "calcium_mg": log.calcium_mg,
+        "fibre_g": log.fibre_g,
     }
 
 
@@ -81,12 +87,15 @@ async def get_daily_summary(
     total_protein = 0
     total_carbs = 0
     total_fat = 0
-    
+    total_iron = 0
+    total_calcium = 0
+    total_fibre = 0
+
     for log in logs:
         slot = log.meal_slot
         if slot not in meals_by_slot:
             meals_by_slot[slot] = []
-        
+
         meals_by_slot[slot].append({
             "id": log.id,
             "food_name": log.food_name,
@@ -95,19 +104,28 @@ async def get_daily_summary(
             "protein_g": log.protein_g or 0,
             "carbs_g": log.carbs_g or 0,
             "fat_g": log.fat_g or 0,
+            "iron_mg": log.iron_mg or 0,
+            "calcium_mg": log.calcium_mg or 0,
+            "fibre_g": log.fibre_g or 0,
         })
-        
+
         total_calories += log.calories or 0
         total_protein += log.protein_g or 0
         total_carbs += log.carbs_g or 0
         total_fat += log.fat_g or 0
-    
+        total_iron += log.iron_mg or 0
+        total_calcium += log.calcium_mg or 0
+        total_fibre += log.fibre_g or 0
+
     return {
         "log_date": log_date,
         "total_calories": round(total_calories, 1),
         "total_protein_g": round(total_protein, 1),
         "total_carbs_g": round(total_carbs, 1),
         "total_fat_g": round(total_fat, 1),
+        "total_iron_mg": round(total_iron, 2),
+        "total_calcium_mg": round(total_calcium, 1),
+        "total_fibre_g": round(total_fibre, 1),
         "meal_count": len(logs),
         "meals_by_slot": meals_by_slot,
     }

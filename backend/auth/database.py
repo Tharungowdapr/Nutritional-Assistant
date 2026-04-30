@@ -161,7 +161,7 @@ class RecipeHistoryDB(Base):
     user_id = Column(Integer, nullable=True, index=True)
     recipe_id = Column(Integer, nullable=True, index=True)
     recipe_title = Column(String(255), nullable=False)
-    viewed_at = Column(DateTime, default=datetime.utcnow)
+    viewed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class ChatSessionDB(Base):

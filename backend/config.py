@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     )
     APP_NAME: str = "AaharAI NutriSync"
     APP_VERSION: str = "2.0.0"
-    DEBUG: bool = True
+    DEBUG: bool = False
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
