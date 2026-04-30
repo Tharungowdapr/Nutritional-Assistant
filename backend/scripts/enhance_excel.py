@@ -8,7 +8,6 @@ Adds to IFCT sheet:
 """
 import pandas as pd
 from pathlib import Path
-import re
 
 EXCEL_PATH = Path(__file__).parent.parent / "data" / "AaharAI_NutriSync_Enhanced.xlsx"
 OUTPUT_PATH = EXCEL_PATH  # overwrite in place
@@ -144,7 +143,7 @@ def main():
     # Print summary
     print(f"  Added columns: avail_north/south/east/west/central, allergen_* (7), GI_Category, Omega-6")
     print(f"  Allergen flags sample:")
-    flagged = ifct[(ifct["allergen_gluten"] | ifct["allergen_dairy"] | ifct["allergen_nuts"])]
+    ifct[(ifct["allergen_gluten"] | ifct["allergen_dairy"] | ifct["allergen_nuts"])]
     print(f"    Gluten: {ifct['allergen_gluten'].sum()} | Dairy: {ifct['allergen_dairy'].sum()} | Nuts: {ifct['allergen_nuts'].sum()}")
 
     # ── Write back: replace just the IFCT sheet ──

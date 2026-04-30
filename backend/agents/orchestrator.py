@@ -116,7 +116,6 @@ class OrchestratorAgent:
         """Process meal plan request."""
         try:
             from rag.service import RAGService
-            from config import settings
             
             if not self.rag_service:
                 self.rag_service = RAGService(self.llm_router)
@@ -131,6 +130,9 @@ class OrchestratorAgent:
                     f"meal plan for {user_profile['diet_type']} diet",
                     "nutrisync"
                 )
+                if preferences is None:
+                    preferences = {}
+                preferences["knowledge"] = knowledge
             except Exception as e:
                 logger.warning(f"Meal plan RAG failed: {e}")
         

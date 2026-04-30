@@ -1,4 +1,3 @@
-import pytest
 from engines.inference_engine import inference_engine
 
 def test_default_targets():
@@ -39,7 +38,7 @@ def test_glp1_modifier():
     targets = inference_engine.compute_targets(profile)
     
     # Reduction: 32.5% for Semaglutide Maintenance
-    expected_calories = base_targets["calories"] * (1 - 0.325)
+    base_targets["calories"] * (1 - 0.325)
     # Note: Profession adjustment might shift the base, so we check relative reduction
     assert targets["calories"] < base_targets["calories"]
     assert targets["protein_g"] >= 80  # Protein floor for maintenance

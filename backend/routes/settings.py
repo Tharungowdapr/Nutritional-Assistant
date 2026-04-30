@@ -4,10 +4,9 @@ LLM provider config: save, test, activate, list.
 API keys encrypted with Fernet before storing.
 """
 import json, logging, time
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional
 
 from auth.database import get_db, UserDB
 from auth.dependencies import require_user
@@ -125,7 +124,6 @@ async def test_provider(req: ProviderTestRequest, user: UserDB = Depends(require
     start = time.time()
     try:
         test_prompt = "Reply with only the word: OK"
-        response_text = ""
 
         if provider == "groq":
             from groq import Groq
@@ -133,14 +131,14 @@ async def test_provider(req: ProviderTestRequest, user: UserDB = Depends(require
             resp = client.chat.completions.create(
                 model=model, messages=[{"role": "user", "content": test_prompt}], max_tokens=5
             )
-            response_text = resp.choices[0].message.content
+            resp.choices[0].message.content
 
         elif provider == "gemini":
             import google.generativeai as genai
             genai.configure(api_key=api_key)
             m = genai.GenerativeModel(model)
             resp = m.generate_content(test_prompt)
-            response_text = resp.text
+            resp.text
 
         elif provider == "anthropic":
             import anthropic
@@ -149,7 +147,7 @@ async def test_provider(req: ProviderTestRequest, user: UserDB = Depends(require
                 model=model, max_tokens=5,
                 messages=[{"role": "user", "content": test_prompt}]
             )
-            response_text = resp.content[0].text
+            resp.content[0].text
 
         elif provider in ("openrouter", "together", "mistral"):
             import httpx
@@ -165,7 +163,7 @@ async def test_provider(req: ProviderTestRequest, user: UserDB = Depends(require
                     json={"model": model, "messages": [{"role": "user", "content": test_prompt}], "max_tokens": 5}
                 )
                 resp.raise_for_status()
-                response_text = resp.json()["choices"][0]["message"]["content"]
+                resp.json()["choices"][0]["message"]["content"]
 
         elif provider == "ollama":
             import httpx
@@ -176,13 +174,13 @@ async def test_provider(req: ProviderTestRequest, user: UserDB = Depends(require
                     json={"model": model, "prompt": test_prompt, "stream": False}
                 )
                 resp.raise_for_status()
-                response_text = resp.json().get("response", "")
+                resp.json().get("response", "")
 
         elif provider == "cohere":
             import cohere
             co = cohere.Client(api_key)
             resp = co.chat(message=test_prompt, model=model)
-            response_text = resp.text
+            resp.text
 
         latency = round((time.time() - start) * 1000)
         return {"valid": True, "latency_ms": latency, "model": model}

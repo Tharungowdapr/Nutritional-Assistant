@@ -3,8 +3,7 @@ AaharAI NutriSync — RAG Service
 Orchestrates: user query → hybrid search → rerank → augment prompt → generate response.
 """
 import logging
-from typing import Optional, List, Dict, Any
-from datetime import datetime
+from typing import Optional
 
 import chromadb
 
@@ -59,11 +58,14 @@ class RAGService:
             return client.get_collection(name, embedding_function=embed_fn)
         except Exception as e:
             logger.warning(f"ChromaDB collection {name} not found or embedding mismatch: {e}")
-            # Fallback to default if Ollama fails
+            # Fallback to default embeddings if Ollama fails
             try:
-                return client.get_client().get_collection(name)
+                client2 = self._get_client()
+                if client2:
+                    return client2.get_collection(name)
             except:
-                return None
+                pass
+            return None
 
     def retrieve(self, query: str, top_k: int = None,
                  collection_name: str = "nutrisync",
@@ -160,7 +162,7 @@ class RAGService:
         # Import memory functions
         try:
             from memory.user_memory import format_user_profile
-            from memory.meal_memory import format_recent_meals, analyze_diet_pattern
+            from memory.meal_memory import format_recent_meals
         except ImportError:
             pass
 
@@ -227,13 +229,9 @@ class RAGService:
         logger.info(f"RAG Intent: {intent}")
 
         # 2. Route retrieval based on intent
-        collection_map = {
-            "FOOD_SEARCH": "nutrisync_foods",
-            "CLINICAL_ADVICE": "nutrisync_clinical",
-            "GENERAL_CHAT": "nutrisync"
-        }
-        col_name = collection_map.get(intent, "nutrisync")
-        chunks = self.retrieve(query, collection_name=col_name)
+        # All data is in the single "nutrisync" collection created by ingestion.
+        # Intent is used for prompt routing, not collection routing.
+        chunks = self.retrieve(query, collection_name="nutrisync")
 
         # 2. Build augmented prompt
         context = self._build_context(chunks)
@@ -301,13 +299,7 @@ Please provide a detailed, evidence-based answer using the retrieved knowledge a
     async def chat_stream(self, query: str, user_profile: Optional[dict] = None):
         """Streaming RAG pipeline."""
         intent = await self.classify_intent(query)
-        collection_map = {
-            "FOOD_SEARCH": "nutrisync_foods",
-            "CLINICAL_ADVICE": "nutrisync_clinical",
-            "GENERAL_CHAT": "nutrisync"
-        }
-        col_name = collection_map.get(intent, "nutrisync")
-        chunks = self.retrieve(query, collection_name=col_name)
+        chunks = self.retrieve(query, collection_name="nutrisync")
         context = self._build_context(chunks)
         user_ctx = self._build_user_context(user_profile)
 
@@ -323,24 +315,8 @@ USER QUESTION:
 
 Provide a concise, evidence-based answer. Respond token-by-token."""
 
-        full_answer = ""
         async for token in self.llm_router.stream_generate(prompt, SYSTEM_PROMPT):
-            full_answer += token
             yield token
-        
-        # Post-generation: Verification & Swaps (appended to stream)
-        v_result = citation_verifier.verify(full_answer, chunks)
-        if v_result["status"] != "VERIFIED":
-            yield f"\n\n> [!CAUTION]\n> {v_result['alerts'][0]}"
-        
-        # Auto-suggestion for unhealthy items mentioned
-        unhealthy_items = ["white rice", "maida", "potato"]
-        for item in unhealthy_items:
-            if item in query.lower() or item in full_answer.lower():
-                swaps = semantic_substitution.suggest(item)
-                if swaps:
-                    yield f"\n\n**NutriSync Swap Suggestion:** Try **{swaps[0]['name']}** instead of {item}. *Reason: {swaps[0]['reason']}*"
-                    break
 
     @property
     def is_ready(self) -> bool:

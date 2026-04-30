@@ -4,12 +4,12 @@ Structured JSON output, real grocery list, customer analysis banner.
 """
 import json
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from database.models import MealPlanRequest, RecipeRequest, GroceryRequest
+from database.models import MealPlanRequest, RecipeRequest
 from auth.database import get_db, MealPlanDB
 from auth.dependencies import get_current_user
 from routes.customer_profile import _match_rda_profile, _calc_bmr, PAL_MAP

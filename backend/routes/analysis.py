@@ -1,5 +1,4 @@
-import functools
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database.loader import db
@@ -205,7 +204,7 @@ async def get_personal_analysis(
     }
 
     # Compare with RDA (Simplified logic for now)
-    profile = user.profile
+    user.profile
     
     # Insights generation
     insights = []

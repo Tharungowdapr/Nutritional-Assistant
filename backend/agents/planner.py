@@ -2,9 +2,8 @@
 AaharAI NutriSync — Planner Agent
 Analyzes user query and determines intent + routing.
 """
-import json
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 

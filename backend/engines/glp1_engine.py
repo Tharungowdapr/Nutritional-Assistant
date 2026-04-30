@@ -3,7 +3,7 @@ AaharAI NutriSync — GLP-1 Digital Twin Modeling
 Simulates pharmacokinetic response and provides clinical guardrails for users on GLP-1 agonists.
 """
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class GLP1Engine:
         model = self.PK_MODELS[medication]
         now = datetime.now(timezone.utc)
         hours_since = (now - last_dose_time).total_seconds() / 3600
-        days_since = hours_since / 24
+        hours_since / 24
 
         # Simplified decay/peak model
         # 1.0 at peak, decaying by half-life

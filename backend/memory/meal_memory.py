@@ -3,7 +3,7 @@ AaharAI NutriSync — Meal Memory Module
 Long-term memory for meal logs and dietary patterns.
 """
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)

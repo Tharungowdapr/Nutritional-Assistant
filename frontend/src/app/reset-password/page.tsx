@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Sparkles, Loader2, AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { authApi } from "@/lib/api";
 import { toast } from "sonner";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
         </div>
 
         {!isSuccess ? (
-          <div className="glass-card p-6">
+          <div className="bg-card border border-border rounded-xl p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="password">New Password</Label>
@@ -137,7 +137,7 @@ export default function ResetPasswordPage() {
             </form>
           </div>
         ) : (
-          <div className="glass-card p-6 text-center space-y-4">
+          <div className="bg-card border border-border rounded-xl p-6 text-center space-y-4">
             <div className="flex justify-center mb-4">
               <CheckCircle className="w-12 h-12 text-primary" />
             </div>
@@ -149,5 +149,17 @@ export default function ResetPasswordPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

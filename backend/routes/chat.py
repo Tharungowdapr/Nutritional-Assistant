@@ -6,15 +6,13 @@ import json
 import uuid
 import logging
 from fastapi import APIRouter, Depends, Request, HTTPException
-from typing import Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from database.models import ChatRequest, ChatResponse
 from fastapi.responses import StreamingResponse
-from auth.database import get_db, ChatHistoryDB, ChatSessionDB
+from auth.database import get_db, ChatHistoryDB
 from auth.dependencies import get_current_user
 
 logger = logging.getLogger(__name__)

@@ -101,14 +101,14 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen luxury-bg flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-xl fade-in">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold">Welcome to NutriSync</h1>
-          <p className="text-muted-foreground mt-2">Let's set up your personalized nutrition profile</p>
+          <h1 className="text-2xl font-bold">Welcome to NutriSync</h1>
+          <p className="text-muted-foreground text-sm mt-1">Let's set up your nutrition profile</p>
         </div>
 
-        <div className="glass-card p-8 space-y-8">
+        <div className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-8">
           {/* Step Progress */}
           <div className="flex items-center gap-2">
             {STEPS.map((label, i) => {
