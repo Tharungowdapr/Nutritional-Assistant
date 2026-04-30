@@ -18,17 +18,13 @@ export default function AnalyticsPage() {
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [columns, setColumns] = useState<string[]>([]);
-  const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"table"|"charts">("table");
-
-  const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
 
   useEffect(() => {
     fetch("/AaharAI_NutriSync_Enhanced.xlsx")
       .then(res => res.arrayBuffer())
       .then(ab => {
         const wb = XLSX.read(ab, { type: "array" });
-        setWorkbook(wb);
         setSheets(wb.SheetNames);
         if (wb.SheetNames.length > 0) {
           loadSheetData(wb, wb.SheetNames[0]);
@@ -41,66 +37,36 @@ export default function AnalyticsPage() {
   const loadSheetData = (wb: XLSX.WorkBook, sheetName: string) => {
     setActiveSheet(sheetName);
     const ws = wb.Sheets[sheetName];
-    if (!ws) return;
-    
-    // Read as array of arrays
-    const rawData = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
-    if (rawData.length < 2) return;
-    
-    // Find the header row (assume it's the second row because of the title, or the first one with >5 columns)
-    let headerRowIdx = 0;
-    for (let i = 0; i < Math.min(5, rawData.length); i++) {
-      if (rawData[i] && rawData[i].length > 5) {
-        headerRowIdx = i;
-        break;
-      }
+    const jsonData = XLSX.utils.sheet_to_json(ws);
+    setData(jsonData);
+    setFilteredData(jsonData);
+    if (jsonData.length > 0) {
+      setColumns(Object.keys(jsonData[0] as object));
     }
-    
-    const headers = rawData[headerRowIdx] as string[];
-    const rows = rawData.slice(headerRowIdx + 1).map(row => {
-      let obj: any = {};
-      headers.forEach((h, i) => {
-        if (h && typeof h === 'string') {
-          obj[h] = row[i];
-        }
-      });
-      return obj;
-    }).filter(row => Object.keys(row).length > 0);
-
-    setData(rows);
-    setFilteredData(rows);
-    
-    // 1. Remove 'IFCT Code' to keep the table clean
-    const finalColumns = headers.filter(h => h && typeof h === 'string' && h !== 'IFCT Code');
-    setColumns(finalColumns);
-    setVisibleColumns(finalColumns);
   };
 
   const handleSheetChange = (sheet: string) => {
-    if (workbook) {
-      loadSheetData(workbook, sheet);
-    }
-  };
-
-  const toggleColumn = (col: string) => {
-    setVisibleColumns(prev => 
-      prev.includes(col) ? prev.filter(c => c !== col) : [...prev, col]
-    );
+    setLoading(true);
+    fetch("/AaharAI_NutriSync_Enhanced.xlsx")
+      .then(res => res.arrayBuffer())
+      .then(ab => {
+        const wb = XLSX.read(ab, { type: "array" });
+        loadSheetData(wb, sheet);
+      })
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    let filtered = data;
-    
-    // Text search
-    if (search) {
-      const lower = search.toLowerCase();
-      filtered = filtered.filter(row => {
-        return Object.values(row).some(val => 
-          String(val).toLowerCase().includes(lower)
-        );
-      });
+    if (!search) {
+      setFilteredData(data);
+      return;
     }
-    
+    const lower = search.toLowerCase();
+    const filtered = data.filter(row => {
+      return Object.values(row).some(val => 
+        String(val).toLowerCase().includes(lower)
+      );
+    });
     setFilteredData(filtered);
   }, [search, data]);
 
@@ -168,46 +134,26 @@ export default function AnalyticsPage() {
       ) : (
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-xl border border-border">
-            <div className="flex flex-col w-full md:w-auto flex-1 gap-2">
-              <div className="flex items-center gap-2 pb-2 md:pb-0">
-                <span className="text-xs font-semibold text-muted-foreground self-center">Sheet:</span>
-                <select 
-                  value={activeSheet}
-                  onChange={(e) => handleSheetChange(e.target.value)}
-                  className="bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-semibold outline-none focus:border-primary"
+            <div className="flex overflow-x-auto gap-2 pb-2 md:pb-0 w-full md:w-auto flex-1">
+              {sheets.map(s => (
+                <button
+                  key={s}
+                  onClick={() => handleSheetChange(s)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors border",
+                    activeSheet === s ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                  )}
                 >
-                  {sheets.map(s => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-2 pt-3 border-t border-border/50">
-                <span className="text-xs font-semibold text-muted-foreground">Show/Hide Columns:</span>
-                <div className="flex flex-wrap gap-1.5 items-center">
-                  {columns.map(c => {
-                    const isVisible = visibleColumns.includes(c);
-                    return (
-                      <button
-                        key={c}
-                        onClick={() => toggleColumn(c)}
-                        className={cn(
-                          "px-2.5 py-1 rounded-md text-[10px] md:text-xs font-medium whitespace-nowrap transition-colors border",
-                          isVisible ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted"
-                        )}
-                      >
-                        {c}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+                  {s}
+                </button>
+              ))}
             </div>
             <div className="relative w-full md:w-64 shrink-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input 
                 value={search} 
                 onChange={e => setSearch(e.target.value)} 
-                placeholder={`Search ${filteredData.length} rows...`}
+                placeholder={`Filter ${filteredData.length} rows...`}
                 className="pl-9 bg-background"
               />
             </div>
@@ -219,7 +165,7 @@ export default function AnalyticsPage() {
                 <table className="w-full text-xs text-left whitespace-nowrap">
                   <thead className="sticky top-0 bg-muted/95 backdrop-blur z-10 shadow-sm">
                     <tr>
-                      {visibleColumns.map(col => (
+                      {columns.map(col => (
                         <th key={col} className="p-3 font-semibold text-muted-foreground border-b border-border">
                           {col}
                         </th>
@@ -229,7 +175,7 @@ export default function AnalyticsPage() {
                   <tbody className="divide-y divide-border/50">
                     {filteredData.slice(0, 100).map((row, i) => (
                       <tr key={i} className="hover:bg-muted/30 transition-colors">
-                        {visibleColumns.map(col => (
+                        {columns.map(col => (
                           <td key={col} className="p-3">
                             {row[col] !== undefined && row[col] !== null ? String(row[col]) : "-"}
                           </td>

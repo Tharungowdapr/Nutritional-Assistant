@@ -14,8 +14,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "NutriSync — AI Nutrition Assistant",
-  description: "AI-powered Indian nutritional assistant grounded in IFCT 2017 and ICMR-NIN 2024 data.",
+  title: "NutriSync - AI Nutritionist",
+  description: "Your personalized AI nutritional assistant and meal planner.",
+  manifest: "/manifest.json",
+  themeColor: "#10b981",
 };
 
 export default function RootLayout({

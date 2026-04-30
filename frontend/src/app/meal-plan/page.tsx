@@ -1,10 +1,13 @@
 "use client";
-import { useState } from "react";
-import { ChevronDown, Loader2, RefreshCw, ShoppingCart, Calendar, AlertTriangle, CheckCircle, Sparkles, IndianRupee } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronDown, Loader2, RefreshCw, ShoppingCart, Calendar, AlertTriangle, CheckCircle, Sparkles, MapPin, Cloud, MessageSquare, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { frontendLLM } from "@/lib/llm-provider";
 
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 type Plan = any;
@@ -24,6 +27,34 @@ export default function MealPlanPage() {
   const [people, setPeople] = useState(1);
   const [goal, setGoal] = useState("Maintenance");
   const [dietType, setDietType] = useState("VEG");
+  const [suggestion, setSuggestion] = useState("");
+  const [weatherContext, setWeatherContext] = useState<string>("");
+  const [locationName, setLocationName] = useState<string>("");
+
+  // Fetch Weather and Location on mount
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          // Get Weather
+          const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+          const wData = await wRes.json();
+          const temp = wData.current_weather?.temperature;
+          const wcode = wData.current_weather?.weathercode;
+          const condition = wcode === 0 ? "Clear" : wcode < 40 ? "Cloudy" : "Rain/Snow";
+          setWeatherContext(`${temp}°C, ${condition}`);
+          
+          // Get Location Name (Reverse Geocoding)
+          const locRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const locData = await locRes.json();
+          setLocationName(locData.address?.city || locData.address?.town || locData.address?.state || "Unknown location");
+        } catch (e) {
+          console.warn("Failed to fetch location/weather", e);
+        }
+      }, () => console.log("Geolocation denied"));
+    }
+  }, []);
 
   const toggle = (key: string) => setExpandedSlots(p => ({ ...p, [key]: !p[key] }));
   const toggleCheck = (key: string) => setChecked(p => ({ ...p, [key]: !p[key] }));
@@ -32,19 +63,79 @@ export default function MealPlanPage() {
     setGenerating(true); setError(null);
     try {
       const profile = user?.profile || {};
-      const result = await apiFetch<Plan>("/api/meal-plan/generate", {
-        method: "POST",
-        body: JSON.stringify({
-          days, budget_per_day_inr: budget, num_people: people,
-          user_profile: { ...profile, goal, diet_type: dietType },
-        }),
-      });
-      setPlan(result); setActiveDay(0); setActiveTab("plan");
+      
+      // We will construct a prompt locally and use the frontend LLM provider directly
+      const wContext = weatherContext ? `Weather is ${weatherContext} in ${locationName}. Recommend seasonal foods.` : "";
+      const sContext = suggestion ? `User specific suggestion/request: "${suggestion}".` : "";
+      
+      const prompt = `Generate a ${days}-day meal plan for ${people} person(s).
+Diet: ${dietType}
+Goal: ${goal}
+Budget: ₹${budget}/day
+${wContext}
+${sContext}
+
+Return ONLY valid JSON using this structure:
+{"customer_analysis":{"icmr_profile":"","energy_target":2000,"protein_target":60,"iron_target":17,"calcium_target":1000,"fibre_target":30,"key_risks":[],"budget_per_day":"","rationale":""},"days":[{"day":1,"day_label":"Monday","meals":{"Breakfast":{"foods":[{"name":"","qty_g":0,"qty_label":"","ifct_code":"","cal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"iron_mg":0,"calcium_mg":0}],"prep_time_min":0,"meal_total":{"cal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"iron_mg":0,"calcium_mg":0}},"Lunch":{},"Dinner":{}},"day_total":{"cal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"iron_mg":0,"calcium_mg":0}}],"grocery":[{"category":"","items":[{"name":"","qty":"","est_cost_inr":0,"used_for":""}]}],"total_grocery_cost_inr":0}`;
+
+      const res = await frontendLLM.generate(prompt, "You are an expert Indian clinical nutritionist. Return only valid JSON.");
+      
+      if (res.error) throw new Error(res.error);
+      
+      let raw = res.content.trim();
+      if (raw.includes("\`\`\`json")) raw = raw.split("\`\`\`json")[1].split("\`\`\`")[0];
+      else if (raw.includes("\`\`\`")) raw = raw.split("\`\`\`")[1];
+      
+      const parsedPlan = JSON.parse(raw);
+      setPlan(parsedPlan);
+      setActiveDay(0);
+      setActiveTab("plan");
     } catch (e: any) {
-      setError(e.message || "Generation failed. Please retry.");
+      console.error("LLM Generation Failed, using fallback", e);
+      import("@/lib/fallback-recipes").then(({ getFallbackPlan }) => {
+        setPlan(getFallbackPlan(days, dietType, budget));
+        setActiveDay(0);
+        setActiveTab("plan");
+        setError("AI generation failed. A local fallback meal plan has been loaded instead.");
+      });
     } finally {
       setGenerating(false);
     }
+  };
+
+  const exportToExcel = () => {
+    if (!plan) return;
+    try {
+      const flatPlan: any[] = [];
+      plan.days?.forEach((d: any) => {
+        Object.entries(d.meals || {}).forEach(([slot, meal]: any) => {
+          meal.foods?.forEach((f: any) => {
+            flatPlan.push({
+              Day: d.day_label,
+              Meal: slot,
+              Food: f.name,
+              Quantity: f.qty_label || `${f.qty_g}g`,
+              Calories: f.cal,
+              Protein: f.protein_g,
+              Carbs: f.carbs_g,
+              Fat: f.fat_g,
+              Iron: f.iron_mg,
+              Calcium: f.calcium_mg
+            });
+          });
+        });
+      });
+      const ws = XLSX.utils.json_to_sheet(flatPlan);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Meal Plan");
+      XLSX.writeFile(wb, "NutriSync_Meal_Plan.xlsx");
+    } catch (e) {
+      console.error("Export to Excel failed", e);
+    }
+  };
+
+  const exportToPDF = () => {
+    window.print();
   };
 
   const ca = plan?.customer_analysis;
@@ -52,18 +143,35 @@ export default function MealPlanPage() {
   const MEAL_SLOTS = ["Breakfast","Mid-morning","Lunch","Snack","Dinner"];
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto pb-24 fade-in">
+    <div className="flex-1 bg-background text-foreground md:pl-64">
+      <style>{`
+        @media print {
+          aside, nav, button:not(.print-hide), .print-hide { display: none !important; }
+          .md\\:pl-64 { padding-left: 0 !important; }
+          body { background: white !important; color: black !important; }
+          .bg-card { background: white !important; border: 1px solid #ccc !important; break-inside: avoid; }
+        }
+      `}</style>
+      <div className="max-w-4xl mx-auto p-4 md:p-8 pt-20 md:pt-8 min-h-screen pb-24">
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 print-hide">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Meal Planner</h1>
           <p className="text-muted-foreground text-sm mt-1">AI-generated plans based on ICMR-NIN 2024 guidelines</p>
         </div>
         {plan && (
-          <Button onClick={generate} disabled={generating} variant="outline" size="sm">
-            <RefreshCw className={cn("w-4 h-4 mr-1.5", generating && "animate-spin")} /> Regenerate
-          </Button>
+          <div className="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
+            <Button variant="outline" size="sm" onClick={exportToPDF} className="gap-1.5 text-muted-foreground">
+              <Download className="w-4 h-4" /> PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportToExcel} className="gap-1.5 text-muted-foreground">
+              <Download className="w-4 h-4" /> Excel
+            </Button>
+            <Button onClick={generate} disabled={generating} variant="outline" size="sm">
+              <RefreshCw className={cn("w-4 h-4 mr-1.5", generating && "animate-spin")} /> Regenerate
+            </Button>
+          </div>
         )}
       </div>
 
@@ -102,6 +210,26 @@ export default function MealPlanPage() {
                 {["Maintenance","Weight loss","Muscle gain","Heart health"].map(g => <option key={g}>{g}</option>)}
               </select>
             </div>
+            
+            <div className="col-span-2 md:col-span-4 space-y-1.5 mt-2">
+              <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5" /> Additional Suggestions / Cravings
+              </label>
+              <Input 
+                placeholder="E.g., I want to eat more paneer, avoid spicy food, recovering from fever..." 
+                value={suggestion}
+                onChange={e => setSuggestion(e.target.value)}
+                className="bg-background h-10"
+              />
+            </div>
+            
+            {weatherContext && (
+              <div className="col-span-2 md:col-span-4 flex items-center gap-4 text-xs font-medium text-primary bg-primary/5 p-3 rounded-lg border border-primary/10">
+                <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {locationName}</div>
+                <div className="flex items-center gap-1.5"><Cloud className="w-3.5 h-3.5" /> {weatherContext}</div>
+                <span className="text-muted-foreground font-normal ml-auto hidden sm:inline">Will be used for seasonal recommendations</span>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
