@@ -20,6 +20,7 @@ const NAV = [
   { href: "/chat",      label: "Chat",       mobileLabel: "Chat",    icon: MessageSquare   },
   { href: "/meal-plan", label: "Meal Plan",  mobileLabel: "Plans",   icon: CalendarDays    },
   { href: "/recipes",   label: "Recipes",    mobileLabel: "Recipes", icon: CookingPot      },
+  { href: "/analytics", label: "Analytics",  mobileHide: true,       icon: Cpu             },
   { href: "/explore",   label: "Explore",    mobileHide: true,       icon: Search          },
   { href: "/settings",  label: "Settings",   mobileHide: true,       icon: Settings        },
 ] as const;
@@ -29,6 +30,18 @@ const MOBILE_NAV = NAV.filter(n => !("mobileHide" in n && n.mobileHide));
 function DesktopNav() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const [cost, setCost] = useState("0.00");
+  const [tokens, setTokens] = useState("0");
+
+  useEffect(() => {
+    const updateUsage = () => {
+      setCost(localStorage.getItem("llm_cost") || "0.00");
+      setTokens(localStorage.getItem("llm_tokens") || "0");
+    };
+    updateUsage();
+    window.addEventListener("llm_usage_updated", updateUsage);
+    return () => window.removeEventListener("llm_usage_updated", updateUsage);
+  }, []);
 
   return (
     <div className="flex flex-col h-full">
@@ -67,6 +80,17 @@ function DesktopNav() {
 
       {/* Bottom section */}
       <div className="p-4 border-t border-border space-y-1">
+        {/* API Usage */}
+        <div className="px-1 pb-3">
+          <div className="rounded-xl bg-muted/50 p-3 text-xs text-muted-foreground flex flex-col gap-1.5">
+            <span className="font-semibold text-foreground flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3 text-primary"/> API Usage
+            </span>
+            <div className="flex justify-between"><span>Tokens:</span> <span>{tokens}</span></div>
+            <div className="flex justify-between"><span>Est. Cost:</span> <span className="text-primary font-medium">${cost}</span></div>
+          </div>
+        </div>
+
         {/* LLM provider badge */}
         {user && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 mb-2">

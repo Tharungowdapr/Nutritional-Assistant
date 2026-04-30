@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Plus, Clock, Users, ChevronLeft, ChevronRight, Loader2, AlertTriangle, Sparkles, Utensils, X } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { frontendLLM } from "@/lib/llm-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -15,24 +16,8 @@ interface Recipe {
   nutrition_per_serving?: any; ifct_note?: string; tips?: string[];
 }
 
-const RECIPES: Recipe[] = [
-  { id:"r1", name:"Ragi Mudde + Sambar", category:"Breakfast", diet_type:"VEG", region:"Karnataka", prep_time_min:20, servings:2, cal:390, protein_g:11, carbs_g:74, fat_g:3.4, iron_mg:8.2, calcium_mg:620, fibre_g:6, ifct_code:"A010", badge:"High Calcium", badge_color:"purple",
-    ingredients:["Ragi flour 160g","Water 400ml","Salt to taste","Toor dal 60g","Tamarind small piece","Tomato 1 medium","Drumstick pieces 50g","Mustard seeds, curry leaves, dried red chilli"],
-    steps:["Boil salted water. Slowly add ragi flour while stirring to avoid lumps.","Cook on low heat 8 min, stirring until stiff. Shape into balls.","Pressure cook toor dal 3 whistles. Temper mustard, curry leaves, add tamarind water.","Add cooked dal, tomato, drumstick. Simmer 10 min. Season with sambar powder."],
-    ifct_note:"Ragi has 344mg calcium/100g — highest among Indian cereals (IFCT 2017)." },
-  { id:"r2", name:"Rajma Rice Bowl", category:"Lunch", diet_type:"VEG", region:"North India", prep_time_min:15, servings:2, cal:545, protein_g:20, carbs_g:109, fat_g:3.5, iron_mg:6.1, calcium_mg:134, fibre_g:8, ifct_code:"C020", badge:"Iron + Protein", badge_color:"amber",
-    ingredients:["Brown rice 150g","Rajma 100g (soaked overnight)","Onion 1 large","Tomato 2 medium","Ginger-garlic paste 1 tsp","Rajma masala, cumin, bay leaf","Coriander + lemon"],
-    steps:["Pressure cook soaked rajma 6–8 whistles until soft.","Sauté onion golden brown. Add ginger-garlic, tomatoes. Cook until oil separates.","Add rajma, cooking water, masala. Simmer 15 min.","Serve over brown rice. Squeeze lemon — Vit C triples iron absorption."],
-    ifct_note:"Rajma: 130mg folate + 4.8mg iron per 100g (IFCT). Brown rice GI 55 vs white rice 72." },
-  { id:"r3", name:"Bajra Roti + Methi Sabzi", category:"Dinner", diet_type:"VEG", region:"Rajasthan", prep_time_min:30, servings:2, cal:424, protein_g:13.8, carbs_g:77, fat_g:6.6, iron_mg:12.8, calcium_mg:228, fibre_g:7, ifct_code:"A005", badge:"Highest Iron", badge_color:"red",
-    ingredients:["Bajra flour 120g","Hot water to knead","Methi leaves 200g","Onion 1 small","Garlic 3 cloves","Mustard seeds, green chilli, salt","Oil 1 tsp"],
-    steps:["Knead bajra flour with hot water into soft dough.","Press firmly on tawa — bajra doesn't bind like wheat. Cook both sides well.","For methi: sauté garlic + mustard seeds. Add methi, cook 5 min.","Serve hot — bajra roti firms on cooling."],
-    ifct_note:"Bajra: 8mg iron/100g. Methi: 3.2mg iron + 176mg calcium per 100g (IFCT)." },
-  { id:"r4", name:"Moong Dal Cheela", category:"Breakfast", diet_type:"VEG", region:"All India", prep_time_min:20, servings:3, cal:210, protein_g:14, carbs_g:32, fat_g:3.2, iron_mg:2.8, calcium_mg:48, fibre_g:4, ifct_code:"D001", badge:"High Protein", badge_color:"teal",
-    ingredients:["Yellow moong dal 100g (soaked 2h)","Green chilli 1","Ginger small piece","Cumin seeds ½ tsp","Coriander leaves","Salt, oil for cooking"],
-    steps:["Blend soaked dal with chilli, ginger, cumin and minimal water to thick batter.","Season with salt, fold in coriander.","Pour on hot non-stick tawa. Spread thin. Drizzle oil.","Cook 2–3 min per side until golden. Serve with green chutney."],
-    ifct_note:"Moong dal: 24g protein/100g dry (IFCT). Faster than dosa with equal protein." },
-];
+import RECIPES_DATA from "@/lib/recipes-db.json";
+const RECIPES: Recipe[] = RECIPES_DATA as Recipe[];
 
 const BADGE_COLORS: Record<string, string> = {
   purple: "bg-purple-500/10 text-purple-700 dark:text-purple-400",
@@ -153,7 +138,18 @@ export default function RecipesPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
 
-  const filtered = RECIPES.filter(r => {
+  const [allRecipes, setAllRecipes] = useState<Recipe[]>(RECIPES);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("custom_recipes");
+      if (saved) {
+        setAllRecipes(prev => [...JSON.parse(saved), ...prev]);
+      }
+    } catch (e) {}
+  }, []);
+
+  const filtered = allRecipes.filter(r => {
     const q = search.toLowerCase();
     if (q && !r.name.toLowerCase().includes(q)) return false;
     if (category !== "All" && r.category !== category) return false;
@@ -168,14 +164,55 @@ export default function RecipesPage() {
     if (!aiPrompt.trim()) return;
     setAiLoading(true); setAiError("");
     try {
-      const result = await apiFetch<Recipe>("/api/meal-plan/recipe", {
-        method: "POST",
-        body: JSON.stringify({ instructions: aiPrompt }),
-      });
+      const prompt = `Generate a highly detailed Indian recipe for: "${aiPrompt}".
+Return ONLY a valid JSON object matching this exact structure (no markdown tags):
+{
+  "id": "ai_generated",
+  "name": "Recipe Name",
+  "category": "Breakfast, Lunch, Dinner, or Snack",
+  "diet_type": "VEG" or "NON-VEG",
+  "region": "Indian Region",
+  "prep_time_min": 30,
+  "servings": 2,
+  "cal": 400,
+  "protein_g": 15,
+  "iron_mg": 5,
+  "calcium_mg": 100,
+  "badge": "High Protein" (or High Iron, etc),
+  "badge_color": "teal" (teal for protein, red for iron, purple for calcium),
+  "ingredients": [
+    "200g specific ingredient with detailed prep instructions (e.g. finely chopped)",
+    "1 tbsp specific spice"
+  ],
+  "steps": [
+    "Aromatics Extraction: detailed instruction...",
+    "Base Building: detailed instruction..."
+  ],
+  "tips": ["Chef tip 1", "Chef tip 2"]
+}
+Make the ingredients very specific (with quantities) and the steps professionally culinary.`;
+
+      const res = await frontendLLM.generate(prompt, "You are a master Indian chef and nutritionist. Return ONLY valid JSON.");
+      if (res.error) throw new Error(res.error);
+      
+      let raw = res.content.trim();
+      if (raw.includes("\`\`\`json")) raw = raw.split("\`\`\`json")[1].split("\`\`\`")[0];
+      else if (raw.includes("\`\`\`")) raw = raw.split("\`\`\`")[1];
+      
+      const newRecipe: Recipe = JSON.parse(raw);
+      newRecipe.id = "custom_" + Date.now();
+      
+      // Auto-save to local storage and update list
+      const savedStr = localStorage.getItem("custom_recipes");
+      const saved = savedStr ? JSON.parse(savedStr) : [];
+      const updatedCustom = [newRecipe, ...saved];
+      localStorage.setItem("custom_recipes", JSON.stringify(updatedCustom));
+      
+      setAllRecipes(prev => [newRecipe, ...prev]);
       setAiModal(false);
-      setSelected({ ...result, name: result.title || result.name || aiPrompt, iron_mg: result.nutrition_per_serving?.iron_mg || 0, calcium_mg: result.nutrition_per_serving?.calcium_mg || 0, cal: result.nutrition_per_serving?.cal || 0, protein_g: result.nutrition_per_serving?.protein_g || 0 });
+      setSelected(newRecipe);
     } catch (e: any) {
-      setAiError(e.message || "Failed to generate recipe");
+      setAiError(e.message || "Failed to generate recipe. Check your LLM settings.");
     } finally {
       setAiLoading(false);
     }

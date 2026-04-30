@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { User, Lock, Palette, ShieldCheck, Settings2, Loader2, Sun, Moon, Monitor, Globe, Download, Save, Eye, EyeOff } from "lucide-react";
+import { useState, useEffect } from "react";
+import { User, Lock, Palette, ShieldCheck, Settings2, Loader2, Sun, Moon, Monitor, Globe, Download, Save, Eye, EyeOff, Brain, Leaf, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth-context";
@@ -11,9 +11,13 @@ import { useTheme } from "next-themes";
 import { SettingsLayout, SettingsCard } from "@/components/settings-layout";
 import { cn } from "@/lib/utils";
 
+import { frontendLLM, LLMConfig } from "@/lib/llm-provider";
+
 const SIDEBAR_ITEMS = [
   { id: "account", label: "Account", icon: User },
+  { id: "diet_profile", label: "Diet Profile", icon: Leaf },
   { id: "security", label: "Security", icon: Lock },
+  { id: "ai_models", label: "AI Models", icon: Brain },
   { id: "preferences", label: "Preferences", icon: Palette },
   { id: "privacy", label: "Privacy & Data", icon: ShieldCheck },
 ];
@@ -36,6 +40,43 @@ export default function RebuiltSettingsPage() {
   
   // Account Form
   const [nameForm, setNameForm] = useState(user?.name || "");
+
+  // Diet Profile Form
+  const [dietForm, setDietForm] = useState({
+    diet_type: user?.profile?.diet_type || "VEG",
+    goal: user?.profile?.goal || "Maintenance",
+    allergies: user?.profile?.conditions?.join(", ") || "",
+  });
+
+  // AI Config Form
+  const [llmConfig, setLlmConfig] = useState<LLMConfig>({ provider: "ollama" });
+  
+  // Load initial LLM config on mount
+  useEffect(() => {
+    setLlmConfig(frontendLLM.getConfig());
+  }, []);
+
+  const handleSaveLlmConfig = () => {
+    frontendLLM.saveConfig(llmConfig);
+    toast.success("AI Configuration saved locally");
+  };
+
+  const handleSaveDietProfile = async () => {
+    setIsLoading(true);
+    try {
+      const conditions = dietForm.allergies.split(",").map(s => s.trim()).filter(Boolean);
+      await updateProfile({ 
+        diet_type: dietForm.diet_type,
+        goal: dietForm.goal,
+        conditions: conditions
+      });
+      toast.success("Diet profile updated");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update profile");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Password Form
   const [passwordForm, setPasswordForm] = useState({
@@ -141,6 +182,58 @@ export default function RebuiltSettingsPage() {
         </SettingsCard>
       )}
 
+      {/* DIET PROFILE */}
+      {activeTab === "diet_profile" && (
+        <SettingsCard title="Dietary Preferences" description="Help the AI personalize your meals and recipes.">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Diet Type</label>
+                <select 
+                  className="w-full h-12 px-4 rounded-xl border border-border bg-background"
+                  value={dietForm.diet_type}
+                  onChange={(e) => setDietForm({...dietForm, diet_type: e.target.value})}
+                >
+                  <option value="VEG">Vegetarian</option>
+                  <option value="NON-VEG">Non-Vegetarian</option>
+                  <option value="VEGAN">Vegan</option>
+                  <option value="PESCATARIAN">Pescatarian</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Primary Goal</label>
+                <select 
+                  className="w-full h-12 px-4 rounded-xl border border-border bg-background"
+                  value={dietForm.goal}
+                  onChange={(e) => setDietForm({...dietForm, goal: e.target.value})}
+                >
+                  <option value="Maintenance">Maintain Weight</option>
+                  <option value="Weight Loss">Weight Loss</option>
+                  <option value="Muscle Gain">Muscle Gain</option>
+                  <option value="General Health">General Health</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Allergies & Conditions</label>
+              <Input 
+                value={dietForm.allergies} 
+                onChange={(e) => setDietForm({...dietForm, allergies: e.target.value})} 
+                placeholder="e.g. Peanut allergy, Lactose intolerant, Diabetes" 
+                className="h-12"
+              />
+              <p className="text-xs text-muted-foreground">Comma-separated list. Used to filter out dangerous ingredients.</p>
+            </div>
+            
+            <Button onClick={handleSaveDietProfile} disabled={isLoading} className="px-6 h-12 w-full md:w-auto">
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              Save Profile
+            </Button>
+          </div>
+        </SettingsCard>
+      )}
+
       {/* SECURITY */}
       {activeTab === "security" && (
         <SettingsCard title="Password" description="Ensure your account is protected with a strong password.">
@@ -197,6 +290,88 @@ export default function RebuiltSettingsPage() {
             </Button>
           </form>
         </SettingsCard>
+      )}
+
+      {/* AI MODELS */}
+      {activeTab === "ai_models" && (
+        <div className="space-y-6">
+          <SettingsCard title="AI Provider Configuration" description="Configure which AI generates your meal plans and recipes.">
+            <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl mb-6 flex gap-3 text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="w-5 h-5 shrink-0" />
+              <div className="text-sm">
+                <strong>Keys are stored locally.</strong> Your API keys never touch our backend database. They are stored securely in your browser's localStorage and used directly for requests.
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Active Provider</label>
+                <div className="grid grid-cols-3 gap-4">
+                  {(["ollama", "groq", "gemini"] as const).map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setLlmConfig({...llmConfig, provider: p})}
+                      className={cn(
+                        "p-3 rounded-xl border-2 text-sm font-semibold capitalize transition-all",
+                        llmConfig.provider === p 
+                          ? "border-primary bg-primary/5 text-primary" 
+                          : "border-border hover:border-primary/40 bg-card text-muted-foreground"
+                      )}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {llmConfig.provider === "ollama" && (
+                <div className="space-y-2 fade-in">
+                  <label className="text-sm font-medium">Ollama Base URL</label>
+                  <Input 
+                    value={llmConfig.ollamaUrl || ""} 
+                    onChange={(e) => setLlmConfig({...llmConfig, ollamaUrl: e.target.value})} 
+                    placeholder="http://localhost:11434"
+                    className="h-12"
+                  />
+                  <p className="text-xs text-muted-foreground">Make sure you have started Ollama with OLLAMA_ORIGINS="*" if running locally.</p>
+                </div>
+              )}
+
+              {llmConfig.provider === "groq" && (
+                <div className="space-y-2 fade-in">
+                  <label className="text-sm font-medium">Groq API Key</label>
+                  <Input 
+                    type="password"
+                    value={llmConfig.groqApiKey || ""} 
+                    onChange={(e) => setLlmConfig({...llmConfig, groqApiKey: e.target.value})} 
+                    placeholder="gsk_..."
+                    className="h-12"
+                  />
+                  <p className="text-xs text-muted-foreground">Get your free key at console.groq.com. We use the llama3-8b-8192 model.</p>
+                </div>
+              )}
+
+              {llmConfig.provider === "gemini" && (
+                <div className="space-y-2 fade-in">
+                  <label className="text-sm font-medium">Google Gemini API Key</label>
+                  <Input 
+                    type="password"
+                    value={llmConfig.geminiApiKey || ""} 
+                    onChange={(e) => setLlmConfig({...llmConfig, geminiApiKey: e.target.value})} 
+                    placeholder="AIzaSy..."
+                    className="h-12"
+                  />
+                  <p className="text-xs text-muted-foreground">Get your key from Google AI Studio. Uses gemini-pro.</p>
+                </div>
+              )}
+
+              <Button onClick={handleSaveLlmConfig} className="px-6 h-12">
+                <Save className="w-4 h-4 mr-2" />
+                Save AI Configuration
+              </Button>
+            </div>
+          </SettingsCard>
+        </div>
       )}
 
       {/* PREFERENCES */}
