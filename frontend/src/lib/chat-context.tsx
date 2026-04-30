@@ -134,65 +134,69 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
     if (!sessionId) throw new Error("No session available");
 
-    setLoading(true);
+    // Optimistically add user message
     setMessages(prev => [...prev, { role: "user", content: message }]);
+    // Add empty assistant message that we'll stream into
+    setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+    setLoading(true);
 
     try {
-      let response: any;
-      
-      if (currentSession) {
-        response = await fetch("http://localhost:8000/api/chat/sessions/" + sessionId + "/messages", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token,
-          },
-          body: JSON.stringify({
-            message: message,
-            session_id: sessionId,
-          }),
-        });
-        
-        if (!response.ok) throw new Error("Failed to send message");
-        const data = await response.json();
-        
-        setMessages(prev => [...prev, { 
-          role: "assistant", 
-          content: data.assistant_message,
-          sources: data.sources || [],
-        }]);
-        
-        await refreshSessions();
-        
-        return data.assistant_message;
-      } else {
-        response = await fetch("http://localhost:8000/api/chat", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token,
-          },
-          body: JSON.stringify({
-            message: message,
-            user_profile: userProfile,
-            session_id: sessionId,
-          }),
-        });
-        
-        if (!response.ok) throw new Error("Failed to send message");
-        const data = await response.json();
-        
-        setMessages(prev => [...prev, { 
-          role: "assistant", 
-          content: data.answer,
-          sources: data.sources || [],
-        }]);
-        
-        await refreshSessions();
-        
-        return data.answer;
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${API_BASE}/api/chat/stream`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          message,
+          user_profile: userProfile,
+          session_id: sessionId,
+        }),
+      });
+
+      if (!res.ok) throw new Error(`Chat failed: ${res.status}`);
+      if (!res.body) throw new Error("No response body");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullResponse = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        // SSE lines come as: "data: {...}\n\n"
+        const lines = chunk.split("\n").filter(l => l.startsWith("data: "));
+
+        for (const line of lines) {
+          try {
+            const json = JSON.parse(line.slice(6)); // strip "data: "
+            if (json.error) throw new Error(json.error);
+            if (json.token) {
+              fullResponse += json.token;
+              // Update the last (assistant) message in place
+              setMessages(prev => {
+                const updated = [...prev];
+                updated[updated.length - 1] = {
+                  role: "assistant",
+                  content: fullResponse,
+                };
+                return updated;
+              });
+            }
+          } catch {
+            // skip malformed SSE lines
+          }
+        }
       }
+
+      await refreshSessions();
+      return fullResponse;
     } catch (err) {
+      // Remove the empty assistant message on error
+      setMessages(prev => prev.slice(0, -1));
       console.error("Failed to send message:", err);
       throw err;
     } finally {

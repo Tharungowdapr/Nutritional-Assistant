@@ -12,14 +12,20 @@ function getToken(): string | null {
   return localStorage.getItem("nutrisync_token");
 }
 
-/** Set JWT token */
+/** Set JWT token — persists in localStorage AND a cookie for middleware */
 export function setToken(token: string) {
   localStorage.setItem("nutrisync_token", token);
+  // Set a cookie so Next.js middleware.ts can read it server-side.
+  // SameSite=Strict, no httpOnly so JS can clear it on logout.
+  // Max-age: 24 hours (matches JWT_EXPIRE_MINUTES = 1440).
+  document.cookie = `nutrisync_token=${token}; path=/; max-age=86400; SameSite=Strict`;
 }
 
 /** Remove JWT token */
 export function clearToken() {
   localStorage.removeItem("nutrisync_token");
+  // Expire the cookie immediately
+  document.cookie = "nutrisync_token=; path=/; max-age=0; SameSite=Strict";
 }
 
 /** Core fetch wrapper with automatic token refresh on 401 */

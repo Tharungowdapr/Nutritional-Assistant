@@ -42,16 +42,16 @@
    ═══════════════════════════════════════════ */
 @layer base {
   :root {
-    --background: #FAFAF8;
-    --foreground: #1A1A1A;
+    --background: #FDFCF8; /* Creamy White */
+    --foreground: #0A2E28; /* Deep Emerald */
 
     --card: #FFFFFF;
-    --card-foreground: #1A1A1A;
+    --card-foreground: #0A2E28;
 
     --popover: #FFFFFF;
-    --popover-foreground: #1A1A1A;
+    --popover-foreground: #0A2E28;
 
-    --primary: #2D6A4F;
+    --primary: #0A5C4A; /* Imperial Emerald */
     --primary-foreground: #FFFFFF;
 
     --secondary: #F5F3EF;
@@ -60,94 +60,88 @@
     --muted: #F0EDE8;
     --muted-foreground: #7A7A7A;
 
-    --accent: #F0EDE8;
-    --accent-foreground: #2D6A4F;
+    --accent: #D4AF37; /* Champagne Gold */
+    --accent-foreground: #FFFFFF;
 
     --destructive: #C53030;
     --destructive-foreground: #FFFFFF;
 
     --border: #E8E4DD;
     --input: #E8E4DD;
-    --ring: #2D6A4F;
+    --ring: #0A5C4A;
 
-    --chart-1: #2D6A4F;
-    --chart-2: #52B788;
-    --chart-3: #D4A373;
+    --chart-1: #0A5C4A;
+    --chart-2: #D4AF37;
+    --chart-3: #1A2B4A;
     --chart-4: #E76F51;
     --chart-5: #457B9D;
 
     /* Nutrition macros colors */
-    --color-calories: #E07B39;
-    --color-protein: #3B82F6;
-    --color-carbs: #F59E0B;
-    --color-fat: #A855F7;
-    --color-fibre: #22C55E;
+    --color-calories: #D97706;
+    --color-protein: #0D7E6A;
+    --color-carbs: #7C3AED;
+    --color-fat: #1A2B4A;
+    --color-fibre: #16A34A;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
-    --glass-bg: rgba(255, 255, 255, 0.8);
-    --glass-border: rgba(232, 228, 221, 0.6);
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(232, 228, 221, 0.4);
 
     --sidebar-width: 260px;
     --bg-subtle: #F8F9FA;
-    --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 1px 4px -1px rgba(0, 0, 0, 0.02);
-    --card-radius: 20px;
-    --google-blue: #1A73E8;
-    --app-bg: #F8F9FA;
+    --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    --card-radius: 24px;
+    --app-bg: #FDFCF8;
   }
 
-  /* ═══════════════════════════════════════════
-     MINIMAL LUXURY — Dark Theme
-     Deep charcoal, warm stone, muted gold
-     ═══════════════════════════════════════════ */
   .dark {
-    --background: #0F0F0F;
-    --foreground: #ECECEC;
+    --background: #051412; /* Deep Dark Emerald */
+    --foreground: #F5F3EF;
 
-    --card: #1A1A1A;
-    --card-foreground: #ECECEC;
+    --card: #0A211D;
+    --card-foreground: #F5F3EF;
 
-    --popover: #1A1A1A;
-    --popover-foreground: #ECECEC;
+    --popover: #0A211D;
+    --popover-foreground: #F5F3EF;
 
-    --primary: #52B788;
-    --primary-foreground: #0F0F0F;
+    --primary: #D4AF37; /* Gold as primary in dark mode */
+    --primary-foreground: #051412;
 
-    --secondary: #252525;
+    --secondary: #122824;
     --secondary-foreground: #D4D4D4;
 
-    --muted: #252525;
+    --muted: #122824;
     --muted-foreground: #999999;
 
-    --accent: #252525;
-    --accent-foreground: #52B788;
+    --accent: #D4AF37;
+    --accent-foreground: #051412;
 
     --destructive: #E53E3E;
-    --destructive-foreground: #ECECEC;
+    --destructive-foreground: #F5F3EF;
 
-    --border: #2A2A2A;
-    --input: #2A2A2A;
-    --ring: #52B788;
+    --border: #1A2B28;
+    --input: #1A2B28;
+    --ring: #D4AF37;
 
-    --chart-1: #52B788;
-    --chart-2: #81CFAB;
-    --chart-3: #D4A373;
+    --chart-1: #D4AF37;
+    --chart-2: #0D7E6A;
+    --chart-3: #FBBF24;
     --chart-4: #F4845F;
     --chart-5: #76B5C5;
 
     /* Nutrition macros colors */
     --color-calories: #F59E0B;
-    --color-protein: #60A5FA;
-    --color-carbs: #FBBF24;
-    --color-fat: #C084FC;
+    --color-protein: #52B788;
+    --color-carbs: #A78BFA;
+    --color-fat: #94A3B8;
     --color-fibre: #4ADE80;
 
-    --glass-bg: rgba(26, 26, 26, 0.8);
-    --glass-border: rgba(42, 42, 42, 0.6);
-    --bg-subtle: #202124;
-    --app-bg: #0F0F0F; 
-    --card-shadow: 0 1px 2px 0 rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
-    --google-blue: #8AB4F8;
+    --glass-bg: rgba(10, 33, 29, 0.8);
+    --glass-border: rgba(26, 43, 40, 0.6);
+    --bg-subtle: #081A18;
+    --app-bg: #051412; 
+    --card-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -165,7 +159,14 @@
   }
   h1, h2, h3, h4 {
     @apply font-semibold tracking-tight;
-    letter-spacing: -0.025em;
+    font-family: var(--font-playfair), serif;
+    letter-spacing: -0.015em;
+  }
+  .font-serif {
+    font-family: var(--font-playfair), serif;
+  }
+  .luxury-text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-foreground to-accent;
   }
 }
 

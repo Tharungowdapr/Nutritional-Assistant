@@ -84,11 +84,11 @@ async def lifespan(app: FastAPI):
 
     # 4. Initialize Meal Agent (LangGraph orchestrated)
     try:
-        from agent.langgraph_meal_agent import LangGraphMealAgent
+        from agents.orchestrator import OrchestratorAgent
 
-        _meal_agent = LangGraphMealAgent(llm_router=_llm_router)
+        _meal_agent = OrchestratorAgent(llm_router=_llm_router)
     except Exception as e:
-        logger.warning(f"Could not initialize LangGraphMealAgent: {e}")
+        logger.warning(f"Could not initialize OrchestratorAgent: {e}")
         _meal_agent = None
 
     logger.info("✅ AaharAI NutriSync API ready!")
@@ -159,6 +159,8 @@ from routes.tracker import router as tracker_router
 from routes.analysis import router as analysis_router
 from routes.recipes import router as recipes_router
 from routes.chat_sessions import router as chat_sessions_router
+from routes.customer_profile import router as customer_profile_router
+from routes.settings import router as settings_router
 
 app.include_router(auth_router)
 app.include_router(chat_router)
@@ -169,6 +171,8 @@ app.include_router(tracker_router)
 app.include_router(analysis_router)
 app.include_router(recipes_router)
 app.include_router(chat_sessions_router)
+app.include_router(customer_profile_router)
+app.include_router(settings_router)
 
 
 @app.get("/api/health", response_model=HealthCheckResponse)
