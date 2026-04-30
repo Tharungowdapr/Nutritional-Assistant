@@ -4,10 +4,7 @@ Identifies chronic nutritional deficits by comparing logged intake vs RDA target
 """
 import logging
 from typing import Dict, List, Any
-from datetime import datetime, timezone
 
-from database.loader import db
-from database.models import NutrientTargets
 
 logger = logging.getLogger(__name__)
 

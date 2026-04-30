@@ -3,16 +3,14 @@ AaharAI NutriSync — API Routes: Customer Profile Analysis
 Serves all 6 personalised analysis cards on the dashboard.
 Single endpoint, Redis-cached, only recomputes when user profile changes.
 """
-import json
 import logging
-import math
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from auth.database import get_db, UserDB, DailyLogDB
 from auth.dependencies import require_user
 from database.loader import db as nutri_db
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/analysis", tags=["Analysis"])
@@ -62,15 +60,15 @@ def _match_rda_profile(profile: dict) -> dict | None:
 
     # Determine life stage bucket
     if age < 13:
-        stage = "child"
+        pass
     elif age < 19:
-        stage = "teen"
+        pass
     elif age < 40:
-        stage = "adult"
+        pass
     elif age < 60:
-        stage = "middle"
+        pass
     else:
-        stage = "elderly"
+        pass
 
     rda = nutri_db.rda
     # Try to match on gender keyword and activity keyword
@@ -177,7 +175,7 @@ def _get_deficiency_risks(profile: dict) -> list:
     diet = (profile.get("diet_type") or "veg").lower()
     gender = (profile.get("gender") or "male").lower()
     age = profile.get("age", 25)
-    conditions = profile.get("conditions", [])
+    profile.get("conditions", [])
 
     if "veg" in diet:
         risks.append({

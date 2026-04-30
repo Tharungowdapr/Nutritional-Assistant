@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         {!submitted ? (
-          <div className="glass-card p-6">
+          <div className="bg-card border border-border rounded-xl p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
             </div>
           </div>
         ) : (
-          <div className="glass-card p-6 text-center space-y-4">
+          <div className="bg-card border border-border rounded-xl p-6 text-center space-y-4">
             <div className="flex justify-center mb-4">
               <CheckCircle className="w-12 h-12 text-primary" />
             </div>

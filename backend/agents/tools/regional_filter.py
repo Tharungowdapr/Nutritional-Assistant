@@ -44,5 +44,5 @@ def filter_foods_by_region(zone: str, diet_type: str = None) -> list[dict]:
     For now, returns all IFCT foods filtered by diet type.
     Regional food mapping can be extended later.
     """
-    from agent.tools.food_search import search_foods_tool
+    from agents.tools.food_search import search_foods_tool
     return search_foods_tool(query="", diet_type=diet_type)

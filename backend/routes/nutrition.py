@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Request, Query
 from pydantic import BaseModel
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from database.models import UserProfile, NutrientTargets
+from database.models import UserProfile
 from database.loader import db
 from engines.inference_engine import inference_engine
 

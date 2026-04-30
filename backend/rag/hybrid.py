@@ -3,7 +3,7 @@ AaharAI NutriSync — Hybrid Search Retriever
 Combines BM25 (keyword) + Vector (semantic) search for better accuracy.
 """
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +80,11 @@ class HybridRetriever:
             embed_fn = ef.OllamaEmbeddingFunction(
                 url=settings.OLLAMA_BASE_URL + "/api/embeddings",
                 model_name=settings.OLLAMA_EMBED_MODEL,
+            )
+            
+            collection = self.chroma_client.get_or_create_collection(
+                name=self.collection_name,
+                embedding_function=embed_fn
             )
             
             results = collection.query(

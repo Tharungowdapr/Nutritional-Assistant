@@ -6,7 +6,6 @@ import json
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from datetime import datetime, timezone
 
 from auth.database import get_db, RecipeDB, RecipeHistoryDB, UserDB
 from auth.dependencies import require_user

@@ -2,7 +2,7 @@
 AaharAI NutriSync — Agent Tool: Nutrition Analyzer
 Computes nutrient totals for a meal (list of foods with portions).
 """
-from agent.tools.food_search import get_food_detail, _safe_float
+from agents.tools.food_search import get_food_detail
 
 
 def analyze_meal(foods_with_portions: list[dict]) -> dict:

@@ -3,9 +3,7 @@ IMP-013: Unit tests for database loader and search functionality.
 """
 import pytest
 import sys
-import re
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 

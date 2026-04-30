@@ -8,7 +8,6 @@ Orchestrates the full nutrient target computation pipeline:
 5. Physio Mapper → energy/sleep/focus boosts
 6. Context Resolver → multi-context conflict resolution
 """
-import pandas as pd
 from database.loader import db
 
 
@@ -59,7 +58,7 @@ class InferenceEngine:
     def _default_targets(self, profile: dict) -> dict:
         """Fallback ICMR-NIN 2024 targets when database not loaded."""
         sex = profile.get("sex", "Male")
-        age = profile.get("age", 30)
+        profile.get("age", 30)
         return {
             "calories": 2000,
             "protein_g": 55,

@@ -4,11 +4,10 @@ Daily food logging with macro tracking.
 """
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import func
 
 from auth.database import get_db, DailyLogDB, UserDB
 from auth.dependencies import require_user
-from database.models import LogFoodRequest, DailyLogResponse, DailySummaryResponse
+from database.models import LogFoodRequest
 from database.loader import db
 
 router = APIRouter(prefix="/api/tracker", tags=["Tracker"])
