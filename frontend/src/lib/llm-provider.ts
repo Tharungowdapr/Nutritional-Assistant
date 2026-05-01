@@ -182,7 +182,7 @@ export class FrontendLLM {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "llama3", // Adjust as necessary
+        model: "gemma3:1b",
         prompt: prompt,
         system: systemPrompt,
         stream: false,

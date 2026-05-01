@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "nutrisync")
 
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "gemma3:4b"
+    OLLAMA_MODEL: str = "gemma3:1b"
     OLLAMA_EMBED_MODEL: str = "nomic-embed-text"
 
     GROQ_API_KEY: str = ""

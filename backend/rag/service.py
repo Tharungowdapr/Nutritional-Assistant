@@ -296,24 +296,36 @@ Please provide a detailed, evidence-based answer using the retrieved knowledge a
             "llm_provider": provider,
         }
 
-    async def chat_stream(self, query: str, user_profile: Optional[dict] = None):
-        """Streaming RAG pipeline."""
+    async def chat_stream(self, query: str, user_profile: Optional[dict] = None, 
+                          history: Optional[list] = None, user_id: int = None):
+        """Streaming RAG pipeline with context and history."""
+        # 1. Classify intent
         intent = await self.classify_intent(query)
-        chunks = self.retrieve(query, collection_name="nutrisync")
-        context = self._build_context(chunks)
-        user_ctx = self._build_user_context(user_profile)
-
-        source_prompt = "RETRIEVED KNOWLEDGE (" + ("IFCT 2017" if intent == "FOOD_SEARCH" else "Medical Guidelines") + "):"
         
+        # 2. Retrieve
+        chunks = self.retrieve(query, collection_name="nutrisync")
+        
+        # 3. Build augmented prompt
+        context = self._build_context(chunks)
+        user_ctx = self._build_user_context(user_profile, user_id)
+        
+        # Format chat history
+        history_str = ""
+        if history:
+            history_parts = ["CONVERSATION HISTORY:"]
+            for h in history[-5:]:
+                history_parts.append(f"USER: {h.get('user_message')}\nASSISTANT: {h.get('assistant_message')}")
+            history_str = "\n".join(history_parts) + "\n\n"
+
         prompt = f"""{user_ctx}
 
-{source_prompt}
+{history_str}RETRIEVED KNOWLEDGE (from IFCT 2017 database + ICMR-NIN 2024 RDA):
 {context}
 
 USER QUESTION:
 {query}
 
-Provide a concise, evidence-based answer. Respond token-by-token."""
+Provide a detailed, evidence-based answer. Respond token-by-token."""
 
         async for token in self.llm_router.stream_generate(prompt, SYSTEM_PROMPT):
             yield token
