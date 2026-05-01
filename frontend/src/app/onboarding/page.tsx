@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
+import { getStorageKey } from "@/lib/utils";
 
 const STEPS = ["Physiology", "Lifestyle", "Health", "Wellness", "Budget"];
 
@@ -47,7 +48,9 @@ export default function OnboardingPage() {
 
   // Load draft from localStorage
   useEffect(() => {
-    const draft = localStorage.getItem("nutrisync_onboarding_draft");
+    if (!user?.id) return;
+    const storageKey = getStorageKey("nutrisync_onboarding_draft", user.id);
+    const draft = localStorage.getItem(storageKey);
     if (draft) {
       try {
         setData(JSON.parse(draft));
@@ -55,12 +58,14 @@ export default function OnboardingPage() {
         console.error("Failed to load draft", e);
       }
     }
-  }, []);
+  }, [user?.id]);
 
   // Save draft to localStorage on every change
   useEffect(() => {
-    localStorage.setItem("nutrisync_onboarding_draft", JSON.stringify(data));
-  }, [data]);
+    if (user?.id) {
+      localStorage.setItem(getStorageKey("nutrisync_onboarding_draft", user.id), JSON.stringify(data));
+    }
+  }, [data, user?.id]);
 
   const handleSubmit = async () => {
     if (!user) {

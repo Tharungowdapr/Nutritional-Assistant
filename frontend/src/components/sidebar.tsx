@@ -8,6 +8,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
+import { getStorageKey } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { frontendLLM } from "@/lib/llm-provider";
 
 /**
  * Single NAV array drives BOTH desktop sidebar and mobile bottom bar.
@@ -35,13 +38,17 @@ function DesktopNav() {
 
   useEffect(() => {
     const updateUsage = () => {
-      setCost(localStorage.getItem("llm_cost") || "0.00");
-      setTokens(localStorage.getItem("llm_tokens") || "0");
+      setCost(localStorage.getItem(getStorageKey("llm_cost", user?.id)) || "0.00");
+      setTokens(localStorage.getItem(getStorageKey("llm_tokens", user?.id)) || "0");
     };
     updateUsage();
     window.addEventListener("llm_usage_updated", updateUsage);
-    return () => window.removeEventListener("llm_usage_updated", updateUsage);
-  }, []);
+    window.addEventListener("llm_config_updated", updateUsage);
+    return () => {
+      window.removeEventListener("llm_usage_updated", updateUsage);
+      window.removeEventListener("llm_config_updated", updateUsage);
+    };
+  }, [user?.id]);
 
   return (
     <div className="flex flex-col h-full">
@@ -95,8 +102,8 @@ function DesktopNav() {
         {user && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 mb-2">
             <Cpu className="w-3.5 h-3.5 text-primary shrink-0" />
-            <span className="text-[10px] text-muted-foreground truncate">
-              {(user as any).llm_provider || "Groq · llama3-70b"}
+            <span className="text-[10px] text-muted-foreground truncate uppercase font-medium">
+              {frontendLLM.getConfig().provider} Mode
             </span>
           </div>
         )}

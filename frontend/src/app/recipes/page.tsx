@@ -5,7 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { frontendLLM } from "@/lib/llm-provider";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, getStorageKey } from "@/lib/utils";
 
 interface Recipe {
   id?: string; name: string; title?: string; category: string; diet_type: "VEG"|"NON-VEG";
@@ -141,13 +141,14 @@ export default function RecipesPage() {
   const [allRecipes, setAllRecipes] = useState<Recipe[]>(RECIPES);
 
   useEffect(() => {
+    if (!user?.id) return;
     try {
-      const saved = localStorage.getItem("custom_recipes");
+      const saved = localStorage.getItem(getStorageKey("custom_recipes", user.id));
       if (saved) {
         setAllRecipes(prev => [...JSON.parse(saved), ...prev]);
       }
     } catch (e) {}
-  }, []);
+  }, [user?.id]);
 
   const filtered = allRecipes.filter(r => {
     const q = search.toLowerCase();
@@ -192,7 +193,7 @@ Return ONLY a valid JSON object matching this exact structure (no markdown tags)
 }
 Make the ingredients very specific (with quantities) and the steps professionally culinary.`;
 
-      const res = await frontendLLM.generate(prompt, "You are a master Indian chef and nutritionist. Return ONLY valid JSON.");
+      const res = await frontendLLM.generate(prompt, "You are a master Indian chef and nutritionist. Return ONLY valid JSON.", user?.id);
       if (res.error) throw new Error(res.error);
       
       let raw = res.content.trim();
@@ -203,10 +204,11 @@ Make the ingredients very specific (with quantities) and the steps professionall
       newRecipe.id = "custom_" + Date.now();
       
       // Auto-save to local storage and update list
-      const savedStr = localStorage.getItem("custom_recipes");
+      const storageKey = getStorageKey("custom_recipes", user?.id);
+      const savedStr = localStorage.getItem(storageKey);
       const saved = savedStr ? JSON.parse(savedStr) : [];
       const updatedCustom = [newRecipe, ...saved];
-      localStorage.setItem("custom_recipes", JSON.stringify(updatedCustom));
+      localStorage.setItem(storageKey, JSON.stringify(updatedCustom));
       
       setAllRecipes(prev => [newRecipe, ...prev]);
       setAiModal(false);

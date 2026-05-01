@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { authApi, setToken, clearToken, ApiError } from "@/lib/api";
+import { frontendLLM } from "@/lib/llm-provider";
 
 interface User {
   id: number;
@@ -75,6 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw error;
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      frontendLLM.setUser(user.id.toString());
+    }
+  }, [user]);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, signup, logout, updateProfile }}>

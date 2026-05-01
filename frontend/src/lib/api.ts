@@ -261,10 +261,16 @@ export const adminApi = {
 
 // ── Tracker ──
 export const trackerApi = {
-  logFood: (mealSlot: string, foodName: string, quantityG: number = 100) =>
+  logFood: (mealSlot: string, foodName: string, quantityG: number = 100, logDate?: string, overrides: any = {}) =>
     apiFetch("/api/tracker/log-food", {
       method: "POST",
-      body: JSON.stringify({ meal_slot: mealSlot, food_name: foodName, quantity_g: quantityG }),
+      body: JSON.stringify({ 
+        meal_slot: mealSlot, 
+        food_name: foodName, 
+        quantity_g: quantityG, 
+        log_date: logDate,
+        ...overrides
+      }),
     }),
 
   getDailySummary: (logDate: string) =>

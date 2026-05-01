@@ -8,7 +8,10 @@ import { nutritionApi, trackerApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import { Plus, Trash2, TrendingUp, Target, Flame, Activity, Search, Loader2, Utensils } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getStorageKey } from '@/lib/utils';
+import RECIPES_DATA from "@/lib/recipes-db.json";
+
+const RECIPES = RECIPES_DATA as any[];
 
 interface MealLog {
   id: number;
@@ -79,8 +82,39 @@ export default function TrackerPage() {
     if (query.length < 2) { setFoodResults([]); return; }
     setSearchLoading(true);
     try {
+      const q = query.toLowerCase();
+      // 1. Search in IFCT database
       const data = await nutritionApi.searchFoods(query, undefined, undefined, undefined, 1, 8);
-      setFoodResults(data.foods || []);
+      const apiFoods = data.foods || [];
+
+      // 2. Search in hardcoded recipes
+      const recipeMatches = RECIPES.filter(r => 
+        (r.title || r.name).toLowerCase().includes(q)
+      ).map(r => ({
+        ...r,
+        'Food Name': r.title || r.name,
+        'Food Group': 'Recipe',
+        'Energy (kcal)': r.cal,
+        'isRecipe': true
+      }));
+
+      // 3. Search in user's custom recipes
+      let customMatches: any[] = [];
+      const savedStr = localStorage.getItem(getStorageKey("custom_recipes", user?.id));
+      if (savedStr) {
+        const custom = JSON.parse(savedStr);
+        customMatches = custom.filter((r: any) => 
+          (r.title || r.name).toLowerCase().includes(q)
+        ).map((r: any) => ({
+          ...r,
+          'Food Name': r.title || r.name,
+          'Food Group': 'Custom Recipe',
+          'Energy (kcal)': r.cal || r.nutrition_per_serving?.cal,
+          'isRecipe': true
+        }));
+      }
+
+      setFoodResults([...customMatches, ...recipeMatches, ...apiFoods].slice(0, 10));
     } catch { setFoodResults([]); }
     finally { setSearchLoading(false); }
   };
@@ -88,11 +122,43 @@ export default function TrackerPage() {
   const handleAddFood = async () => {
     if (!selectedFood || !selectedSlot) { toast.error('Select food and meal'); return; }
     try {
-      await trackerApi.logFood(selectedSlot, selectedFood['Food Name'], selectedQuantity);
+      if (selectedFood.isRecipe) {
+        // Log recipe by servings
+        const n = selectedFood.nutrition_per_serving || {
+          cal: selectedFood.cal,
+          protein_g: selectedFood.protein_g,
+          carbs_g: selectedFood.carbs_g || 0,
+          fat_g: selectedFood.fat_g || 0,
+          iron_mg: selectedFood.iron_mg || 0,
+          calcium_mg: selectedFood.calcium_mg || 0,
+          fibre_g: selectedFood.fibre_g || 0
+        };
+
+        await trackerApi.logFood(
+          selectedSlot,
+          selectedFood['Food Name'],
+          selectedQuantity, // This is number of servings
+          todayDate,
+          {
+            manual_calories: n.cal * selectedQuantity,
+            manual_protein_g: n.protein_g * selectedQuantity,
+            manual_carbs_g: n.carbs_g * selectedQuantity,
+            manual_fat_g: n.fat_g * selectedQuantity,
+            manual_iron_mg: n.iron_mg * selectedQuantity,
+            manual_calcium_mg: n.calcium_mg * selectedQuantity,
+            manual_fibre_g: n.fibre_g * selectedQuantity,
+          }
+        );
+      } else {
+        await trackerApi.logFood(selectedSlot, selectedFood['Food Name'], selectedQuantity, todayDate);
+      }
+      
       toast.success(`${selectedFood['Food Name']} logged`);
       setShowAddFood(false); setSelectedFood(null); setFoodSearch(''); setFoodResults([]);
       loadDailySummary(todayDate); loadHistory(historyRange);
-    } catch { toast.error('Failed to log food'); }
+    } catch (err: any) { 
+      toast.error(err.message || 'Failed to log food'); 
+    }
   };
 
   const handleDeleteLog = async (logId: number) => {
@@ -242,7 +308,9 @@ export default function TrackerPage() {
                       <div key={m.id} className="group bg-card border border-border p-3 rounded-lg flex items-center justify-between">
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">{m.food_name}</p>
-                          <p className="text-[11px] text-muted-foreground">{m.quantity_g}g · {Math.round(m.calories)} kcal</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {m.quantity_g < 20 ? `${m.quantity_g} serving(s)` : `${m.quantity_g}g`} · {Math.round(m.calories)} kcal
+                          </p>
                         </div>
                         <button
                           onClick={() => handleDeleteLog(m.id)}
@@ -309,6 +377,7 @@ export default function TrackerPage() {
                       key={i}
                       onClick={() => {
                         setSelectedFood(food);
+                        setSelectedQuantity(food.isRecipe ? 1 : 100);
                         setFoodSearch(food['Food Name']);
                         setFoodResults([]);
                       }}
@@ -316,7 +385,10 @@ export default function TrackerPage() {
                     >
                       <div>
                         <p className="text-sm font-medium">{food['Food Name']}</p>
-                        <p className="text-[11px] text-muted-foreground">{food['Food Group']}</p>
+                        <p className={cn("text-[10px] px-1.5 py-0.5 rounded inline-block mt-0.5", 
+                          food.isRecipe ? "bg-primary/10 text-primary font-bold" : "bg-muted text-muted-foreground")}>
+                          {food['Food Group']}
+                        </p>
                       </div>
                       <p className="text-sm font-semibold">{Math.round(food['Energy (kcal)'])} <span className="text-xs text-muted-foreground">kcal</span></p>
                     </button>
@@ -335,7 +407,9 @@ export default function TrackerPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-primary">
-                      {Math.round((selectedFood['Energy (kcal)'] * selectedQuantity) / 100)}
+                      {selectedFood.isRecipe 
+                        ? Math.round(selectedFood['Energy (kcal)'] * selectedQuantity)
+                        : Math.round((selectedFood['Energy (kcal)'] * selectedQuantity) / 100)}
                     </p>
                     <p className="text-xs text-muted-foreground">kcal</p>
                   </div>
@@ -345,11 +419,18 @@ export default function TrackerPage() {
                     <input
                       type="number"
                       value={selectedQuantity}
-                      onChange={e => setSelectedQuantity(Math.max(1, Number(e.target.value)))}
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        const max = selectedFood.isRecipe ? 50 : 2000;
+                        setSelectedQuantity(Math.min(max, Math.max(0, val)));
+                      }}
                       className="w-20 bg-transparent border-none text-center font-bold text-lg h-10 outline-none"
                     />
-                    <span className="pr-3 text-xs text-muted-foreground">g</span>
+                    <span className="pr-3 text-xs text-muted-foreground">{selectedFood.isRecipe ? "Servings" : "g"}</span>
                   </div>
+                  {selectedFood.isRecipe && (
+                    <p className="text-[10px] text-muted-foreground">Logging {selectedQuantity} serving(s)</p>
+                  )}
                 </div>
               </div>
             )}
