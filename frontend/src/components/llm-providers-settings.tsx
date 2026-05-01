@@ -19,7 +19,7 @@ const PROVIDERS = [
   { id: "mistral",    name: "Mistral AI",    tier: "Trial",  models: ["mistral-small-latest","mixtral-8x22b-instruct","open-mistral-7b"],       link: "https://console.mistral.ai/api-keys",    placeholder: "..." },
   { id: "together",   name: "Together AI",   tier: "Free+",  models: ["meta-llama/Llama-3-70b-chat-hf","Qwen/Qwen2.5-72B-Instruct"],            link: "https://api.together.ai/settings/api-keys", placeholder: "..." },
   { id: "cohere",     name: "Cohere",        tier: "Free",   models: ["command-r","command-r-plus"],                                             link: "https://dashboard.cohere.com/api-keys", placeholder: "..." },
-  { id: "ollama",     name: "Ollama (local)",tier: "Free",   models: ["gemma3:4b","llama3.2:3b","phi4-mini","mistral:7b","deepseek-r1:7b"],      link: "https://ollama.ai",                     placeholder: "http://localhost:11434" },
+  { id: "ollama",     name: "Ollama (local)",tier: "Free",   models: ["gemma3:1b","gemma3:4b","llama3.2:3b","phi4-mini","mistral:7b","deepseek-r1:7b"],      link: "https://ollama.ai",                     placeholder: "http://localhost:11434" },
 ];
 
 const TIER_COLORS: Record<string, string> = {

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ChevronDown, Loader2, RefreshCw, ShoppingCart, Calendar, AlertTriangle, CheckCircle, Sparkles, MapPin, Cloud, MessageSquare, Download } from "lucide-react";
+import { ChevronDown, Loader2, RefreshCw, ShoppingCart, Calendar, AlertTriangle, CheckCircle, Sparkles, MapPin, Cloud, MessageSquare, Download, X } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
@@ -58,43 +58,77 @@ export default function MealPlanPage() {
 
   const toggle = (key: string) => setExpandedSlots(p => ({ ...p, [key]: !p[key] }));
   const toggleCheck = (key: string) => setChecked(p => ({ ...p, [key]: !p[key] }));
+  const [history, setHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [streamText, setStreamText] = useState("");
+
+  const fetchHistory = async () => {
+    try {
+      const data = await apiFetch<any>("/api/meal-plan/history");
+      setHistory(data.plans || []);
+    } catch (e) { console.error(e); }
+  };
+
+  useEffect(() => { if (user) fetchHistory(); }, [user]);
 
   const generate = async () => {
-    setGenerating(true); setError(null);
+    setGenerating(true); setError(null); setStreamText("");
+    const token = localStorage.getItem("nutrisync_token");
+    
     try {
-      const profile = user?.profile || {};
-      
-      // We will construct a prompt locally and use the frontend LLM provider directly
-      const wContext = weatherContext ? `Weather is ${weatherContext} in ${locationName}. Recommend seasonal foods.` : "";
-      const sContext = suggestion ? `User specific suggestion/request: "${suggestion}".` : "";
-      
-      const prompt = `Generate a ${days}-day meal plan for ${people} person(s).
-Diet: ${dietType}
-Goal: ${goal}
-Budget: ₹${budget}/day
-${wContext}
-${sContext}
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${API_BASE}/api/meal-plan/stream`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          days,
+          num_people: people,
+          budget_per_day_inr: budget,
+          user_profile: {
+            ...user?.profile,
+            diet_type: dietType,
+            goal: goal,
+          }
+        }),
+      });
 
-CRITICAL: You MUST provide a comprehensive "grocery" list categorized by section.
-Calculate "total_grocery_cost_inr" accurately based on the meal requirements.
+      if (!res.ok) throw new Error(`Generation failed: ${res.status}`);
+      if (!res.body) throw new Error("No response body");
 
-Return ONLY valid JSON using this structure:
-{"customer_analysis":{"icmr_profile":"","energy_target":2000,"protein_target":60,"iron_target":17,"calcium_target":1000,"fibre_target":30,"key_risks":[],"budget_per_day":"","rationale":""},"days":[{"day":1,"day_label":"Monday","meals":{"Breakfast":{"foods":[{"name":"","qty_g":0,"qty_label":"","ifct_code":"","cal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"iron_mg":0,"calcium_mg":0}],"prep_time_min":0,"meal_total":{"cal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"iron_mg":0,"calcium_mg":0}},"Lunch":{},"Dinner":{}},"day_total":{"cal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"iron_mg":0,"calcium_mg":0}}],"grocery":[{"category":"Vegetables","items":[{"name":"Onion","qty":"2 kg","est_cost_inr":80,"used_for":"Curries"}]}],"total_grocery_cost_inr":500}`;
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullRaw = "";
 
-      const res = await frontendLLM.generate(prompt, "You are an expert Indian clinical nutritionist. Return only valid JSON.", user?.id);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n").filter(l => l.startsWith("data: "));
+
+        for (const line of lines) {
+          try {
+            const jsonContent = JSON.parse(line.slice(6));
+            if (jsonContent.error) throw new Error(jsonContent.error);
+            if (jsonContent.token) {
+              fullRaw += jsonContent.token;
+              setStreamText(prev => prev + jsonContent.token);
+            }
+            if (jsonContent.final && jsonContent.plan) {
+              setPlan(jsonContent.plan);
+              fetchHistory();
+            }
+          } catch (e) { /* skip malformed */ }
+        }
+      }
       
-      if (res.error) throw new Error(res.error);
-      
-      let raw = res.content.trim();
-      if (raw.includes("\`\`\`json")) raw = raw.split("\`\`\`json")[1].split("\`\`\`")[0];
-      else if (raw.includes("\`\`\`")) raw = raw.split("\`\`\`")[1];
-      
-      const parsedPlan = JSON.parse(raw);
-      setPlan(parsedPlan);
       setActiveDay(0);
       setActiveTab("plan");
     } catch (e: any) {
-      console.error("LLM Generation Failed, using fallback", e);
+      console.error("Streaming Generation Failed, using fallback", e);
       import("@/lib/fallback-recipes").then(({ getFallbackPlan }) => {
         setPlan(getFallbackPlan(days, dietType, budget));
         setActiveDay(0);
@@ -103,7 +137,15 @@ Return ONLY valid JSON using this structure:
       });
     } finally {
       setGenerating(false);
+      setStreamText("");
     }
+  };
+
+  const handleHistorySelect = (hPlan: any) => {
+    setPlan(hPlan);
+    setShowHistory(false);
+    setActiveDay(0);
+    setActiveTab("plan");
   };
 
   const exportToExcel = () => {
@@ -165,6 +207,9 @@ Return ONLY valid JSON using this structure:
         </div>
         {plan && (
           <div className="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
+            <Button variant="outline" size="sm" onClick={() => setShowHistory(true)} className="gap-1.5">
+              <MessageSquare className="w-4 h-4" /> History
+            </Button>
             <Button variant="outline" size="sm" onClick={exportToPDF} className="gap-1.5 text-muted-foreground">
               <Download className="w-4 h-4" /> PDF
             </Button>
@@ -176,7 +221,56 @@ Return ONLY valid JSON using this structure:
             </Button>
           </div>
         )}
+        {!plan && (
+           <Button variant="outline" size="sm" onClick={() => setShowHistory(true)} className="gap-1.5">
+            <MessageSquare className="w-4 h-4" /> Past Plans
+          </Button>
+        )}
       </div>
+
+      {/* Streaming Text Display */}
+      {generating && streamText && (
+        <div className="mb-6 p-4 bg-muted/50 rounded-xl border border-border font-mono text-[10px] whitespace-pre-wrap max-h-40 overflow-y-auto opacity-70">
+          <p className="text-primary font-bold mb-2 uppercase tracking-widest text-[9px]">AI Reasoning Stream...</p>
+          {streamText}
+        </div>
+      )}
+
+      {/* History Overlay */}
+      {showHistory && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b border-border flex items-center justify-between">
+              <h2 className="font-bold flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-primary" /> Past Meal Plans
+              </h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowHistory(false)}><X className="w-4 h-4" /></Button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {history.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">No saved plans yet.</div>
+              ) : (
+                history.map((h: any) => (
+                  <div 
+                    key={h.id} 
+                    onClick={() => handleHistorySelect(h.plan)}
+                    className="p-4 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors group"
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <p className="font-semibold text-sm">Plan for {h.days} Days</p>
+                      <p className="text-[10px] text-muted-foreground">{new Date(h.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <div className="flex gap-4 text-[11px] text-muted-foreground">
+                      <span>{h.targets?.energy || 0} kcal</span>
+                      <span>₹{h.budget}/day</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Configuration Form */}
       {!plan && (

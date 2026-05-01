@@ -109,14 +109,73 @@ async def chat_stream(
     if rag_service is None:
         raise HTTPException(status_code=503, detail="RAG Service unavailable")
 
+    # Get session history
+    session_id = data.session_id
+    history = []
+    if session_id and db:
+        try:
+            prev_messages = (
+                db.query(ChatHistoryDB)
+                .filter(ChatHistoryDB.session_id == session_id)
+                .order_by(ChatHistoryDB.created_at.desc())
+                .limit(5)
+                .all()
+            )
+            history = [
+                {"user_message": m.user_message, "assistant_message": m.assistant_message}
+                for m in reversed(prev_messages)
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to fetch session history: {e}")
+
     async def event_generator():
+        full_response = ""
         try:
             if hasattr(rag_service, 'chat_stream'):
-                async for token in rag_service.chat_stream(data.message, data.user_profile):
+                async for token in rag_service.chat_stream(
+                    data.message, 
+                    data.user_profile, 
+                    history=history,
+                    user_id=user.id if user else None
+                ):
+                    full_response += token
                     yield f"data: {json.dumps({'token': token})}\n\n"
             else:
-                res = await rag_service.chat(data.message, data.user_profile)
-                yield f"data: {json.dumps({'token': res['answer'], 'final': True})}\n\n"
+                res = await rag_service.chat(data.message, data.user_profile, history=history, user_id=user.id if user else None)
+                full_response = res['answer']
+                yield f"data: {json.dumps({'token': full_response, 'final': True})}\n\n"
+            
+            # Save to history if user is logged in
+            if user is not None and session_id and full_response:
+                try:
+                    # Determine active provider (usually Ollama for stream)
+                    provider = "ollama" 
+                    if hasattr(rag_service.llm_router, 'active_provider'):
+                        provider = rag_service.llm_router.active_provider
+
+                    db.add(ChatHistoryDB(
+                        user_id=user.id,
+                        session_id=session_id,
+                        user_message=data.message,
+                        assistant_message=full_response,
+                        sources_json="[]", # Sources not easily available in stream without complex changes
+                        llm_provider=provider,
+                    ))
+                    
+                    # Update session timestamp and title if needed
+                    from auth.database import ChatSessionDB
+                    session = db.query(ChatSessionDB).filter(ChatSessionDB.id == session_id).first()
+                    if session:
+                        from datetime import datetime, timezone
+                        session.updated_at = datetime.now(timezone.utc)
+                        if session.title == "New Chat":
+                            session.title = data.message[:50] + ("..." if len(data.message) > 50 else "")
+                    
+                    db.commit()
+                except Exception as e:
+                    logger.warning(f"Failed to save streamed chat history: {e}")
+                    db.rollback()
+
         except Exception as e:
             logger.error(f"Streaming error: {e}")
             yield f"data: {json.dumps({'error': str(e), 'final': True})}\n\n"

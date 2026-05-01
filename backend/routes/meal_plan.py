@@ -143,6 +143,74 @@ async def get_meal_plan_history(limit: int = 10, user=Depends(get_current_user),
     return {"plans": result}
 
 
+@router.post("/stream")
+async def stream_meal_plan(request: Request, meal_request: MealPlanRequest,
+                            user=Depends(get_current_user), db: Session = Depends(get_db)):
+    from main import get_llm_router
+    llm = get_llm_router()
+    if llm is None:
+        raise HTTPException(status_code=503, detail="LLM not available")
+
+    profile = meal_request.user_profile.model_dump() if hasattr(meal_request.user_profile, "model_dump") else dict(meal_request.user_profile)
+    profile["budget_per_day_inr"] = meal_request.budget_per_day_inr
+    ca = _build_ca(profile)
+
+    prompt = MEAL_PLAN_PROMPT.format(
+        days=meal_request.days, age=ca["age"], gender=ca["gender"],
+        weight=ca["weight"], height=ca["height"], activity=ca["activity"], pal=ca["pal"],
+        diet_type=ca["diet_type"], region=ca["region"],
+        conditions=", ".join(ca["conditions"]) if ca["conditions"] else "None",
+        budget=ca["budget"], goal=ca["goal"], num_people=meal_request.num_people,
+        energy=ca["energy"], protein=ca["protein"],
+        iron=ca["iron"], calcium=ca["calcium"], fibre=ca["fibre"],
+    )
+
+    from fastapi.responses import StreamingResponse
+
+    async def event_generator():
+        full_raw = ""
+        try:
+            async for token in llm.stream_generate(prompt=prompt, system="Return ONLY valid JSON. No markdown."):
+                full_raw += token
+                yield f"data: {json.dumps({'token': token})}\n\n"
+            
+            # Post-processing and persistence
+            raw = full_raw.strip()
+            if "```" in raw:
+                raw = raw.split("```")[1]
+                if raw.startswith("json"): raw = raw[4:]
+            raw = raw.strip().rstrip("`").strip()
+            
+            try:
+                plan_json = json.loads(raw)
+                # Overwrite customer_analysis
+                plan_json["customer_analysis"] = {
+                    "icmr_profile": ca["icmr_profile"],
+                    "energy_target": ca["energy"], "protein_target": ca["protein"],
+                    "iron_target": ca["iron"], "calcium_target": ca["calcium"], "fibre_target": ca["fibre"],
+                    "key_risks": ca["key_risks"],
+                    "budget_per_day": f"₹{ca['budget']}/day · {ca['diet_type']} · {ca['region']}",
+                    "rationale": f"BMR {ca['bmr']} kcal × PAL {ca['pal']} = TDEE {ca['tdee']} kcal",
+                }
+                
+                if user is not None:
+                    plan_db = MealPlanDB(user_id=user.id, plan_text=json.dumps(plan_json),
+                                         targets_json=json.dumps({"energy": ca["energy"], "protein_g": ca["protein"],
+                                                                  "iron_mg": ca["iron"], "calcium_mg": ca["calcium"]}),
+                                         days=meal_request.days, budget=float(ca["budget"]))
+                    db.add(plan_db); db.commit()
+                
+                yield f"data: {json.dumps({'final': True, 'plan': plan_json})}\n\n"
+            except Exception as e:
+                logger.error(f"Stream persistence error: {e}")
+                yield f"data: {json.dumps({'error': 'Failed to parse final JSON', 'raw': full_raw})}\n\n"
+        except Exception as e:
+            logger.error(f"Meal plan stream failed: {e}")
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
 @router.post("/recipe")
 @limiter.limit("5/minute")
 async def generate_recipe(request: Request, recipe_request: RecipeRequest):
@@ -160,3 +228,4 @@ Return ONLY valid JSON:
     except Exception as e:
         logger.error(f"Recipe error: {e}")
         raise HTTPException(status_code=500, detail="Recipe generation failed. Please retry.")
+
