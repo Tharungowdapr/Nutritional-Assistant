@@ -26,27 +26,46 @@ async def log_food(
     ist = ZoneInfo("Asia/Kolkata")
     today = request.log_date if hasattr(request, 'log_date') and request.log_date else datetime.now(ist).strftime("%Y-%m-%d")
     
-    # Get food nutritional data
-    food_data = db.get_food_by_name(request.food_name)
-    if not food_data:
-        raise HTTPException(status_code=404, detail=f"Food '{request.food_name}' not found in database")
-    
-    # Calculate macros for the given quantity
-    quantity_multiplier = request.quantity_g / 100.0
-    
+    # Determine macros: manual overrides or database lookup
+    if request.manual_calories is not None:
+        calories = request.manual_calories
+        protein_g = request.manual_protein_g or 0
+        fat_g = request.manual_fat_g or 0
+        carbs_g = request.manual_carbs_g or 0
+        fibre_g = request.manual_fibre_g or 0
+        iron_mg = request.manual_iron_mg or 0
+        calcium_mg = request.manual_calcium_mg or 0
+        q_g = request.quantity_g # If it's a recipe, quantity_g is used as servings count
+    else:
+        # Get food nutritional data from static database
+        food_data = db.get_food_by_name(request.food_name)
+        if not food_data:
+            raise HTTPException(status_code=404, detail=f"Food '{request.food_name}' not found in database")
+        
+        # Calculate macros for the given quantity
+        quantity_multiplier = request.quantity_g / 100.0
+        calories = (food_data.get("Energy (kcal)", 0) or 0) * quantity_multiplier
+        protein_g = (food_data.get("Protein (g)", 0) or 0) * quantity_multiplier
+        fat_g = (food_data.get("Fat (g)", 0) or 0) * quantity_multiplier
+        carbs_g = (food_data.get("Carbs (g)", 0) or 0) * quantity_multiplier
+        fibre_g = (food_data.get("Fibre (g)", 0) or 0) * quantity_multiplier
+        iron_mg = (food_data.get("Iron (mg)", 0) or 0) * quantity_multiplier
+        calcium_mg = (food_data.get("Calcium (mg)", 0) or 0) * quantity_multiplier
+        q_g = request.quantity_g
+
     log = DailyLogDB(
         user_id=current_user.id,
         log_date=today,
         meal_slot=request.meal_slot,
         food_name=request.food_name,
-        quantity_g=request.quantity_g,
-        calories=(food_data.get("Energy (kcal)", 0) or 0) * quantity_multiplier,
-        protein_g=(food_data.get("Protein (g)", 0) or 0) * quantity_multiplier,
-        fat_g=(food_data.get("Fat (g)", 0) or 0) * quantity_multiplier,
-        carbs_g=(food_data.get("Carbs (g)", 0) or 0) * quantity_multiplier,
-        fibre_g=(food_data.get("Fibre (g)", 0) or 0) * quantity_multiplier,
-        iron_mg=(food_data.get("Iron (mg)", 0) or 0) * quantity_multiplier,
-        calcium_mg=(food_data.get("Calcium (mg)", 0) or 0) * quantity_multiplier,
+        quantity_g=q_g,
+        calories=calories,
+        protein_g=protein_g,
+        fat_g=fat_g,
+        carbs_g=carbs_g,
+        fibre_g=fibre_g,
+        iron_mg=iron_mg,
+        calcium_mg=calcium_mg,
     )
     
     db_session.add(log)

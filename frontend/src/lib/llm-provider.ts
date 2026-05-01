@@ -1,3 +1,5 @@
+import { getStorageKey } from "./utils";
+
 export type LLMProviderType = "groq" | "gemini" | "ollama";
 
 export interface LLMConfig {
@@ -15,29 +17,55 @@ export interface LLMResponse {
 
 export class FrontendLLM {
   private config: LLMConfig;
+  private userId: string | null = null;
 
   constructor() {
     this.config = this.loadConfig();
   }
 
+  public setUser(userId: string | undefined) {
+    if (this.userId === userId) return;
+    this.userId = userId || null;
+    this.config = this.loadConfig();
+  }
+
   private loadConfig(): LLMConfig {
-    if (typeof window === "undefined") return { provider: "ollama", ollamaUrl: "http://localhost:11434" };
+    const defaultConfig: LLMConfig = { 
+      provider: "ollama", 
+      ollamaUrl: "http://localhost:11434",
+      geminiApiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
+      groqApiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY
+    };
+
+    if (typeof window === "undefined") return defaultConfig;
     
-    const stored = localStorage.getItem("nutrisync_llm_config");
+    // Check for user-scoped config first
+    const key = this.userId ? getStorageKey("nutrisync_llm_config", this.userId) : "nutrisync_llm_config";
+    const stored = localStorage.getItem(key);
+    
     if (stored) {
       try {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        return {
+          ...defaultConfig,
+          ...parsed,
+          geminiApiKey: parsed.geminiApiKey || defaultConfig.geminiApiKey,
+          groqApiKey: parsed.groqApiKey || defaultConfig.groqApiKey,
+        };
       } catch (e) {
         console.error("Failed to parse LLM config", e);
       }
     }
-    return { provider: "ollama", ollamaUrl: "http://localhost:11434" };
+    return defaultConfig;
   }
 
   public saveConfig(config: LLMConfig) {
     this.config = config;
     if (typeof window !== "undefined") {
-      localStorage.setItem("nutrisync_llm_config", JSON.stringify(config));
+      const key = this.userId ? getStorageKey("nutrisync_llm_config", this.userId) : "nutrisync_llm_config";
+      localStorage.setItem(key, JSON.stringify(config));
+      // Dispatch event to update UI (like sidebar)
+      window.dispatchEvent(new Event("llm_config_updated"));
     }
   }
 
@@ -45,16 +73,20 @@ export class FrontendLLM {
     return this.config;
   }
 
-  public async generate(prompt: string, systemPrompt?: string): Promise<LLMResponse> {
+  public async generate(prompt: string, systemPrompt?: string, userId?: string | number): Promise<LLMResponse> {
     const { provider, groqApiKey, geminiApiKey, ollamaUrl } = this.config;
 
     try {
       if (provider === "groq") {
-        if (!groqApiKey) throw new Error("Groq API key not configured");
-        return await this.generateGroq(prompt, systemPrompt, groqApiKey);
+        if (!groqApiKey?.trim()) throw new Error("Groq API key not configured. Please add it in Settings > AI Models.");
+        const res = await this.generateGroq(prompt, systemPrompt, groqApiKey);
+        this.updateUsage(prompt + (systemPrompt || ""), res.content, "groq", userId);
+        return res;
       } else if (provider === "gemini") {
-        if (!geminiApiKey) throw new Error("Gemini API key not configured");
-        return await this.generateGemini(prompt, systemPrompt, geminiApiKey);
+        if (!geminiApiKey?.trim()) throw new Error("Gemini API key not configured. Please add it in Settings > AI Models.");
+        const res = await this.generateGemini(prompt, systemPrompt, geminiApiKey);
+        this.updateUsage(prompt + (systemPrompt || ""), res.content, "gemini", userId);
+        return res;
       } else {
         return await this.generateOllama(prompt, systemPrompt, ollamaUrl || "http://localhost:11434");
       }
@@ -64,7 +96,7 @@ export class FrontendLLM {
     }
   }
 
-  private updateUsage(prompt: string, response: string, provider: string) {
+  private updateUsage(prompt: string, response: string, provider: string, userId?: string | number) {
     if (typeof window === "undefined" || provider === "ollama") return; // Local is free
     const chars = prompt.length + response.length;
     const estTokens = Math.ceil(chars / 4);
@@ -74,11 +106,14 @@ export class FrontendLLM {
     if (provider === "groq") costPerToken = 0.05 / 1000000;
     if (provider === "gemini") costPerToken = 0.50 / 1000000;
     
-    const currentTokens = parseInt(localStorage.getItem("llm_tokens") || "0");
-    const currentCost = parseFloat(localStorage.getItem("llm_cost") || "0");
+    const tokensKey = getStorageKey("llm_tokens", userId);
+    const costKey = getStorageKey("llm_cost", userId);
     
-    localStorage.setItem("llm_tokens", (currentTokens + estTokens).toString());
-    localStorage.setItem("llm_cost", (currentCost + (estTokens * costPerToken)).toFixed(6));
+    const currentTokens = parseInt(localStorage.getItem(tokensKey) || "0");
+    const currentCost = parseFloat(localStorage.getItem(costKey) || "0");
+    
+    localStorage.setItem(tokensKey, (currentTokens + estTokens).toString());
+    localStorage.setItem(costKey, (currentCost + (estTokens * costPerToken)).toFixed(6));
     
     window.dispatchEvent(new Event("llm_usage_updated"));
   }
@@ -107,7 +142,6 @@ export class FrontendLLM {
 
     const data = await res.json();
     const content = data.choices[0].message.content;
-    this.updateUsage(prompt + systemPrompt, content, "groq");
     return {
       content,
       provider: "groq"
@@ -137,7 +171,6 @@ export class FrontendLLM {
 
     const data = await res.json();
     const content = data.candidates[0].content.parts[0].text;
-    this.updateUsage(fullPrompt, content, "gemini");
     return {
       content,
       provider: "gemini"

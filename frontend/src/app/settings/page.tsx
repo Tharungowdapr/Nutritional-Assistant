@@ -64,7 +64,7 @@ export default function RebuiltSettingsPage() {
   const handleSaveDietProfile = async () => {
     setIsLoading(true);
     try {
-      const conditions = dietForm.allergies.split(",").map(s => s.trim()).filter(Boolean);
+      const conditions = dietForm.allergies.split(",").map((s: string) => s.trim()).filter(Boolean);
       await updateProfile({ 
         diet_type: dietForm.diet_type,
         goal: dietForm.goal,

@@ -93,6 +93,14 @@ class LogFoodRequest(BaseModel):
     food_name: str
     quantity_g: float = Field(100.0, ge=1, le=5000)
     log_date: Optional[str] = None
+    # Optional manual overrides for recipes
+    manual_calories: Optional[float] = None
+    manual_protein_g: Optional[float] = None
+    manual_carbs_g: Optional[float] = None
+    manual_fat_g: Optional[float] = None
+    manual_iron_mg: Optional[float] = None
+    manual_calcium_mg: Optional[float] = None
+    manual_fibre_g: Optional[float] = None
 
 
 class DailyLogResponse(BaseModel):

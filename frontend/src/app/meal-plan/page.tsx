@@ -75,10 +75,13 @@ Budget: ₹${budget}/day
 ${wContext}
 ${sContext}
 
-Return ONLY valid JSON using this structure:
-{"customer_analysis":{"icmr_profile":"","energy_target":2000,"protein_target":60,"iron_target":17,"calcium_target":1000,"fibre_target":30,"key_risks":[],"budget_per_day":"","rationale":""},"days":[{"day":1,"day_label":"Monday","meals":{"Breakfast":{"foods":[{"name":"","qty_g":0,"qty_label":"","ifct_code":"","cal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"iron_mg":0,"calcium_mg":0}],"prep_time_min":0,"meal_total":{"cal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"iron_mg":0,"calcium_mg":0}},"Lunch":{},"Dinner":{}},"day_total":{"cal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"iron_mg":0,"calcium_mg":0}}],"grocery":[{"category":"","items":[{"name":"","qty":"","est_cost_inr":0,"used_for":""}]}],"total_grocery_cost_inr":0}`;
+CRITICAL: You MUST provide a comprehensive "grocery" list categorized by section.
+Calculate "total_grocery_cost_inr" accurately based on the meal requirements.
 
-      const res = await frontendLLM.generate(prompt, "You are an expert Indian clinical nutritionist. Return only valid JSON.");
+Return ONLY valid JSON using this structure:
+{"customer_analysis":{"icmr_profile":"","energy_target":2000,"protein_target":60,"iron_target":17,"calcium_target":1000,"fibre_target":30,"key_risks":[],"budget_per_day":"","rationale":""},"days":[{"day":1,"day_label":"Monday","meals":{"Breakfast":{"foods":[{"name":"","qty_g":0,"qty_label":"","ifct_code":"","cal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"iron_mg":0,"calcium_mg":0}],"prep_time_min":0,"meal_total":{"cal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"iron_mg":0,"calcium_mg":0}},"Lunch":{},"Dinner":{}},"day_total":{"cal":0,"protein_g":0,"carbs_g":0,"fat_g":0,"iron_mg":0,"calcium_mg":0}}],"grocery":[{"category":"Vegetables","items":[{"name":"Onion","qty":"2 kg","est_cost_inr":80,"used_for":"Curries"}]}],"total_grocery_cost_inr":500}`;
+
+      const res = await frontendLLM.generate(prompt, "You are an expert Indian clinical nutritionist. Return only valid JSON.", user?.id);
       
       if (res.error) throw new Error(res.error);
       
@@ -485,6 +488,7 @@ Return ONLY valid JSON using this structure:
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }
