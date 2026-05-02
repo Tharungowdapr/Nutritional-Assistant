@@ -71,8 +71,12 @@ async def chat(
     # Get user_id for memory
     user_id = user.id if user else None
     
+    # Active Provider override
+    from routes.settings import get_user_active_provider
+    active_provider = get_user_active_provider(user) if user else None
+
     # streaming logic (simplified for standard chat)
-    result = await rag_service.chat(data.message, user_profile, history=history, user_id=user_id)
+    result = await rag_service.chat(data.message, user_profile, history=history, user_id=user_id, user_provider_override=active_provider)
 
     # Save to history if user is logged in
     if user is not None:
@@ -132,17 +136,21 @@ async def chat_stream(
     async def event_generator():
         full_response = ""
         try:
+            from routes.settings import get_user_active_provider
+            active_provider = get_user_active_provider(user) if user else None
+
             if hasattr(rag_service, 'chat_stream'):
                 async for token in rag_service.chat_stream(
                     data.message, 
                     data.user_profile, 
                     history=history,
-                    user_id=user.id if user else None
+                    user_id=user.id if user else None,
+                    user_provider_override=active_provider
                 ):
                     full_response += token
                     yield f"data: {json.dumps({'token': token})}\n\n"
             else:
-                res = await rag_service.chat(data.message, data.user_profile, history=history, user_id=user.id if user else None)
+                res = await rag_service.chat(data.message, data.user_profile, history=history, user_id=user.id if user else None, user_provider_override=active_provider)
                 full_response = res['answer']
                 yield f"data: {json.dumps({'token': full_response, 'final': True})}\n\n"
             

@@ -48,3 +48,4 @@ nohup.out
 *.log
 .env.local
 frontend/.env.local
+backend/*.out

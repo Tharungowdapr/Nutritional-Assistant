@@ -107,7 +107,7 @@ class NutriSyncDB:
         return sorted(self.food["Diet Type"].unique().tolist()) if getattr(self, 'food', None) is not None else []
 
     def search_foods(self, query: str = "", diet_type: str = None,
-                     food_group: str = None, region: str = None):
+                     food_group: str = None, region: str = None, gi_category: str = None):
         # IMP-006: Avoid unnecessary copy - use boolean masking instead
         if getattr(self, 'food', None) is None:
             return []
@@ -132,6 +132,15 @@ class NutriSyncDB:
             elif "Region" in self.food.columns:
                 mask &= self.food["Region"].str.contains(
                     re.escape(region), case=False, na=False, regex=False)
+                    
+        if gi_category and "GI (Glycaemic Index)" in self.food.columns:
+            cat = gi_category.lower()
+            if cat == "low":
+                mask &= (self.food["GI (Glycaemic Index)"] < 56)
+            elif cat == "medium":
+                mask &= (self.food["GI (Glycaemic Index)"] >= 56) & (self.food["GI (Glycaemic Index)"] <= 69)
+            elif cat == "high":
+                mask &= (self.food["GI (Glycaemic Index)"] > 69)
         
         return self.food[mask]
 

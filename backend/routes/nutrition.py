@@ -36,13 +36,14 @@ async def search_foods(
     diet_type: str = None,
     food_group: str = None,
     region: str = None,
+    gi_category: str = None,
     page: int = Query(default=1, ge=1, le=1000),
     limit: int = Query(default=20, ge=1, le=100),
     sort_by: str = "Food Name",
     sort_order: str = "asc"
 ):
     """Search and filter foods from the database with pagination and sorting."""
-    results = db.search_foods(query, diet_type, food_group, region)
+    results = db.search_foods(query, diet_type, food_group, region, gi_category)
 
     if hasattr(results, 'sort_values'):
         ascending = sort_order.lower() == "asc"

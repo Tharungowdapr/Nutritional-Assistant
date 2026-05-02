@@ -40,7 +40,7 @@ class ChatResponse(BaseModel):
 
 
 class MealPlanRequest(BaseModel):
-    user_profile: UserProfile
+    user_profile: dict
     days: int = Field(7, ge=1, le=30)
     num_people: int = Field(1, ge=1, le=10)
     budget_per_day_inr: Optional[float] = None

@@ -78,6 +78,20 @@ def _save_provider_configs(user: UserDB, configs: dict, db: Session):
     db.commit()
 
 
+def get_user_active_provider(user):
+    from auth.database import UserDB
+    if not isinstance(user, UserDB): return None
+    configs = _get_provider_configs(user)
+    for p, cfg in configs.items():
+        if cfg.get("is_active"):
+            return {
+                "provider": p,
+                "model": cfg.get("model", ""),
+                "api_key": _decrypt(cfg.get("encrypted_key", ""), _get_secret())
+            }
+    return None
+
+
 # ── Routes ────────────────────────────────────────────────────────────────
 @router.get("/llm-providers")
 async def list_providers(user: UserDB = Depends(require_user), db: Session = Depends(get_db)):
