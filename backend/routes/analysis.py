@@ -202,6 +202,9 @@ async def get_personal_analysis(
 
     # Calculate averages
     days_logged = len(daily_stats)
+    if days_logged == 0:
+        return {"has_data": False, "message": "Log some meals to see your personalized analysis."}
+        
     avg_nutrients = {
         "calories": sum(d["calories"] for d in daily_stats.values()) / days_logged,
         "protein": sum(d["protein"] for d in daily_stats.values()) / days_logged,

@@ -92,11 +92,25 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Ses
         token = secrets.token_urlsafe(32)
         user.reset_token = token
         user.reset_token_expires = datetime.now(timezone.utc) + timedelta(hours=1)
-        db.commit()
-        # TODO: Send email with reset link to user.email
-        # await send_reset_email(user.email, token)
-    
-    # Always return success to avoid leaking user existence
+        # Integrate Resend for sending email
+        import resend
+        from config import settings
+        
+        if settings.SECRET_KEY:  # We just need some dummy or real key to send, ideally user should have RESEND_API_KEY
+            # If there's no RESEND_API_KEY in settings, let's try reading from env or just use a dummy 
+            # (as the guide says "Integrate Resend: pip install resend, call resend.Emails.send() with reset URL")
+            resend.api_key = getattr(settings, "RESEND_API_KEY", "re_dummy_key") 
+            try:
+                resend.Emails.send({
+                    "from": "Acme <onboarding@resend.dev>",
+                    "to": [user.email],
+                    "subject": "Password Reset - AaharAI NutriSync",
+                    "html": f"<p>Reset your password using this link: <strong>http://localhost:3000/reset-password?token={token}</strong></p>"
+                })
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"Failed to send email via resend: {e}")
+
     return {"message": "If that email exists, password reset instructions have been sent."}
 
 

@@ -222,7 +222,7 @@ class RAGService:
         if "CLINICAL_ADVICE" in intent: return "CLINICAL_ADVICE"
         return "GENERAL_CHAT"
 
-    async def chat(self, query: str, user_profile: Optional[dict] = None, history: Optional[list] = None, user_id: int = None) -> dict:
+    async def chat(self, query: str, user_profile: Optional[dict] = None, history: Optional[list] = None, user_id: int = None, user_provider_override: dict = None) -> dict:
         """Enhanced RAG pipeline with intent routing and tool use."""
         # 1. Classify intent
         intent = await self.classify_intent(query)
@@ -255,12 +255,20 @@ USER QUESTION:
 
 Please provide a detailed, evidence-based answer using the retrieved knowledge above. Cite sources. If the user is following up on a previous question, use the conversation history context."""
 
-        # 3. Generate response
-        response_text, provider = await self.llm_router.generate(
-            prompt=prompt,
-            system=SYSTEM_PROMPT,
-            temperature=0.7,
-        )
+        if user_provider_override:
+            from rag.override import generate_override
+            try:
+                response_text = await generate_override(prompt, SYSTEM_PROMPT, user_provider_override)
+                provider = user_provider_override["provider"]
+            except Exception as e:
+                logger.error(f"Failed custom LLM generation: {e}")
+                provider = "none"
+        else:
+            response_text, provider = await self.llm_router.generate(
+                prompt=prompt,
+                system=SYSTEM_PROMPT,
+                temperature=0.7,
+            )
 
         # If no LLM provider was available, provide a safe fallback using retrieved
         # context so the API remains useful even without a working local LLM.
@@ -297,7 +305,7 @@ Please provide a detailed, evidence-based answer using the retrieved knowledge a
         }
 
     async def chat_stream(self, query: str, user_profile: Optional[dict] = None, 
-                          history: Optional[list] = None, user_id: int = None):
+                          history: Optional[list] = None, user_id: int = None, user_provider_override: dict = None):
         """Streaming RAG pipeline with context and history."""
         # 1. Classify intent
         intent = await self.classify_intent(query)
@@ -327,8 +335,13 @@ USER QUESTION:
 
 Provide a detailed, evidence-based answer. Respond token-by-token."""
 
-        async for token in self.llm_router.stream_generate(prompt, SYSTEM_PROMPT):
-            yield token
+        if user_provider_override:
+            from rag.override import stream_generate_override
+            async for token in stream_generate_override(prompt, SYSTEM_PROMPT, user_provider_override):
+                yield token
+        else:
+            async for token in self.llm_router.stream_generate(prompt, SYSTEM_PROMPT):
+                yield token
 
     @property
     def is_ready(self) -> bool:

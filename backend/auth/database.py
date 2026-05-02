@@ -148,6 +148,8 @@ class RecipeDB(Base):
     fat_g = Column(Float, nullable=True)
     carbs_g = Column(Float, nullable=True)
     fibre_g = Column(Float, nullable=True)
+    iron_mg = Column(Float, nullable=True)
+    calcium_mg = Column(Float, nullable=True)
     
     created_at = Column(DateTime, default=utc_now_default)
     updated_at = Column(DateTime, default=utc_now_default, onupdate=utc_now_default)
