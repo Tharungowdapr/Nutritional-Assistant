@@ -10,7 +10,9 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     unoptimized: true
-  }
+  },
+  // For Next.js 16, use Turbopack
+  turbopack: {},
 };
 
 module.exports = withPWA(nextConfig);
