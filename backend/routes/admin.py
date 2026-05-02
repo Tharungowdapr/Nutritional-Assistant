@@ -168,7 +168,7 @@ async def toggle_admin(
     is_currently_admin = user.is_admin or False
 
     if user.id == current_user.id and is_currently_admin:
-        admin_count = db.query(func.count(UserDB.id)).filter(UserDB.is_admin == True).scalar()
+        admin_count = db.query(func.count(UserDB.id)).filter(UserDB.is_admin.is_(True)).scalar()
         if admin_count <= 1:
             raise HTTPException(status_code=400, detail="Cannot demote the last remaining admin")
 

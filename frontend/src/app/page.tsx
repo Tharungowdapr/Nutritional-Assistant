@@ -1,50 +1,85 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Target, Flame, TrendingUp, AlertTriangle, CheckCircle,
   ChevronRight, MapPin, FlaskConical, Pill, Plus,
-  Loader2, Activity, Sparkles, Utensils
+  Loader2, Activity, Sparkles, Utensils, User, Brain
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { trackerApi, apiFetch } from "@/lib/api";
+import { frontendLLM } from "@/lib/llm-provider";
 import { MacroRing } from "@/components/macro-ring";
 import { Button } from "@/components/ui/button";
+import dynamic from "next/dynamic";
+
+const AnalysisSection = dynamic(() => import("@/components/analysis-section").then(m => m.AnalysisSection), { ssr: false });
 
 const pct = (v: number, t: number) => t ? Math.min(100, Math.round((v / t) * 100)) : 0;
 
-function ProgressBar({ value, max, color = "var(--primary)" }: { value: number; max: number; color?: string }) {
+const ProgressBar = React.memo(({ value, max, color = "var(--primary)" }: { value: number; max: number; color?: string }) => {
   const p = pct(value, max);
   return (
     <div className="h-1.5 bg-muted rounded-full overflow-hidden">
       <div style={{ width: `${p}%`, background: color }} className="h-full rounded-full transition-all duration-700 ease-out" />
     </div>
   );
-}
+});
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [daily, setDaily] = useState<any>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [llmAnalysis, setLlmAnalysis] = useState<string | null>(null);
+  const [llmLoading, setLlmLoading] = useState(false);
   const todayIST = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 
   useEffect(() => {
     if (!user) { setLoadingProfile(false); return; }
     apiFetch<any>("/api/analysis/customer-profile")
-      .then(setProfile).catch(console.error).finally(() => setLoadingProfile(false));
+      .then((data) => {
+        setProfile(data);
+        return data;
+      })
+      .then((data) => {
+        // Generate LLM analysis based on profile
+        const p = data;
+        if (p?.body_metrics) {
+          setLlmLoading(true);
+          const prompt = `As a clinical nutritionist, analyze this Indian user's profile and provide a concise health summary (max 150 words):
+Age: ${p.profile_summary?.age}, Gender: ${p.profile_summary?.gender}
+BMI: ${p.body_metrics?.bmi} (${p.body_metrics?.status}), Weight: ${p.body_metrics?.weight_kg}kg, Height: ${p.body_metrics?.height_cm}cm
+TDEE: ${p.body_metrics?.tdee} kcal/day, BMR: ${p.body_metrics?.bmr}
+Diet: ${p.profile_summary?.diet_type}, Activity: ${p.profile_summary?.activity_level}
+RDA Targets: Energy ${p.icmr_match?.energy}kcal, Protein ${p.icmr_match?.protein_g}g
+Top Risks: ${(p.deficiency_risks || []).slice(0, 2).map((r: any) => r.nutrient).join(", ")}
+${p.disease_protocol ? `Condition: ${p.disease_protocol.condition}` : ""}
+${p.regional_concern ? `Region: ${p.regional_concern.region} — ${p.regional_concern.detail}` : ""}
+
+Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.`;
+          frontendLLM.generate(prompt, "You are an Indian clinical nutritionist. Give concise, actionable advice.", user.id)
+            .then((res) => {
+              if (res.content) setLlmAnalysis(res.content);
+            })
+            .catch(console.error)
+            .finally(() => setLlmLoading(false));
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoadingProfile(false));
     trackerApi.getDailySummary(todayIST).then(setDaily).catch(console.error);
   }, [user, todayIST]);
+
+  const targets = useMemo(() => profile?.icmr_match || { energy: 2000, protein_g: 60, carbs_g: 300, fat_g: 65, iron_mg: 17, calcium_mg: 600, fibre_g: 30 }, [profile]);
+  const d = useMemo(() => daily || { total_calories: 0, total_protein_g: 0, total_carbs_g: 0, total_fat_g: 0, total_iron_mg: 0, total_calcium_mg: 0, total_fibre_g: 0, meals_by_slot: {}, meal_count: 0 }, [daily]);
 
   if (authLoading) return (
     <div className="flex items-center justify-center min-h-screen">
       <Loader2 className="w-6 h-6 animate-spin text-primary" />
     </div>
   );
-
-  const targets = profile?.icmr_match || { energy: 2000, protein_g: 60, carbs_g: 300, fat_g: 65, iron_mg: 17, calcium_mg: 600, fibre_g: 30 };
-  const d = daily || { total_calories: 0, total_protein_g: 0, total_carbs_g: 0, total_fat_g: 0, total_iron_mg: 0, total_calcium_mg: 0, total_fibre_g: 0, meals_by_slot: {}, meal_count: 0 };
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto pb-24 fade-in">
@@ -159,7 +194,7 @@ export default function Dashboard() {
                       <div key={slot} className="flex items-center justify-between p-2.5 rounded-lg border border-border/60">
                         <span className="text-sm font-medium">{slot}</span>
                         {items.length > 0 ? (
-                          <span className="text-xs font-semibold text-emerald-600">{Math.round(items.reduce((s:any,f:any)=>s+f.calories,0))} kcal</span>
+                          <span className="text-xs font-semibold text-emerald-600">{Math.round((items || []).reduce((s:any,f:any)=>s+(f.calories||0),0))} kcal</span>
                         ) : (
                           <Link href="/tracker" className="text-xs text-primary font-medium hover:underline">+ Add</Link>
                         )}
@@ -171,149 +206,56 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Analysis Cards */}
-          {loadingProfile ? (
-            <div className="flex items-center justify-center py-12 bg-muted/30 rounded-xl border border-dashed border-border">
-              <Loader2 className="w-6 h-6 animate-spin text-primary mr-2" />
-              <p className="text-sm text-muted-foreground">Loading your analysis...</p>
-            </div>
-          ) : profile && (
-            <div>
-              <h2 className="text-lg font-semibold mb-4">Your Analysis</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Analysis Cards - Lazy Loaded */}
+          <AnalysisSection profile={profile} loadingProfile={loadingProfile} />
 
-                {/* ICMR Profile */}
-                <div className="bg-card border border-border rounded-xl p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Activity className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-semibold text-muted-foreground">ICMR Profile</span>
-                    {profile.icmr_match?.profile && (
-                      <span className="ml-auto text-xs px-2 py-0.5 rounded bg-primary/10 text-primary font-medium">{profile.icmr_match.profile}</span>
-                    )}
+          {/* User Profile Summary */}
+          {profile && (
+            <div className="bg-card border border-border rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <User className="w-4 h-4 text-primary" />
+                <h2 className="text-sm font-semibold">Your Profile</h2>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { l: "Age", v: profile.profile_summary?.age || "—" },
+                  { l: "Gender", v: profile.profile_summary?.gender || "—" },
+                  { l: "Weight", v: profile.body_metrics?.weight_kg ? `${profile.body_metrics.weight_kg} kg` : "—" },
+                  { l: "Height", v: profile.body_metrics?.height_cm ? `${profile.body_metrics.height_cm} cm` : "—" },
+                  { l: "Diet", v: profile.profile_summary?.diet_type || "—" },
+                  { l: "Activity", v: profile.profile_summary?.activity_level || "—" },
+                  { l: "Region", v: profile.profile_summary?.region || "—" },
+                  { l: "Conditions", v: (profile.profile_summary?.conditions || []).length > 0 ? profile.profile_summary?.conditions?.join(", ") : "None" },
+                ].map(m => (
+                  <div key={m.l} className="bg-muted/40 rounded-lg p-2.5">
+                    <p className="text-[10px] text-muted-foreground font-medium">{m.l}</p>
+                    <p className="text-sm font-semibold">{m.v}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { label: "Energy", value: profile.icmr_match?.energy, unit: "kcal" },
-                      { label: "Protein", value: profile.icmr_match?.protein_g, unit: "g" },
-                      { label: "Iron", value: profile.icmr_match?.iron_mg, unit: "mg" },
-                      { label: "Calcium", value: profile.icmr_match?.calcium_mg, unit: "mg" },
-                    ].map((s) => (
-                      <div key={s.label} className="bg-muted/40 rounded-lg p-2.5">
-                        <p className="text-[10px] text-muted-foreground font-medium mb-0.5">{s.label}</p>
-                        <p className="text-base font-bold">{s.value}<span className="text-xs ml-0.5 text-muted-foreground">{s.unit}</span></p>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-3">Source: ICMR-NIN 2024</p>
-                </div>
-
-                {/* BMI */}
-                <div className="bg-card border border-border rounded-xl p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Target className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-semibold text-muted-foreground">Body Metrics</span>
-                  </div>
-                  <div className="flex items-center gap-4 mb-3">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground font-medium">BMI</p>
-                      <p className={`text-3xl font-bold ${profile.body_metrics?.status === "Normal" ? "text-emerald-500" : "text-amber-500"}`}>
-                        {profile.body_metrics?.bmi}
-                      </p>
-                      <span className="text-xs font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">{profile.body_metrics?.status}</span>
-                    </div>
-                    <div className="h-10 w-px bg-border" />
-                    <div>
-                      <p className="text-[10px] text-muted-foreground font-medium">TDEE</p>
-                      <p className="text-2xl font-bold text-primary">{profile.body_metrics?.tdee}</p>
-                      <p className="text-[10px] text-muted-foreground">kcal/day</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Risks */}
-                <div className="bg-card border border-border rounded-xl p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <AlertTriangle className="w-4 h-4 text-accent" />
-                    <span className="text-xs font-semibold text-muted-foreground">Nutritional Risks</span>
-                  </div>
-                  <div className="space-y-2">
-                    {profile.deficiency_risks?.slice(0, 3).map((r: any, i: number) => (
-                      <div key={i} className={`p-3 rounded-lg text-xs ${r.severity === "high" ? "bg-destructive/5 border border-destructive/10" : "bg-accent/5 border border-accent/10"}`}>
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <div className={`w-1.5 h-1.5 rounded-full ${r.severity === "high" ? "bg-destructive" : "bg-accent"}`} />
-                          <p className="font-semibold">{r.nutrient}</p>
-                        </div>
-                        <p className="text-muted-foreground">{r.fix}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Regional */}
-                <div className="bg-card border border-border rounded-xl p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <MapPin className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-semibold text-muted-foreground">Regional Diet</span>
-                    {profile.regional_concern?.region && (
-                      <span className="ml-auto text-xs px-2 py-0.5 rounded bg-primary/10 text-primary font-medium">{profile.regional_concern.region}</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {profile.regional_concern?.detail || "Regional diet analysis based on your location."}
-                  </p>
-                </div>
-
-                {/* Health */}
-                <div className="bg-card border border-border rounded-xl p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <FlaskConical className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-semibold text-muted-foreground">Health Notes</span>
-                  </div>
-                  {profile.disease_protocol ? (
-                    <div className="space-y-2 text-xs">
-                      <p className="font-semibold">{profile.disease_protocol.condition}</p>
-                      <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                        <p className="font-medium text-emerald-700 dark:text-emerald-400 mb-0.5">Increase</p>
-                        <p className="text-muted-foreground">{profile.disease_protocol.foods_increase?.split(";")[0]}</p>
-                      </div>
-                      <div className="p-2 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
-                        <p className="font-medium text-red-700 dark:text-red-400 mb-0.5">Reduce</p>
-                        <p className="text-muted-foreground">{profile.disease_protocol.foods_restrict?.split(";")[0]}</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2 text-xs text-muted-foreground">
-                      <p className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> No chronic conditions detected.</p>
-                      <p className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> Preventive nutrition active.</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Medications */}
-                <div className="bg-card border border-border rounded-xl p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Pill className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-semibold text-muted-foreground">Medications</span>
-                  </div>
-                  {profile.medicine_watch?.length > 0 ? (
-                    <div className="space-y-2">
-                      {profile.medicine_watch.slice(0, 2).map((m: any, i: number) => (
-                        <div key={i} className="p-2.5 rounded-lg bg-primary/5 border border-primary/10 text-xs">
-                          <p className="font-semibold text-primary mb-0.5">{m.medication}</p>
-                          <p className="text-muted-foreground">{m.note}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-center py-4 opacity-50">
-                      <CheckCircle className="w-6 h-6 mb-1.5 text-emerald-500" />
-                      <p className="text-xs font-medium">No drug-nutrient interactions</p>
-                    </div>
-                  )}
-                </div>
+                ))}
               </div>
             </div>
           )}
+
+          {/* LLM AI Analysis */}
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="px-5 py-4 bg-primary/5 border-b border-border flex items-center gap-2">
+              <Brain className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-semibold">AI Health Analysis</h2>
+              {llmLoading && <Loader2 className="w-3 h-3 animate-spin text-primary ml-auto" />}
+            </div>
+            <div className="p-5">
+              {llmLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary mr-2" />
+                  <p className="text-sm text-muted-foreground">Analyzing your profile...</p>
+                </div>
+              ) : llmAnalysis ? (
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{llmAnalysis}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">Click to generate AI-powered health analysis based on your profile.</p>
+              )}
+            </div>
+          </div>
         </div>
       ) : (
         /* Logged-out landing */

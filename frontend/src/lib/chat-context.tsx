@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
-import { apiFetch, setToken, clearToken } from "@/lib/api";
+import { apiFetch, setToken, clearToken, API_BASE } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 export interface ChatSession {
   id: string;
@@ -34,6 +35,7 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | null>(null);
 
 export function ChatProvider({ children }: { children: ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -141,7 +143,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setLoading(true);
 
     try {
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const res = await fetch(`${API_BASE}/api/chat/stream`, {
         method: "POST",
         headers: {
@@ -205,8 +206,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, [currentSession, createSession, refreshSessions]);
 
   useEffect(() => {
-    refreshSessions();
-  }, [refreshSessions]);
+    if (!authLoading && user) {
+      refreshSessions();
+    }
+  }, [authLoading, user, refreshSessions]);
 
   return (
     <ChatContext.Provider value={{

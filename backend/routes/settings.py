@@ -64,7 +64,7 @@ def _get_provider_configs(user: UserDB) -> dict:
     profile = user.profile or {}
     if isinstance(profile, str):
         try: profile = json.loads(profile)
-        except: profile = {}
+        except json.JSONDecodeError: profile = {}
     return profile.get("llm_provider_configs", {})
 
 
@@ -72,7 +72,7 @@ def _save_provider_configs(user: UserDB, configs: dict, db: Session):
     profile = user.profile or {}
     if isinstance(profile, str):
         try: profile = json.loads(profile)
-        except: profile = {}
+        except json.JSONDecodeError: profile = {}
     profile["llm_provider_configs"] = configs
     user.profile = profile
     db.commit()

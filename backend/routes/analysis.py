@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from math import isnan
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database.loader import db
@@ -6,6 +7,12 @@ from auth.database import get_db, DailyLogDB
 from auth.dependencies import get_current_user, require_user
 
 router = APIRouter(prefix="/api/analysis", tags=["Analysis"])
+
+
+def _safe_mean(series) -> float:
+    """Compute mean of a pandas series, returning 0.0 for NaN results."""
+    val = series.mean()
+    return 0.0 if isnan(val) else float(val)
 
 
 def _check_db_loaded():
@@ -25,8 +32,8 @@ async def get_food_group_stats(user=Depends(require_user)):
         stats.append({
             "food_group": group,
             "count": len(group_foods),
-            "avg_calories": (group_foods["Energy (kcal)"].mean() or 0),
-            "avg_protein": (group_foods["Protein (g)"].mean() or 0),
+            "avg_calories": _safe_mean(group_foods["Energy (kcal)"]),
+            "avg_protein": _safe_mean(group_foods["Protein (g)"]),
         })
     
     return {"groups": stats}
@@ -44,15 +51,15 @@ async def get_veg_nonveg_stats(user=Depends(require_user)):
     return {
         "vegetarian": {
             "count": len(veg),
-            "avg_calories": (veg["Energy (kcal)"].mean() or 0),
-            "avg_protein": (veg["Protein (g)"].mean() or 0),
-            "avg_iron": (veg["Iron (mg)"].mean() or 0),
+            "avg_calories": _safe_mean(veg["Energy (kcal)"]),
+            "avg_protein": _safe_mean(veg["Protein (g)"]),
+            "avg_iron": _safe_mean(veg["Iron (mg)"]),
         },
         "non_vegetarian": {
             "count": len(nonveg),
-            "avg_calories": (nonveg["Energy (kcal)"].mean() or 0),
-            "avg_protein": (nonveg["Protein (g)"].mean() or 0),
-            "avg_iron": (nonveg["Iron (mg)"].mean() or 0),
+            "avg_calories": _safe_mean(nonveg["Energy (kcal)"]),
+            "avg_protein": _safe_mean(nonveg["Protein (g)"]),
+            "avg_iron": _safe_mean(nonveg["Iron (mg)"]),
         }
     }
 
@@ -99,8 +106,8 @@ async def get_b12_analysis(user=Depends(require_user)):
     
     return {
         "veg_with_b12": len(veg[veg["Vit B12 (mcg)"] > 0]),
-        "veg_avg_b12": (veg["Vit B12 (mcg)"].mean() or 0),
-        "nonveg_avg_b12": (nonveg["Vit B12 (mcg)"].mean() or 0),
+        "veg_avg_b12": _safe_mean(veg["Vit B12 (mcg)"]),
+        "nonveg_avg_b12": _safe_mean(nonveg["Vit B12 (mcg)"]),
         "top_sources": db.food.nlargest(5, "Vit B12 (mcg)")[
             ["Food Name", "Vit B12 (mcg)", "Diet Type"]
         ].to_dict(orient="records")
@@ -134,7 +141,7 @@ async def get_calorie_distribution(user=Depends(require_user)):
         "low_calorie": len(food_clean[food_clean["Energy (kcal)"] < 100]),
         "medium_calorie": len(food_clean[(food_clean["Energy (kcal)"] >= 100) & (food_clean["Energy (kcal)"] < 300)]),
         "high_calorie": len(food_clean[food_clean["Energy (kcal)"] >= 300]),
-        "avg_calories": (food_clean["Energy (kcal)"].mean() or 0),
+        "avg_calories": _safe_mean(food_clean["Energy (kcal)"]),
     }
 
 
@@ -149,12 +156,12 @@ async def get_nutrient_summary(user=Depends(require_user)):
         "food_groups": len(db.food["Food Group"].unique()),
         "diet_types": db.food["Diet Type"].unique().tolist(),
         "avg_nutrients": {
-            "calories": (db.food["Energy (kcal)"].mean() or 0),
-            "protein": (db.food["Protein (g)"].mean() or 0),
-            "fat": (db.food["Fat (g)"].mean() or 0),
-            "carbs": (db.food["Carbs (g)"].mean() or 0),
-            "iron": (db.food["Iron (mg)"].mean() or 0),
-            "calcium": (db.food["Calcium (mg)"].mean() or 0),
+            "calories": _safe_mean(db.food["Energy (kcal)"]),
+            "protein": _safe_mean(db.food["Protein (g)"]),
+            "fat": _safe_mean(db.food["Fat (g)"]),
+            "carbs": _safe_mean(db.food["Carbs (g)"]),
+            "iron": _safe_mean(db.food["Iron (mg)"]),
+            "calcium": _safe_mean(db.food["Calcium (mg)"]),
         }
     }
 
@@ -204,16 +211,25 @@ async def get_personal_analysis(
     }
 
     # Compare with RDA (Simplified logic for now)
-    user.profile
-    
-    # Insights generation
+    # Compare with RDA targets if profile available
+    profile = user.profile or {} if hasattr(user, 'profile') else {}
+    rda_calories = profile.get("energy_score", 3) * 500  # rough estimate
+    rda_protein = 50  # minimum RDA
     insights = []
-    if avg_nutrients["protein"] < 50:
-        insights.append("Your protein intake is consistently below the 60g RDA. Try adding more pulses or dairy.")
+
+    if avg_nutrients["calories"] > rda_calories * 1.2:
+        insights.append(f"Your calorie intake ({avg_nutrients['calories']:.0f} kcal/day) exceeds estimated needs.")
+    elif avg_nutrients["calories"] < rda_calories * 0.8:
+        insights.append(f"Your calorie intake ({avg_nutrients['calories']:.0f} kcal/day) may be too low.")
+
+    if avg_nutrients["protein"] < rda_protein:
+        insights.append(f"Protein intake ({avg_nutrients['protein']:.1f}g/day) is below the {rda_protein}g minimum. Add more pulses, dairy, or eggs.")
+    
+    # Additional insights
     if avg_nutrients["iron"] < 15:
         insights.append("Iron levels are low. Consider green leafy vegetables or iron-fortified cereals.")
-    if avg_nutrients["calories"] > 2500:
-        insights.append("Energy intake is high relative to average requirements. Monitor portion sizes.")
+    if avg_nutrients["fat"] > 80:
+        insights.append("Fat intake is high. Consider reducing oil and fried foods.")
 
     return {
         "has_data": True,
@@ -272,7 +288,7 @@ async def get_database_intelligence(user=Depends(require_user)):
         if hasattr(db, 'profession') and not db.profession.empty and "Male Kcal/day (65kg ref)" in db.profession.columns:
             try:
                 prof_val = abs(db.profession["Male Kcal/day (65kg ref)"].max() - db.profession["Male Kcal/day (65kg ref)"].min())
-            except:
+            except (ValueError, TypeError, KeyError):
                 pass
 
         prof_insight = {

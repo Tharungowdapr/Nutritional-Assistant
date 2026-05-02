@@ -3,6 +3,7 @@ AaharAI NutriSync — Recipe API Routes
 Save, retrieve, and manage user recipes with history tracking.
 """
 import json
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -148,14 +149,20 @@ async def get_recipe(
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
     
-    # Track recipe history
-    history = RecipeHistoryDB(
-        user_id=user.id,
-        recipe_id=recipe.id,
-        recipe_title=recipe.title,
-    )
-    db.add(history)
-    db.commit()
+    # Track recipe history — only if no entry in the last hour
+    recent = db.query(RecipeHistoryDB).filter(
+        RecipeHistoryDB.user_id == user.id,
+        RecipeHistoryDB.recipe_id == recipe.id,
+        RecipeHistoryDB.viewed_at >= datetime.now(timezone.utc) - timedelta(hours=1),
+    ).first()
+    if not recent:
+        history = RecipeHistoryDB(
+            user_id=user.id,
+            recipe_id=recipe.id,
+            recipe_title=recipe.title,
+        )
+        db.add(history)
+        db.commit()
     
     return RecipeResponse(
         id=recipe.id,
