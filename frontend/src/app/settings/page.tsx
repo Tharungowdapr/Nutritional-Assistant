@@ -56,6 +56,19 @@ export default function RebuiltSettingsPage() {
     setLlmConfig(frontendLLM.getConfig());
   }, []);
 
+  // Sync form state with user data when it loads
+  useEffect(() => {
+    if (user) {
+      setSelectedLanguage(user.profile?.language || "en");
+      setNameForm(user.name || "");
+      setDietForm({
+        diet_type: user.profile?.diet_type || "VEG",
+        goal: user.profile?.goal || "Maintenance",
+        allergies: user.profile?.conditions?.join(", ") || "",
+      });
+    }
+  }, [user]);
+
   const handleSaveLlmConfig = () => {
     frontendLLM.saveConfig(llmConfig);
     toast.success("AI Configuration saved locally");

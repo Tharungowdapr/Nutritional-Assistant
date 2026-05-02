@@ -4,6 +4,7 @@ Serves all 6 personalised analysis cards on the dashboard.
 Single endpoint, Redis-cached, only recomputes when user profile changes.
 """
 import logging
+from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -58,17 +59,18 @@ def _match_rda_profile(profile: dict) -> dict | None:
     gender = (profile.get("gender") or "male").lower()
     activity = (profile.get("activity_level") or "moderate").lower()
 
-    # Determine life stage bucket
+    # Determine life stage bucket for RDA matching
+    life_stage_kw = None
     if age < 13:
-        pass
+        life_stage_kw = "child"
     elif age < 19:
-        pass
+        life_stage_kw = "adolescent"
     elif age < 40:
-        pass
+        life_stage_kw = "adult"
     elif age < 60:
-        pass
+        life_stage_kw = "middle"
     else:
-        pass
+        life_stage_kw = "elderly"
 
     rda = nutri_db.rda
     # Try to match on gender keyword and activity keyword
@@ -79,6 +81,11 @@ def _match_rda_profile(profile: dict) -> dict | None:
         rda["Profile"].str.lower().str.contains(gender_kw, na=False) &
         rda["Activity Level"].str.lower().str.contains(activity_kw, na=False)
     ]
+    # Refine by life stage if available
+    if life_stage_kw and not matches.empty:
+        stage_matches = matches[matches["Profile"].str.lower().str.contains(life_stage_kw, na=False)]
+        if not stage_matches.empty:
+            matches = stage_matches
     if matches.empty:
         matches = rda[rda["Profile"].str.lower().str.contains(gender_kw, na=False)]
     if matches.empty:
@@ -175,7 +182,15 @@ def _get_deficiency_risks(profile: dict) -> list:
     diet = (profile.get("diet_type") or "veg").lower()
     gender = (profile.get("gender") or "male").lower()
     age = profile.get("age", 25)
-    profile.get("conditions", [])
+    conditions = profile.get("conditions", [])
+    if conditions:
+        if any("diabetes" in str(c).lower() for c in conditions):
+            risks.append({
+                "nutrient": "Chromium & Magnesium",
+                "reason": "Diabetes increases excretion of these minerals. Both are essential for glucose metabolism.",
+                "severity": "medium",
+                "fix": "Ragi, almonds, and green leafy vegetables are rich sources.",
+            })
 
     if "veg" in diet:
         risks.append({
@@ -226,7 +241,6 @@ def _get_deficiency_risks(profile: dict) -> list:
 
 def _calc_streak(user_id: int, db_session: Session) -> int:
     """Count consecutive days with at least 1 food log."""
-    from zoneinfo import ZoneInfo
     ist = ZoneInfo("Asia/Kolkata")
     today = datetime.now(ist).date()
     streak = 0

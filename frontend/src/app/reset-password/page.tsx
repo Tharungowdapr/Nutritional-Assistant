@@ -47,13 +47,19 @@ function ResetPasswordForm() {
       await authApi.resetPassword({ token, new_password: newPassword });
       setIsSuccess(true);
       toast.success("Password reset successfully!");
-      setTimeout(() => router.push("/login"), 2000);
     } catch (err: any) {
       toast.error(err.message || "Failed to reset password");
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isSuccess) {
+      const timer = setTimeout(() => router.push("/login"), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess, router]);
 
   if (!token) {
     return null; // Will redirect

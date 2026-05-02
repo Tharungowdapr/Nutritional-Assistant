@@ -1,82 +1,246 @@
 "use client";
-import { useState, useEffect } from "react";
-import { ChevronDown, Loader2, RefreshCw, ShoppingCart, Calendar, AlertTriangle, CheckCircle, Sparkles, MapPin, Cloud, MessageSquare, Download, X } from "lucide-react";
-import * as XLSX from "xlsx";
+import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  Loader2, RefreshCw, MessageSquare, Sparkles,
+  MapPin, Cloud, AlertTriangle, CheckCircle,
+  ChevronDown, ChevronRight, UtensilsCrossed,
+  Target, Flame, TrendingUp, ShoppingCart,
+  History, Clock, X, ArrowLeft, ArrowRight,
+  Heart, Zap, Droplets, Moon, Dumbbell,
+  ChefHat, ThumbsUp, ThumbsDown, Coffee,
+  Clock as ClockIcon, Wheat, Leaf, Scale, Download, FileSpreadsheet, FileText
+} from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { apiFetch } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { frontendLLM } from "@/lib/llm-provider";
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
 
-const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-type Plan = any;
+interface FoodItem {
+  name: string;
+  qty: string;
+  cal?: number;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
+  iron_mg?: number;
+  calcium_mg?: number;
+  note?: string;
+}
+interface DayPlan {
+  day: number;
+  label: string;
+  breakfast: FoodItem[];
+  mid_morning: FoodItem[];
+  lunch: FoodItem[];
+  snack: FoodItem[];
+  dinner: FoodItem[];
+  cal_approx?: number;
+}
+interface GroceryCategory {
+  category: string;
+  items: { name: string; qty: string; cost_inr: number }[];
+}
+interface MealPlan {
+  summary: string;
+  days: DayPlan[];
+  grocery: GroceryCategory[];
+  grocery_total_inr: number;
+  parse_error?: boolean;
+}
+interface SavedPlan {
+  id: number;
+  plan: MealPlan;
+  days: number;
+  budget: number;
+  created_at: string;
+}
+
+interface QuestionnaireState {
+  days: number;
+  budget: number;
+  people: number;
+  goal: string;
+  dietType: string;
+  allergies: string;
+  favoriteFoods: string;
+  dislikedFoods: string;
+  spiceLevel: string;
+  cookingTime: string;
+  mealFrequency: string;
+  snacksPreference: string;
+  beverages: string;
+  healthConditions: string;
+  activityLevel: string;
+  sleepHours: string;
+  stressLevel: string;
+  hydrationLevel: string;
+  exerciseFreq: string;
+  weightGoal: string;
+  specialRequirements: string;
+  suggestions: string;
+}
+
+const SLOTS: { key: keyof DayPlan; label: string; icon: string }[] = [
+  { key: "breakfast", label: "Breakfast", icon: "🌅" },
+  { key: "mid_morning", label: "Mid-morning", icon: "☕" },
+  { key: "lunch", label: "Lunch", icon: "🍛" },
+  { key: "snack", label: "Snack", icon: "🥜" },
+  { key: "dinner", label: "Dinner", icon: "🌙" },
+];
+
+const NUTRI_COLORS: Record<string, string> = {
+  energy: "var(--color-calories)",
+  protein: "var(--color-protein)",
+  carbs: "var(--color-carbs)",
+  fat: "var(--color-fat)",
+  iron: "#F59E0B",
+  calcium: "#6366F1",
+};
+
+const DEFAULT_Q: QuestionnaireState = {
+  days: 7, budget: 300, people: 1, goal: "Maintenance", dietType: "VEG",
+  allergies: "", favoriteFoods: "", dislikedFoods: "", spiceLevel: "Medium",
+  cookingTime: "30 min", mealFrequency: "3", snacksPreference: "Healthy",
+  beverages: "Tea/Coffee", healthConditions: "", activityLevel: "Sedentary",
+  sleepHours: "7", stressLevel: "Moderate", hydrationLevel: "6-8 glasses",
+  exerciseFreq: "None", weightGoal: "Maintain", specialRequirements: "", suggestions: "",
+};
+
+function FoodDetail({ item, onClose }: { item: FoodItem; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="bg-card border border-border rounded-xl p-5 w-full max-w-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-bold">{item.name}</h3>
+          <button onClick={onClose} className="p-1 rounded hover:bg-muted"><X className="w-4 h-4" /></button>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">{item.qty}</p>
+        {item.note && <p className="text-xs text-muted-foreground italic mb-4 p-2 bg-muted/40 rounded-lg">{item.note}</p>}
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          {[
+            { l: "Energy", v: item.cal, u: "kcal" },
+            { l: "Protein", v: item.protein_g, u: "g" },
+            { l: "Carbs", v: item.carbs_g, u: "g" },
+            { l: "Fat", v: item.fat_g, u: "g" },
+            { l: "Iron", v: item.iron_mg, u: "mg" },
+            { l: "Calcium", v: item.calcium_mg, u: "mg" },
+          ].filter(m => m.v !== undefined).map(m => (
+            <div key={m.l} className="bg-muted/40 rounded-lg p-2 text-center">
+              <p className="text-[9px] text-muted-foreground">{m.l}</p>
+              <p className="text-xs font-bold">{m.v}<span className="text-[9px] text-muted-foreground ml-0.5">{m.u}</span></p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function QuestionCard({ label, icon: Icon, description, children }: { label: string; icon?: any; description?: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+        {Icon && <Icon className="w-3.5 h-3.5" />} {label}
+      </label>
+      {description && <p className="text-[10px] text-muted-foreground/70">{description}</p>}
+      {children}
+    </div>
+  );
+}
 
 export default function MealPlanPage() {
   const { user } = useAuth();
   const [generating, setGenerating] = useState(false);
-  const [plan, setPlan] = useState<Plan | null>(null);
+  const [plan, setPlan] = useState<MealPlan | null>(null);
+  const [streamText, setStreamText] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [activeDay, setActiveDay] = useState(0);
-  const [activeTab, setActiveTab] = useState<"plan"|"grocery">("plan");
-  const [expandedSlots, setExpandedSlots] = useState<Record<string, boolean>>({});
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [collapsedDays, setCollapsedDays] = useState<Record<number, boolean>>({});
+  const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
-  const [days, setDays] = useState(7);
-  const [budget, setBudget] = useState(300);
-  const [people, setPeople] = useState(1);
-  const [goal, setGoal] = useState("Maintenance");
-  const [dietType, setDietType] = useState("VEG");
-  const [suggestion, setSuggestion] = useState("");
-  const [weatherContext, setWeatherContext] = useState<string>("");
-  const [locationName, setLocationName] = useState<string>("");
+  const [history, setHistory] = useState<SavedPlan[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [weatherContext, setWeatherContext] = useState("");
+  const [locationName, setLocationName] = useState("");
 
-  // Fetch Weather and Location on mount
+  // Questionnaire state
+  const [slide, setSlide] = useState(0);
+  const [q, setQ] = useState<QuestionnaireState>(DEFAULT_Q);
+  const totalSlides = 3;
+
+  const streamRef = useRef<HTMLDivElement>(null);
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+  const loadHistory = useCallback(async () => {
+    const token = localStorage.getItem("nutrisync_token");
+    try {
+      const res = await fetch(`${API_BASE}/api/meal-plan/history?limit=20`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setHistory(data.plans || []);
+      }
+    } catch (e) {}
+  }, []);
+
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(async (pos) => {
         try {
           const { latitude, longitude } = pos.coords;
-          // Get Weather
           const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
           const wData = await wRes.json();
           const temp = wData.current_weather?.temperature;
           const wcode = wData.current_weather?.weathercode;
           const condition = wcode === 0 ? "Clear" : wcode < 40 ? "Cloudy" : "Rain/Snow";
           setWeatherContext(`${temp}°C, ${condition}`);
-          
-          // Get Location Name (Reverse Geocoding)
           const locRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
           const locData = await locRes.json();
-          setLocationName(locData.address?.city || locData.address?.town || locData.address?.state || "Unknown location");
-        } catch (e) {
-          console.warn("Failed to fetch location/weather", e);
-        }
-      }, () => console.log("Geolocation denied"));
+          setLocationName(locData.address?.city || locData.address?.town || locData.address?.state || "");
+        } catch (e) {}
+      }, () => {});
     }
+    loadHistory();
   }, []);
 
-  const toggle = (key: string) => setExpandedSlots(p => ({ ...p, [key]: !p[key] }));
-  const toggleCheck = (key: string) => setChecked(p => ({ ...p, [key]: !p[key] }));
-  const [history, setHistory] = useState<any[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
-  const [streamText, setStreamText] = useState("");
-
-  const fetchHistory = async () => {
-    try {
-      const data = await apiFetch<any>("/api/meal-plan/history");
-      setHistory(data.plans || []);
-    } catch (e) { console.error(e); }
-  };
-
-  useEffect(() => { if (user) fetchHistory(); }, [user]);
+  useEffect(() => {
+    if (streamRef.current) streamRef.current.scrollTop = streamRef.current.scrollHeight;
+  }, [streamText]);
 
   const generate = async () => {
-    setGenerating(true); setError(null); setStreamText("");
+    setGenerating(true);
+    setError(null);
+    setPlan(null);
+    setStreamText("");
+    setChecked({});
+    setCollapsedDays({});
+    setExpandedItems({});
     const token = localStorage.getItem("nutrisync_token");
-    
+    const suggestions = [
+      q.allergies ? `Allergies: ${q.allergies}` : "",
+      q.favoriteFoods ? `Favorite foods: ${q.favoriteFoods}` : "",
+      q.dislikedFoods ? `Disliked foods: ${q.dislikedFoods}` : "",
+      `Spice level: ${q.spiceLevel}`,
+      `Cooking time per meal: ${q.cookingTime}`,
+      `Meals per day: ${q.mealFrequency}`,
+      `Snacks: ${q.snacksPreference}`,
+      `Beverages: ${q.beverages}`,
+      q.healthConditions ? `Health conditions: ${q.healthConditions}` : "",
+      `Activity: ${q.activityLevel}`,
+      `Sleep: ${q.sleepHours} hrs/night`,
+      `Stress: ${q.stressLevel}`,
+      `Hydration: ${q.hydrationLevel}`,
+      `Exercise: ${q.exerciseFreq}`,
+      `Weight goal: ${q.weightGoal}`,
+      q.specialRequirements ? `Special requirements: ${q.specialRequirements}` : "",
+      q.suggestions ? `Other: ${q.suggestions}` : "",
+    ].filter(Boolean).join(". ");
+
     try {
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const res = await fetch(`${API_BASE}/api/meal-plan/stream`, {
         method: "POST",
         headers: {
@@ -84,504 +248,644 @@ export default function MealPlanPage() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          days,
-          num_people: people,
-          budget_per_day_inr: budget,
-          user_profile: {
-            ...user?.profile,
-            diet_type: dietType,
-            goal: goal,
-          }
+          days: q.days, num_people: q.people, budget_per_day_inr: q.budget,
+          suggestions: suggestions || undefined,
+          user_profile: { ...user?.profile, diet_type: q.dietType, goal: q.goal },
         }),
       });
-
       if (!res.ok) throw new Error(`Generation failed: ${res.status}`);
       if (!res.body) throw new Error("No response body");
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let fullRaw = "";
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         const chunk = decoder.decode(value, { stream: true });
         const lines = chunk.split("\n").filter(l => l.startsWith("data: "));
-
         for (const line of lines) {
           try {
-            const jsonContent = JSON.parse(line.slice(6));
-            if (jsonContent.error) throw new Error(jsonContent.error);
-            if (jsonContent.token) {
-              fullRaw += jsonContent.token;
-              setStreamText(prev => prev + jsonContent.token);
+            const parsed = JSON.parse(line.slice(6));
+            if (parsed.error) throw new Error(parsed.error);
+            if (parsed.token) setStreamText(prev => prev + parsed.token);
+            if (parsed.final && parsed.plan) {
+              setPlan(parsed.plan);
+              loadHistory();
             }
-            if (jsonContent.final && jsonContent.plan) {
-              setPlan(jsonContent.plan);
-              fetchHistory();
-            }
-          } catch (e) { /* skip malformed */ }
+          } catch (e) {}
         }
       }
-      
-      setActiveDay(0);
-      setActiveTab("plan");
     } catch (e: any) {
-      console.error("Streaming Generation Failed, using fallback", e);
-      import("@/lib/fallback-recipes").then(({ getFallbackPlan }) => {
-        setPlan(getFallbackPlan(days, dietType, budget));
-        setActiveDay(0);
-        setActiveTab("plan");
-        setError("AI generation failed. A local fallback meal plan has been loaded instead.");
-      });
+      setError(e.message || "Generation failed. Please try again.");
     } finally {
       setGenerating(false);
-      setStreamText("");
     }
   };
 
-  const handleHistorySelect = (hPlan: any) => {
-    setPlan(hPlan);
+  const toggleDay = (day: number) => setCollapsedDays(p => ({ ...p, [day]: !p[day] }));
+  const toggleCheck = (key: string) => setChecked(p => ({ ...p, [key]: !p[key] }));
+  const toggleItem = (key: string) => setExpandedItems(p => ({ ...p, [key]: !p[key] }));
+
+  const viewHistory = (savedPlan: SavedPlan) => {
+    setPlan(savedPlan.plan);
+    setQ(prev => ({ ...prev, days: savedPlan.days, budget: savedPlan.budget }));
     setShowHistory(false);
-    setActiveDay(0);
-    setActiveTab("plan");
   };
 
-  const exportToExcel = () => {
+  const formatTimeAgo = (iso: string) => {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  };
+
+  const updateQ = (field: keyof QuestionnaireState, value: string | number) => {
+    setQ(prev => ({ ...prev, [field]: value }));
+  };
+
+  const exportToExcel = useCallback(() => {
     if (!plan) return;
-    try {
-      const flatPlan: any[] = [];
-      plan.days?.forEach((d: any) => {
-        Object.entries(d.meals || {}).forEach(([slot, meal]: any) => {
-          meal.foods?.forEach((f: any) => {
-            flatPlan.push({
-              Day: d.day_label,
-              Meal: slot,
-              Food: f.name,
-              Quantity: f.qty_label || `${f.qty_g}g`,
-              Calories: f.cal,
-              Protein: f.protein_g,
-              Carbs: f.carbs_g,
-              Fat: f.fat_g,
-              Iron: f.iron_mg,
-              Calcium: f.calcium_mg
-            });
+    
+    const wb = XLSX.utils.book_new();
+    
+    // Days sheet
+    const daysData = [];
+    for (const day of plan.days || []) {
+      for (const slot of SLOTS) {
+        const items = day[slot.key] as FoodItem[] || [];
+        for (const item of items) {
+          daysData.push({
+            Day: day.day,
+            DayLabel: day.label,
+            Meal: slot.label,
+            Food: item.name,
+            Quantity: item.qty,
+            Calories: item.cal || 0,
+            Protein_g: item.protein_g || 0,
+            Carbs_g: item.carbs_g || 0,
+            Fat_g: item.fat_g || 0,
           });
-        });
-      });
-      const ws = XLSX.utils.json_to_sheet(flatPlan);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Meal Plan");
-      XLSX.writeFile(wb, "NutriSync_Meal_Plan.xlsx");
-    } catch (e) {
-      console.error("Export to Excel failed", e);
+        }
+      }
     }
-  };
+    const daysSheet = XLSX.utils.json_to_sheet(daysData);
+    XLSX.utils.book_append_sheet(wb, daysSheet, "Meals");
+    
+    // Grocery sheet
+    const groceryData = [];
+    for (const cat of plan.grocery || []) {
+      for (const item of cat.items || []) {
+        groceryData.push({
+          Category: cat.category,
+          Item: item.name,
+          Quantity: item.qty,
+          Cost_INR: item.cost_inr,
+        });
+      }
+    }
+    if (groceryData.length > 0) {
+      const grocerySheet = XLSX.utils.json_to_sheet(groceryData);
+      XLSX.utils.book_append_sheet(wb, grocerySheet, "Grocery");
+    }
+    
+    // Summary sheet
+    const summaryData = [
+      { Label: "Summary", Value: plan.summary || "" },
+      { Label: "Total Days", Value: plan.days?.length || 0 },
+      { Label: "Grocery Total (INR)", Value: plan.grocery_total_inr || 0 },
+    ];
+    const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summarySheet, "Summary");
+    
+    XLSX.writeFile(wb, `meal-plan-${new Date().toISOString().split('T')[0]}.xlsx`);
+  }, [plan]);
 
-  const exportToPDF = () => {
-    window.print();
-  };
-
-  const ca = plan?.customer_analysis;
-  const dayPlan = plan?.days?.[activeDay];
-  const MEAL_SLOTS = ["Breakfast","Mid-morning","Lunch","Snack","Dinner"];
+  const exportToPDF = useCallback(() => {
+    if (!plan) return;
+    
+    const doc = new jsPDF();
+    let y = 20;
+    
+    // Title
+    doc.setFontSize(18);
+    doc.text("AaharAI Meal Plan", 105, y, { align: "center" });
+    y += 10;
+    
+    // Summary
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Summary", 14, y);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    const summaryLines = doc.splitTextToSize(plan.summary || "Meal plan", 180);
+    doc.text(summaryLines, 14, y + 6);
+    y += 20 + summaryLines.length * 4;
+    
+    // Days
+    for (const day of plan.days || []) {
+      if (y > 260) {
+        doc.addPage();
+        y = 20;
+      }
+      
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Day ${day.day} - ${day.label}`, 14, y);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      y += 6;
+      
+      for (const slot of SLOTS) {
+        const items = day[slot.key] as FoodItem[] || [];
+        if (items.length === 0) continue;
+        
+        doc.text(`${slot.label}:`, 14, y);
+        y += 4;
+        
+        for (const item of items) {
+          const itemText = `  - ${item.name} (${item.qty}) ${item.cal || 0}kcal`;
+          doc.text(itemText, 14, y);
+          y += 4;
+        }
+      }
+      y += 4;
+    }
+    
+    // Grocery
+    if (y > 200) {
+      doc.addPage();
+      y = 20;
+    }
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Grocery List", 14, y);
+    y += 8;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    
+    for (const cat of plan.grocery || []) {
+      doc.setFont("helvetica", "bold");
+      doc.text(cat.category, 14, y);
+      y += 4;
+      doc.setFont("helvetica", "normal");
+      
+      for (const item of cat.items || []) {
+        doc.text(`  - ${item.name}: ${item.qty} (₹${item.cost_inr})`, 14, y);
+        y += 4;
+      }
+      y += 2;
+    }
+    
+    if (plan.grocery_total_inr) {
+      y += 4;
+      doc.setFont("helvetica", "bold");
+      doc.text(`Total: ₹${plan.grocery_total_inr}`, 14, y);
+    }
+    
+    doc.save(`meal-plan-${new Date().toISOString().split('T')[0]}.pdf`);
+  }, [plan]);
 
   return (
     <div className="flex-1 bg-background text-foreground md:pl-64">
-      <style>{`
-        @media print {
-          aside, nav, button:not(.print-hide), .print-hide { display: none !important; }
-          .md\\:pl-64 { padding-left: 0 !important; }
-          body { background: white !important; color: black !important; }
-          .bg-card { background: white !important; border: 1px solid #ccc !important; break-inside: avoid; }
-        }
-      `}</style>
-      <div className="max-w-4xl mx-auto p-4 md:p-8 pt-20 md:pt-8 min-h-screen pb-24">
+      <div className="max-w-5xl mx-auto p-4 md:p-8 pt-20 md:pt-8 min-h-screen pb-24">
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 print-hide">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Meal Planner</h1>
-          <p className="text-muted-foreground text-sm mt-1">AI-generated plans based on ICMR-NIN 2024 guidelines</p>
-        </div>
-        {plan && (
-          <div className="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
-            <Button variant="outline" size="sm" onClick={() => setShowHistory(true)} className="gap-1.5">
-              <MessageSquare className="w-4 h-4" /> History
-            </Button>
-            <Button variant="outline" size="sm" onClick={exportToPDF} className="gap-1.5 text-muted-foreground">
-              <Download className="w-4 h-4" /> PDF
-            </Button>
-            <Button variant="outline" size="sm" onClick={exportToExcel} className="gap-1.5 text-muted-foreground">
-              <Download className="w-4 h-4" /> Excel
-            </Button>
-            <Button onClick={generate} disabled={generating} variant="outline" size="sm">
-              <RefreshCw className={cn("w-4 h-4 mr-1.5", generating && "animate-spin")} /> Regenerate
-            </Button>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 print-hide">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold">Meal Planner</h1>
+            <p className="text-muted-foreground text-sm mt-1">AI-generated Indian meal plans · ICMR-NIN 2024</p>
           </div>
-        )}
-        {!plan && (
-           <Button variant="outline" size="sm" onClick={() => setShowHistory(true)} className="gap-1.5">
-            <MessageSquare className="w-4 h-4" /> Past Plans
-          </Button>
-        )}
-      </div>
-
-      {/* Streaming Text Display */}
-      {generating && streamText && (
-        <div className="mb-6 p-4 bg-muted/50 rounded-xl border border-border font-mono text-[10px] whitespace-pre-wrap max-h-40 overflow-y-auto opacity-70">
-          <p className="text-primary font-bold mb-2 uppercase tracking-widest text-[9px]">AI Reasoning Stream...</p>
-          {streamText}
-        </div>
-      )}
-
-      {/* History Overlay */}
-      {showHistory && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
-            <div className="p-4 border-b border-border flex items-center justify-between">
-              <h2 className="font-bold flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-primary" /> Past Meal Plans
-              </h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowHistory(false)}><X className="w-4 h-4" /></Button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {history.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">No saved plans yet.</div>
-              ) : (
-                history.map((h: any) => (
-                  <div 
-                    key={h.id} 
-                    onClick={() => handleHistorySelect(h.plan)}
-                    className="p-4 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors group"
-                  >
-                    <div className="flex justify-between items-start mb-1">
-                      <p className="font-semibold text-sm">Plan for {h.days} Days</p>
-                      <p className="text-[10px] text-muted-foreground">{new Date(h.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <div className="flex gap-4 text-[11px] text-muted-foreground">
-                      <span>{h.targets?.energy || 0} kcal</span>
-                      <span>₹{h.budget}/day</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Configuration Form */}
-      {!plan && (
-        <div className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-8">
-          <div className="flex items-center gap-3">
-            <Calendar className="w-5 h-5 text-primary" />
-            <div>
-              <h2 className="text-base font-semibold">Configure Plan</h2>
-              <p className="text-xs text-muted-foreground">Set your preferences</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Duration</label>
-              <select value={days} onChange={e => setDays(+e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm font-medium outline-none focus:border-primary">
-                {[3,5,7,14].map(d => <option key={d} value={d}>{d} Days</option>)}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Budget / Day (₹)</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-bold">₹</span>
-                <input type="number" value={budget} onChange={e => setBudget(+e.target.value)} className="w-full bg-background border border-border rounded-lg pl-7 pr-3 py-2.5 text-sm font-medium outline-none focus:border-primary" />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">People</label>
-              <input type="number" min={1} max={10} value={people} onChange={e => setPeople(+e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm font-medium outline-none focus:border-primary" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Goal</label>
-              <select value={goal} onChange={e => setGoal(e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm font-medium outline-none focus:border-primary">
-                {["Maintenance","Weight loss","Muscle gain","Heart health"].map(g => <option key={g}>{g}</option>)}
-              </select>
-            </div>
-            
-            <div className="col-span-2 md:col-span-4 space-y-1.5 mt-2">
-              <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                <MessageSquare className="w-3.5 h-3.5" /> Additional Suggestions / Cravings
-              </label>
-              <Input 
-                placeholder="E.g., I want to eat more paneer, avoid spicy food, recovering from fever..." 
-                value={suggestion}
-                onChange={e => setSuggestion(e.target.value)}
-                className="bg-background h-10"
-              />
-            </div>
-            
-            {weatherContext && (
-              <div className="col-span-2 md:col-span-4 flex items-center gap-4 text-xs font-medium text-primary bg-primary/5 p-3 rounded-lg border border-primary/10">
-                <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {locationName}</div>
-                <div className="flex items-center gap-1.5"><Cloud className="w-3.5 h-3.5" /> {weatherContext}</div>
-                <span className="text-muted-foreground font-normal ml-auto hidden sm:inline">Will be used for seasonal recommendations</span>
-              </div>
+          <div className="flex gap-2">
+            {history.length > 0 && (
+              <Button onClick={() => setShowHistory(!showHistory)} variant="outline" size="sm">
+                <History className="w-4 h-4 mr-1.5" /> History ({history.length})
+              </Button>
+            )}
+            {plan && (
+              <>
+                <Button onClick={exportToExcel} variant="outline" size="sm" className="gap-1">
+                  <FileSpreadsheet className="w-4 h-4" /> Excel
+                </Button>
+                <Button onClick={exportToPDF} variant="outline" size="sm" className="gap-1">
+                  <FileText className="w-4 h-4" /> PDF
+                </Button>
+                <Button onClick={() => { setPlan(null); setStreamText(""); setSlide(0); }} variant="outline" size="sm">
+                  <RefreshCw className="w-4 h-4 mr-1.5" /> New Plan
+                </Button>
+              </>
             )}
           </div>
+        </div>
 
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
-            <div className="flex p-0.5 rounded-md bg-muted border border-border">
-              {["VEG","NON-VEG"].map(d => (
+        {/* History Panel */}
+        {showHistory && !plan && !generating && (
+          <div className="bg-card border border-border rounded-xl p-4 mb-6">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary" /> Previous Meal Plans
+            </h3>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {history.map(h => (
                 <button
-                  key={d}
-                  onClick={() => setDietType(d)}
-                  className={cn(
-                    "px-4 py-1.5 rounded text-xs font-semibold transition-colors",
-                    dietType === d ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                  )}
+                  key={h.id}
+                  onClick={() => viewHistory(h)}
+                  className="w-full flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted transition-colors text-left"
                 >
-                  {d}
+                  <div>
+                    <p className="text-sm font-medium">{h.days}-Day Plan · ₹{h.budget}/day</p>
+                    <p className="text-xs text-muted-foreground">{formatTimeAgo(h.created_at)}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </button>
               ))}
             </div>
-            <Button onClick={generate} disabled={generating} className="w-full md:w-auto">
-              {generating ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Generating...</> : <><Sparkles className="w-4 h-4 mr-2" /> Generate Plan</>}
-            </Button>
           </div>
+        )}
 
-          {error && (
-            <div className="flex items-center gap-2 p-4 rounded-lg bg-destructive/5 border border-destructive/10 text-sm text-destructive">
-              <AlertTriangle className="w-4 h-4 shrink-0" /> {error}
+        {/* Questionnaire */}
+        {!plan && !generating && !showHistory && (
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            {/* Progress Bar */}
+            <div className="h-1 bg-muted">
+              <div className="h-full bg-primary transition-all duration-300" style={{ width: `${((slide + 1) / totalSlides) * 100}%` }} />
             </div>
-          )}
-        </div>
-      )}
+            <div className="px-4 py-2 border-b border-border flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground">Step {slide + 1} of {totalSlides}</span>
+              <div className="flex gap-1">
+                {Array.from({ length: totalSlides }).map((_, i) => (
+                  <div key={i} className={cn("w-2 h-2 rounded-full transition-colors", i <= slide ? "bg-primary" : "bg-muted")} />
+                ))}
+              </div>
+            </div>
 
-      {/* Results */}
-      {plan && (
-        <div className="space-y-6">
+            <div className="p-6 md:p-8 space-y-6">
+              {/* Slide 1: Basics */}
+              {slide === 0 && (
+                <>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-4 h-4 text-primary" />
+                    <h2 className="text-lg font-bold">Plan Basics</h2>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <QuestionCard label="Duration" icon={ClockIcon}>
+                      <select value={q.days} onChange={e => updateQ("days", +e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm font-medium outline-none focus:border-primary">
+                        {[3, 5, 7, 14].map(d => <option key={d} value={d}>{d} Days</option>)}
+                      </select>
+                    </QuestionCard>
+                    <QuestionCard label="Budget / Day" icon={Scale}>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">₹</span>
+                        <input type="number" value={q.budget} onChange={e => updateQ("budget", +e.target.value)} className="w-full bg-background border border-border rounded-lg pl-7 pr-3 py-2.5 text-sm font-medium outline-none focus:border-primary" />
+                      </div>
+                    </QuestionCard>
+                    <QuestionCard label="People" icon={Heart}>
+                      <input type="number" min={1} max={10} value={q.people} onChange={e => updateQ("people", +e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm font-medium outline-none focus:border-primary" />
+                    </QuestionCard>
+                    <QuestionCard label="Primary Goal" icon={Zap}>
+                      <select value={q.goal} onChange={e => updateQ("goal", e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm font-medium outline-none focus:border-primary">
+                        {["Maintenance", "Weight loss", "Muscle gain", "Heart health", "Diabetes management"].map(g => <option key={g}>{g}</option>)}
+                      </select>
+                    </QuestionCard>
+                  </div>
+                  <QuestionCard label="Diet Type">
+                    <div className="flex gap-2 mt-2">
+                      {["VEG", "NON-VEG", "VEGAN"].map(d => (
+                        <button key={d} onClick={() => updateQ("dietType", d)}
+                          className={cn("px-4 py-2 rounded-lg text-xs font-semibold border transition-colors", q.dietType === d ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted")}>{d}</button>
+                      ))}
+                    </div>
+                  </QuestionCard>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <QuestionCard label="Weight Goal">
+                      <select value={q.weightGoal} onChange={e => updateQ("weightGoal", e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary">
+                        {["Maintain", "Lose weight", "Gain muscle", "Improve fitness"].map(g => <option key={g}>{g}</option>)}
+                      </select>
+                    </QuestionCard>
+                    <QuestionCard label="Activity Level" icon={Dumbbell}>
+                      <select value={q.activityLevel} onChange={e => updateQ("activityLevel", e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary">
+                        {["Sedentary", "Light", "Moderate", "Active", "Heavy"].map(a => <option key={a}>{a}</option>)}
+                      </select>
+                    </QuestionCard>
+                    <QuestionCard label="Exercise Frequency">
+                      <select value={q.exerciseFreq} onChange={e => updateQ("exerciseFreq", e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary">
+                        {["None", "1-2x/week", "3-4x/week", "5+ x/week"].map(e => <option key={e}>{e}</option>)}
+                      </select>
+                    </QuestionCard>
+                  </div>
+                </>
+              )}
 
-          {/* Analysis Banner */}
-          {ca && (
-            <div className="bg-card border border-border rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground font-medium mb-1">Your ICMR Profile</p>
-                <h3 className="text-base font-semibold">{ca.icmr_profile}</h3>
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{ca.rationale}</p>
-                {ca.key_risks?.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {ca.key_risks.map((r: string, i: number) => (
-                      <span key={i} className="text-[10px] px-2 py-0.5 rounded bg-accent/10 text-accent font-medium">{r}</span>
+              {/* Slide 2: Food Preferences */}
+              {slide === 1 && (
+                <>
+                  <div className="flex items-center gap-2 mb-2">
+                    <ChefHat className="w-4 h-4 text-primary" />
+                    <h2 className="text-lg font-bold">Food Preferences</h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <QuestionCard label="Favorite Foods" icon={ThumbsUp} description="Foods you love and want included">
+                      <Input placeholder="E.g., paneer, dal, idli, chicken biryani..." value={q.favoriteFoods} onChange={e => updateQ("favoriteFoods", e.target.value)} className="bg-background h-10" />
+                    </QuestionCard>
+                    <QuestionCard label="Disliked Foods" icon={ThumbsDown} description="Foods to avoid in your plan">
+                      <Input placeholder="E.g., fish, bitter gourd, eggs..." value={q.dislikedFoods} onChange={e => updateQ("dislikedFoods", e.target.value)} className="bg-background h-10" />
+                    </QuestionCard>
+                    <QuestionCard label="Food Allergies / Intolerances" icon={AlertTriangle} description="Critical — these will be excluded">
+                      <Input placeholder="E.g., peanuts, gluten, dairy, soy..." value={q.allergies} onChange={e => updateQ("allergies", e.target.value)} className="bg-background h-10" />
+                    </QuestionCard>
+                    <QuestionCard label="Spice Level" icon={Leaf}>
+                      <div className="flex gap-2 mt-2">
+                        {["Mild", "Medium", "Spicy", "Extra Spicy"].map(s => (
+                          <button key={s} onClick={() => updateQ("spiceLevel", s)}
+                            className={cn("px-3 py-1.5 rounded text-xs font-semibold border transition-colors", q.spiceLevel === s ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted")}>{s}</button>
+                        ))}
+                      </div>
+                    </QuestionCard>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <QuestionCard label="Cooking Time Per Meal" icon={ClockIcon}>
+                      <select value={q.cookingTime} onChange={e => updateQ("cookingTime", e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary">
+                        {["15 min", "30 min", "45 min", "1 hour+", "No cooking (ready-to-eat)"].map(t => <option key={t}>{t}</option>)}
+                      </select>
+                    </QuestionCard>
+                    <QuestionCard label="Meals Per Day">
+                      <select value={q.mealFrequency} onChange={e => updateQ("mealFrequency", e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary">
+                        {["2", "3", "4", "5 (small frequent meals)"].map(f => <option key={f}>{f}</option>)}
+                      </select>
+                    </QuestionCard>
+                    <QuestionCard label="Snack Preference">
+                      <select value={q.snacksPreference} onChange={e => updateQ("snacksPreference", e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary">
+                        {["Healthy (nuts, fruits)", "Traditional (samosa, pakoda)", "Protein-rich", "Light (tea, biscuits)", "None"].map(s => <option key={s}>{s}</option>)}
+                      </select>
+                    </QuestionCard>
+                  </div>
+                  <QuestionCard label="Beverage Habits" icon={Coffee}>
+                    <Input placeholder="E.g., tea 2x/day, black coffee, buttermilk, fresh juice..." value={q.beverages} onChange={e => updateQ("beverages", e.target.value)} className="bg-background h-10" />
+                  </QuestionCard>
+                </>
+              )}
+
+              {/* Slide 3: Health & Lifestyle */}
+              {slide === 2 && (
+                <>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Heart className="w-4 h-4 text-primary" />
+                    <h2 className="text-lg font-bold">Health & Lifestyle</h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <QuestionCard label="Health Conditions" icon={Heart} description="Any diagnosed conditions">
+                      <Input placeholder="E.g., diabetes, PCOS, thyroid, hypertension..." value={q.healthConditions} onChange={e => updateQ("healthConditions", e.target.value)} className="bg-background h-10" />
+                    </QuestionCard>
+                    <QuestionCard label="Special Requirements" icon={Wheat} description="Fasting, religious diets, etc.">
+                      <Input placeholder="E.g., Jain diet, intermittent fasting..." value={q.specialRequirements} onChange={e => updateQ("specialRequirements", e.target.value)} className="bg-background h-10" />
+                    </QuestionCard>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <QuestionCard label="Sleep Hours / Night" icon={Moon}>
+                      <select value={q.sleepHours} onChange={e => updateQ("sleepHours", e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary">
+                        {["< 5", "5-6", "7", "8", "9+"].map(s => <option key={s}>{s} hours</option>)}
+                      </select>
+                    </QuestionCard>
+                    <QuestionCard label="Stress Level">
+                      <select value={q.stressLevel} onChange={e => updateQ("stressLevel", e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary">
+                        {["Low", "Moderate", "High", "Very High"].map(s => <option key={s}>{s}</option>)}
+                      </select>
+                    </QuestionCard>
+                    <QuestionCard label="Daily Water Intake" icon={Droplets}>
+                      <select value={q.hydrationLevel} onChange={e => updateQ("hydrationLevel", e.target.value)} className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary">
+                        {["< 4 glasses", "4-6 glasses", "6-8 glasses", "8+ glasses"].map(h => <option key={h}>{h}</option>)}
+                      </select>
+                    </QuestionCard>
+                  </div>
+                  <QuestionCard label="Additional Suggestions" icon={MessageSquare}>
+                    <Input placeholder="Anything else we should know..." value={q.suggestions} onChange={e => updateQ("suggestions", e.target.value)} className="bg-background h-10" />
+                  </QuestionCard>
+                </>
+              )}
+
+              {/* Navigation */}
+              <div className="flex items-center justify-between pt-4 border-t border-border">
+                <button
+                  onClick={() => setSlide(s => Math.max(0, s - 1))}
+                  disabled={slide === 0}
+                  className={cn("flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors", slide === 0 ? "text-muted-foreground/30 cursor-not-allowed" : "text-primary hover:bg-primary/5")}
+                >
+                  <ArrowLeft className="w-4 h-4" /> Previous
+                </button>
+                <div className="flex gap-1">
+                  {Array.from({ length: totalSlides }).map((_, i) => (
+                    <button key={i} onClick={() => setSlide(i)} className={cn("w-2 h-2 rounded-full transition-colors", i === slide ? "bg-primary" : "bg-muted hover:bg-primary/30")} />
+                  ))}
+                </div>
+                {slide < totalSlides - 1 ? (
+                  <button
+                    onClick={() => setSlide(s => Math.min(totalSlides - 1, s + 1))}
+                    className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg text-primary hover:bg-primary/5 transition-colors"
+                  >
+                    Next <ArrowRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <Button onClick={generate} disabled={generating} className="gap-2">
+                    {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    Generate {q.days}-Day Plan
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 p-4 border-t border-border bg-destructive/5 text-sm text-destructive">
+                <AlertTriangle className="w-4 h-4 shrink-0" /> {error}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Streaming Indicator */}
+        {generating && !plan && (
+          <div className="space-y-4">
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <div className="px-4 py-3 bg-primary/5 border-b border-border flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span className="text-sm font-semibold">Generating {q.days}-day meal plan...</span>
+              </div>
+              <div ref={streamRef} className="p-4 text-xs font-mono whitespace-pre-wrap max-h-40 overflow-y-auto text-muted-foreground">
+                {streamText || "Starting..."}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Results */}
+        {plan && (
+          <div className="space-y-6">
+
+            {/* Summary */}
+            {plan.summary && (
+              <div className="bg-card border border-border rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Target className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-semibold">Your Personalized Plan</h2>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">{plan.summary}</p>
+              </div>
+            )}
+
+            {plan.parse_error && (
+              <div className="flex items-center gap-2 p-4 rounded-lg bg-amber-500/5 border border-amber-500/10 text-sm text-amber-600">
+                <AlertTriangle className="w-4 h-4 shrink-0" /> The AI response could not be fully parsed. Showing available data.
+              </div>
+            )}
+
+            {/* Day Plans */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <UtensilsCrossed className="w-4 h-4 text-primary" />
+                <h2 className="text-lg font-semibold">{(plan.days || []).length}-Day Meal Plan</h2>
+              </div>
+              <div className="space-y-3">
+                {plan.days?.map((day) => {
+                  const collapsed = collapsedDays[day.day];
+                  const totalCal = day.cal_approx || 0;
+                  const totalProtein = day.breakfast?.concat(day.mid_morning || [], day.lunch || [], day.snack || [], day.dinner || []).reduce((s, i) => s + (i.protein_g || 0), 0);
+                  return (
+                    <div key={day.day} className="bg-card border border-border rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => toggleDay(day.day)}
+                        className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded">Day {day.day}</span>
+                          <span className="text-sm font-semibold">{day.label}</span>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Flame className="w-3 h-3" /> ~{totalCal} kcal
+                          </span>
+                          {totalProtein > 0 && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <TrendingUp className="w-3 h-3" /> {totalProtein.toFixed(0)}g protein
+                            </span>
+                          )}
+                        </div>
+                        {collapsed ? (
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </button>
+
+                      {!collapsed && (
+                        <div className="border-t border-border">
+                          {SLOTS.map(slot => {
+                            const items = day[slot.key] as FoodItem[];
+                            if (!items?.length) return null;
+                            return (
+                              <div key={slot.key} className="px-4 py-3 border-b border-border/50 last:border-0">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <span className="text-sm shrink-0 w-28">{slot.icon} {slot.label}</span>
+                                </div>
+                                <div className="ml-28 space-y-2">
+                                  {items.map((item, i) => {
+                                    const ik = `${day.day}-${slot.key}-${i}`;
+                                    const expanded = expandedItems[ik];
+                                    return (
+                                      <div key={ik} className="border border-border/60 rounded-lg overflow-hidden">
+                                        <div className="flex items-center justify-between px-3 py-2 hover:bg-muted/20 cursor-pointer" onClick={() => toggleItem(ik)}>
+                                          <div>
+                                            <span className="text-sm font-medium">{item.name}</span>
+                                            <span className="text-muted-foreground text-xs ml-2">({item.qty})</span>
+                                            {item.note && <span className="text-xs text-muted-foreground ml-2 italic hidden md:inline">{item.note.substring(0, 40)}...</span>}
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            {item.cal && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-600">{item.cal} kcal</span>}
+                                            {item.protein_g && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600">{item.protein_g}g P</span>}
+                                            {expanded ? <ChevronDown className="w-3 h-3 text-muted-foreground" /> : <ChevronRight className="w-3 h-3 text-muted-foreground" />}
+                                          </div>
+                                        </div>
+                                        {expanded && (
+                                          <div className="px-3 py-2.5 bg-muted/20 border-t border-border/50">
+                                            {item.note && <p className="text-xs text-muted-foreground mb-2 italic">{item.note}</p>}
+                                            <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                                              {[
+                                                { l: "Energy", v: item.cal, u: "kcal" },
+                                                { l: "Protein", v: item.protein_g, u: "g" },
+                                                { l: "Carbs", v: item.carbs_g, u: "g" },
+                                                { l: "Fat", v: item.fat_g, u: "g" },
+                                                { l: "Iron", v: item.iron_mg, u: "mg" },
+                                                { l: "Calcium", v: item.calcium_mg, u: "mg" },
+                                              ].filter(m => m.v !== undefined).map(m => (
+                                                <div key={m.l} className="bg-muted/40 rounded p-1.5 text-center">
+                                                  <p className="text-[9px] text-muted-foreground">{m.l}</p>
+                                                  <p className="text-xs font-bold" style={{ color: NUTRI_COLORS[m.l.toLowerCase()] || "inherit" }}>{m.v}<span className="text-[8px] text-muted-foreground ml-0.5">{m.u}</span></p>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Grocery List */}
+            {plan.grocery && plan.grocery.length > 0 && (
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="px-5 py-4 bg-primary/5 border-b border-border flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart className="w-4 h-4 text-primary" />
+                    <h2 className="text-sm font-semibold">Grocery List</h2>
+                    <span className="text-xs text-muted-foreground">For {(plan.days || []).length} days, {q.people} person(s)</span>
+                  </div>
+                  {plan.grocery_total_inr && (
+                    <div className="text-right">
+                      <span className="text-lg font-bold text-primary">₹{plan.grocery_total_inr}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {plan.grocery.map((cat, ci) => (
+                      <div key={ci} className="border border-border rounded-lg overflow-hidden">
+                        <div className="px-3 py-2 bg-muted/40 border-b border-border">
+                          <p className="text-xs font-semibold text-primary">{cat.category}</p>
+                        </div>
+                        <div className="divide-y divide-border/50">
+                          {cat.items.map((item, ii) => {
+                            const ck = `${ci}-${ii}`;
+                            return (
+                              <label key={ii} className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/20 transition-colors">
+                                <div className={cn("w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0", checked[ck] ? "bg-primary border-primary" : "border-border")}>
+                                  {checked[ck] && <CheckCircle className="w-2.5 h-2.5 text-primary-foreground" />}
+                                  <input type="checkbox" checked={!!checked[ck]} onChange={() => toggleCheck(ck)} className="hidden" />
+                                </div>
+                                <span className={cn("flex-1 text-xs font-medium", checked[ck] && "line-through text-muted-foreground")}>{item.name}</span>
+                                <span className="text-[10px] text-muted-foreground shrink-0">{item.qty}</span>
+                                <span className="text-xs font-semibold text-primary shrink-0">₹{item.cost_inr}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
                     ))}
                   </div>
-                )}
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 shrink-0">
-                {[
-                  {l:"Energy", v:ca.energy_target, u:"kcal"},
-                  {l:"Protein", v:ca.protein_target, u:"g"},
-                  {l:"Iron", v:ca.iron_target, u:"mg"},
-                  {l:"Calcium", v:ca.calcium_target, u:"mg"}
-                ].map((m) => (
-                  <div key={m.l} className="bg-muted/50 rounded-lg p-3">
-                    <p className="text-[10px] text-muted-foreground font-medium">{m.l}</p>
-                    <p className="text-lg font-bold">{m.v}<span className="text-xs ml-0.5 text-muted-foreground">{m.u}</span></p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Tabs */}
-          <div className="flex border-b border-border">
-            {[
-              { key: "plan" as const, label: "Meal Plan" },
-              { key: "grocery" as const, label: "Grocery List" },
-            ].map(t => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key)}
-                className={cn(
-                  "px-4 py-2.5 text-sm font-medium border-b-2 transition-colors",
-                  activeTab === t.key ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
+            )}
           </div>
+        )}
 
-          {activeTab === "plan" && (
-            <div className="space-y-6">
-              {/* Day Selector */}
-              <div className="flex gap-2 flex-wrap">
-                {plan.days?.map((d: any, i: number) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveDay(i)}
-                    className={cn(
-                      "px-4 py-2 rounded-lg text-xs font-semibold border transition-colors",
-                      activeDay === i
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-card border-border text-muted-foreground hover:border-primary/30"
-                    )}
-                  >
-                    {d.day_label?.slice(0,3) || DAYS[i]?.slice(0,3)}
-                    {d.day_total?.cal && <span className="block text-[10px] opacity-70 mt-0.5">{Math.round(d.day_total.cal)} kcal</span>}
-                  </button>
-                ))}
-              </div>
-
-              {dayPlan && (
-                <div className="space-y-4">
-                  {/* Day Summary Bar */}
-                  <div className="flex items-center gap-6 p-4 bg-muted/30 rounded-lg border border-border">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Day {dayPlan.day}</p>
-                      <p className="text-base font-bold">{dayPlan.day_label}</p>
-                    </div>
-                    {dayPlan.day_total && (
-                      <div className="flex gap-6 ml-auto">
-                        {[
-                          {l:"Energy", v:dayPlan.day_total.cal, u:"kcal", c:ca?.energy_target},
-                          {l:"Protein", v:dayPlan.day_total.protein_g, u:"g", c:ca?.protein_target},
-                          {l:"Iron", v:dayPlan.day_total.iron_mg, u:"mg", c:ca?.iron_target},
-                          {l:"Calcium", v:dayPlan.day_total.calcium_mg, u:"mg", c:ca?.calcium_target},
-                        ].map(n => {
-                          const p = n.c ? Math.min(100, Math.round((n.v / n.c) * 100)) : 0;
-                          return (
-                            <div key={n.l} className="text-center hidden md:block">
-                              <p className="text-[10px] text-muted-foreground">{n.l}</p>
-                              <p className="text-sm font-bold">{Math.round(n.v)}<span className="text-[10px] text-muted-foreground ml-0.5">{n.u}</span></p>
-                              <p className={cn("text-[10px] font-semibold", p >= 90 ? "text-emerald-600" : p >= 70 ? "text-amber-500" : "text-red-500")}>{p}%</p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Meal Slots */}
-                  {MEAL_SLOTS.map((slot) => {
-                    const meal = dayPlan.meals?.[slot];
-                    if (!meal || !meal.foods?.length) return null;
-                    const key = `${activeDay}-${slot}`;
-                    const open = expandedSlots[key] !== false;
-                    return (
-                      <div key={slot} className="bg-card border border-border rounded-xl overflow-hidden">
-                        <button
-                          onClick={() => toggle(key)}
-                          className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors text-left"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div>
-                              <p className="text-sm font-semibold">{slot}</p>
-                              <div className="flex gap-3 text-[11px] text-muted-foreground mt-0.5">
-                                {meal.prep_time_min > 0 && <span>{meal.prep_time_min} min</span>}
-                                {meal.meal_total?.cal && <span>{Math.round(meal.meal_total.cal)} kcal</span>}
-                              </div>
-                            </div>
-                          </div>
-                          <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", open && "rotate-180")} />
-                        </button>
-
-                        {open && (
-                          <div className="px-4 pb-4 fade-in">
-                            <div className="overflow-x-auto rounded-lg border border-border">
-                              <table className="w-full text-sm">
-                                <thead>
-                                  <tr className="border-b border-border bg-muted/30">
-                                    {["Food","Qty","Kcal","Protein","Carbs","Fat","Iron","Ca"].map(h => (
-                                      <th key={h} className={cn("px-3 py-2 text-xs font-medium text-muted-foreground", h === "Food" ? "text-left" : "text-right")}>{h}</th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {meal.foods.map((f: any, fi: number) => (
-                                    <tr key={fi} className="border-b border-border/50 last:border-0">
-                                      <td className="px-3 py-2.5 font-medium">{f.name}</td>
-                                      <td className="px-3 py-2.5 text-right text-muted-foreground">{f.qty_label || `${f.qty_g}g`}</td>
-                                      <td className="px-3 py-2.5 text-right font-semibold">{f.cal}</td>
-                                      <td className="px-3 py-2.5 text-right" style={{color:"var(--color-protein)"}}>{f.protein_g}g</td>
-                                      <td className="px-3 py-2.5 text-right text-muted-foreground">{f.carbs_g}g</td>
-                                      <td className="px-3 py-2.5 text-right text-muted-foreground">{f.fat_g}g</td>
-                                      <td className="px-3 py-2.5 text-right font-medium text-amber-600">{f.iron_mg}mg</td>
-                                      <td className="px-3 py-2.5 text-right font-medium text-indigo-500">{f.calcium_mg}mg</td>
-                                    </tr>
-                                  ))}
-                                  {meal.meal_total && (
-                                    <tr className="bg-primary/5 font-semibold text-primary border-t border-primary/20">
-                                      <td className="px-3 py-2.5 text-xs">Total</td>
-                                      <td />
-                                      <td className="px-3 py-2.5 text-right">{Math.round(meal.meal_total.cal)}</td>
-                                      <td className="px-3 py-2.5 text-right">{meal.meal_total.protein_g?.toFixed(1)}g</td>
-                                      <td className="px-3 py-2.5 text-right">{meal.meal_total.carbs_g?.toFixed(1)}g</td>
-                                      <td className="px-3 py-2.5 text-right">{meal.meal_total.fat_g?.toFixed(1)}g</td>
-                                      <td className="px-3 py-2.5 text-right">{meal.meal_total.iron_mg?.toFixed(1)}mg</td>
-                                      <td className="px-3 py-2.5 text-right">{meal.meal_total.calcium_mg?.toFixed(0)}mg</td>
-                                    </tr>
-                                  )}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === "grocery" && (
-            <div className="space-y-6 fade-in">
-              <div className="flex items-center justify-between p-5 bg-card border border-border rounded-xl">
-                <div>
-                  <h2 className="text-base font-semibold">Grocery List</h2>
-                  <p className="text-sm text-muted-foreground">For {people} person(s), {days} days</p>
-                </div>
-                {plan.total_grocery_cost_inr && (
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground mb-0.5">Total estimate</p>
-                    <p className="text-2xl font-bold text-primary">₹{plan.total_grocery_cost_inr}</p>
-                    <p className="text-[10px] text-muted-foreground">₹{Math.round(plan.total_grocery_cost_inr / days)} / day</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {plan.grocery?.map((cat: any, ci: number) => (
-                  <div key={ci} className="bg-card border border-border rounded-xl overflow-hidden">
-                    <div className="px-4 py-3 bg-muted/30 border-b border-border">
-                      <p className="text-xs font-semibold text-primary">{cat.category}</p>
-                    </div>
-                    <div className="divide-y divide-border">
-                      {cat.items?.map((item: any, ii: number) => {
-                        const ck = `${ci}-${ii}`;
-                        return (
-                          <label key={ii} className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/20 transition-colors">
-                            <div className={cn(
-                              "w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
-                              checked[ck] ? "bg-primary border-primary" : "border-border"
-                            )}>
-                              {checked[ck] && <CheckCircle className="w-3 h-3 text-primary-foreground" />}
-                              <input type="checkbox" checked={!!checked[ck]} onChange={() => toggleCheck(ck)} className="hidden" />
-                            </div>
-                            <span className={cn("flex-1 text-sm font-medium", checked[ck] && "line-through text-muted-foreground")}>{item.name}</span>
-                            <span className="text-xs text-muted-foreground">{item.qty}</span>
-                            <span className="text-sm font-semibold text-primary">₹{item.est_cost_inr}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+        {selectedFood && <FoodDetail item={selectedFood} onClose={() => setSelectedFood(null)} />}
       </div>
     </div>
   );

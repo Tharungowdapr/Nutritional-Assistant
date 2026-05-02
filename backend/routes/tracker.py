@@ -2,8 +2,9 @@
 AaharAI NutriSync — API Routes: Nutrition Tracker
 Daily food logging with macro tracking.
 """
+from zoneinfo import ZoneInfo
 from fastapi import APIRouter, HTTPException, Depends
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from auth.database import get_db, DailyLogDB, UserDB
 from auth.dependencies import require_user
@@ -22,7 +23,6 @@ async def log_food(
     """Log a food item for a specific date (defaults to today in IST)."""
     # Fix: accept explicit IST date from frontend to avoid UTC midnight drift
     # At 00:00-05:30 IST, UTC gives yesterday's date — always pass date from client
-    from zoneinfo import ZoneInfo
     ist = ZoneInfo("Asia/Kolkata")
     today = request.log_date if hasattr(request, 'log_date') and request.log_date else datetime.now(ist).strftime("%Y-%m-%d")
     
@@ -159,7 +159,8 @@ async def get_summary(
     if days > 90:
         raise HTTPException(status_code=400, detail="Maximum history range is 90 days")
         
-    start_date = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+    ist = ZoneInfo("Asia/Kolkata")
+    start_date = (datetime.now(ist) - timedelta(days=days)).strftime("%Y-%m-%d")
     logs = db_session.query(DailyLogDB).filter(
         DailyLogDB.user_id == current_user.id,
         DailyLogDB.log_date >= start_date,
@@ -184,7 +185,8 @@ async def get_summary(
     
     # Generate list for frontend charts
     chart_data = []
-    current = datetime.now(timezone.utc)
+    ist = ZoneInfo("Asia/Kolkata")
+    current = datetime.now(ist)
     for i in range(days):
         d_str = (current - timedelta(days=i)).strftime("%Y-%m-%d")
         stats = daily_summary.get(d_str, {"calories": 0, "protein": 0, "carbs": 0, "fat": 0, "meal_count": 0})

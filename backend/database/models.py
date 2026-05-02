@@ -44,6 +44,7 @@ class MealPlanRequest(BaseModel):
     days: int = Field(7, ge=1, le=30)
     num_people: int = Field(1, ge=1, le=10)
     budget_per_day_inr: Optional[float] = None
+    suggestions: Optional[str] = None
 
 
 class GroceryRequest(BaseModel):

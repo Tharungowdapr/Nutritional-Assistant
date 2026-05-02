@@ -5,6 +5,7 @@ Supports both authenticated and anonymous chat with optional history persistence
 import json
 import uuid
 import logging
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.orm import Session
 from slowapi import Limiter
@@ -12,7 +13,7 @@ from slowapi.util import get_remote_address
 
 from database.models import ChatRequest, ChatResponse
 from fastapi.responses import StreamingResponse
-from auth.database import get_db, ChatHistoryDB
+from auth.database import get_db, ChatHistoryDB, ChatSessionDB
 from auth.dependencies import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -110,7 +111,7 @@ async def chat_stream(
         raise HTTPException(status_code=503, detail="RAG Service unavailable")
 
     # Get session history
-    session_id = data.session_id
+    session_id = data.session_id or str(uuid.uuid4())
     history = []
     if session_id and db:
         try:
@@ -163,10 +164,8 @@ async def chat_stream(
                     ))
                     
                     # Update session timestamp and title if needed
-                    from auth.database import ChatSessionDB
                     session = db.query(ChatSessionDB).filter(ChatSessionDB.id == session_id).first()
                     if session:
-                        from datetime import datetime, timezone
                         session.updated_at = datetime.now(timezone.utc)
                         if session.title == "New Chat":
                             session.title = data.message[:50] + ("..." if len(data.message) > 50 else "")

@@ -145,7 +145,10 @@ export default function RecipesPage() {
     try {
       const saved = localStorage.getItem(getStorageKey("custom_recipes", user.id));
       if (saved) {
-        setAllRecipes(prev => [...JSON.parse(saved), ...prev]);
+        const custom = JSON.parse(saved);
+        const existingIds = new Set(RECIPES.map(r => r.id));
+        const deduplicated = custom.filter((r: Recipe) => !existingIds.has(r.id));
+        setAllRecipes([...deduplicated, ...RECIPES]);
       }
     } catch (e) {}
   }, [user?.id]);

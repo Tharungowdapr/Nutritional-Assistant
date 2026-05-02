@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
+  const [submittedEmail, setSubmittedEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -19,6 +20,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     try {
       await authApi.forgotPassword({ email });
+      setSubmittedEmail(email);
       setSubmitted(true);
       setEmail("");
     } catch (err: any) {
@@ -76,7 +78,7 @@ export default function ForgotPasswordPage() {
             </div>
             <h2 className="text-lg font-semibold">Check Your Email</h2>
             <p className="text-muted-foreground">
-              We've sent a password reset link to <strong>{email}</strong>. 
+              We've sent a password reset link to <strong>{submittedEmail}</strong>. 
               The link will expire in 1 hour.
             </p>
             <p className="text-sm text-muted-foreground">
