@@ -22,6 +22,10 @@ class UserProfile(BaseModel):
     glp1_phase: Optional[str] = None  # e.g. "Maintenance"
     energy_score: int = Field(3, ge=1, le=5)
     sleep_hours: float = Field(7, ge=0, le=24)
+    # LLM provider preferences (onboarding/profile)
+    llm_provider: Optional[str] = None
+    llm_model: Optional[str] = None
+    llm_api_key: Optional[str] = None
     focus_score: int = Field(3, ge=1, le=5)
     daily_budget_inr: Optional[float] = None  # e.g. 500.0
 

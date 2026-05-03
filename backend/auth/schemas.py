@@ -43,13 +43,17 @@ class ProfileUpdateRequest(BaseModel):
     region_state: Optional[str] = None
     diet_type: Optional[str] = None
     conditions: Optional[list[str]] = None
-    glp1_medication: Optional[str] = None
-    glp1_phase: Optional[str] = None
-    energy_score: Optional[int] = None
+    goal: Optional[str] = None
     sleep_hours: Optional[float] = None
     focus_score: Optional[int] = None
     daily_budget_inr: Optional[float] = None
     physical_activity: Optional[str] = None
+    # Additional fields for extended profile
+    phone: Optional[str] = None
+    location: Optional[str] = None
+    bio: Optional[str] = None
+    activity_level: Optional[str] = None
+    medical_conditions: Optional[list[str]] = None
     goals: Optional[str] = None
 
 

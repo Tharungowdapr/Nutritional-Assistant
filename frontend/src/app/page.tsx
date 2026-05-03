@@ -13,6 +13,7 @@ import { frontendLLM } from "@/lib/llm-provider";
 import { MacroRing } from "@/components/macro-ring";
 import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
+import ReactMarkdown from "react-markdown";
 
 const AnalysisSection = dynamic(() => import("@/components/analysis-section").then(m => m.AnalysisSection), { ssr: false });
 
@@ -53,8 +54,8 @@ Age: ${p.profile_summary?.age}, Gender: ${p.profile_summary?.gender}
 BMI: ${p.body_metrics?.bmi} (${p.body_metrics?.status}), Weight: ${p.body_metrics?.weight_kg}kg, Height: ${p.body_metrics?.height_cm}cm
 TDEE: ${p.body_metrics?.tdee} kcal/day, BMR: ${p.body_metrics?.bmr}
 Diet: ${p.profile_summary?.diet_type}, Activity: ${p.profile_summary?.activity_level}
-RDA Targets: Energy ${p.icmr_match?.energy}kcal, Protein ${p.icmr_match?.protein_g}g
-Top Risks: ${(p.deficiency_risks || []).slice(0, 2).map((r: any) => r.nutrient).join(", ")}
+RDA Targets: Energy ${p.rda_match?.energy}kcal, Protein ${p.rda_match?.protein_g}g
+Top Risks: ${(p.deficiency_risks || []).slice(0,2).map((r: any) => r.nutrient).join(", ")}
 ${p.disease_protocol ? `Condition: ${p.disease_protocol.condition}` : ""}
 ${p.regional_concern ? `Region: ${p.regional_concern.region} — ${p.regional_concern.detail}` : ""}
 
@@ -72,7 +73,7 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
     trackerApi.getDailySummary(todayIST).then(setDaily).catch(console.error);
   }, [user, todayIST]);
 
-  const targets = useMemo(() => profile?.icmr_match || { energy: 2000, protein_g: 60, carbs_g: 300, fat_g: 65, iron_mg: 17, calcium_mg: 600, fibre_g: 30 }, [profile]);
+  const targets = useMemo(() => profile?.rda_match || { energy: 2000, protein_g: 60, carbs_g: 300, fat_g: 65, iron_mg: 17, calcium_mg: 600, fibre_g: 30 }, [profile]);
   const d = useMemo(() => daily || { total_calories: 0, total_protein_g: 0, total_carbs_g: 0, total_fat_g: 0, total_iron_mg: 0, total_calcium_mg: 0, total_fibre_g: 0, meals_by_slot: {}, meal_count: 0 }, [daily]);
 
   if (authLoading) return (
@@ -98,9 +99,9 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
         </div>
 
         <div className="flex items-center gap-3">
-          {profile?.streak_days > 0 && (
+          {user?.profile_completion !== undefined && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent/10 text-accent text-xs font-medium">
-              <Flame className="w-3.5 h-3.5" /> {profile.streak_days}-day streak
+              <Flame className="w-3.5 h-3.5" /> {user.profile_completion}% complete
             </div>
           )}
           {user && (
@@ -161,47 +162,47 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Quick Actions + Meals */}
-            <div className="space-y-4">
-              <div className="bg-card border border-border rounded-xl p-5">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-3">Quick Actions</h3>
-                <div className="space-y-2">
-                  {[
-                    { label: "Chat with AI", href: "/chat", icon: Sparkles },
-                    { label: "Generate Meal Plan", href: "/meal-plan", icon: Utensils },
-                    { label: "Browse Foods", href: "/explore", icon: Target },
-                  ].map((a) => (
-                    <Link key={a.href} href={a.href}>
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors group">
-                        <div className="flex items-center gap-2.5">
-                          <a.icon className="w-4 h-4 text-primary" />
-                          <span className="text-sm font-medium">{a.label}</span>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+          {/* Quick Actions + Meals */}
+          <div className="space-y-4">
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3">Quick Actions</h3>
+              <div className="space-y-2">
+                {[
+                  { label: "Chat with AI", href: "/chat", icon: Sparkles },
+                  { label: "Generate Meal Plan", href: "/meal-plan", icon: Utensils },
+                  { label: "Browse Foods", href: "/explore", icon: Target },
+                ].map((a) => (
+                  <Link key={a.href} href={a.href}>
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors group">
+                      <div className="flex items-center gap-2.5">
+                        <a.icon className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-medium">{a.label}</span>
                       </div>
-                    </Link>
-                  ))}
-                </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </Link>
+                ))}
               </div>
+            </div>
 
-              <div className="bg-card border border-border rounded-xl p-5">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-3">Today's Meals</h3>
-                <div className="space-y-2">
-                  {["Breakfast", "Lunch", "Dinner"].map((slot) => {
-                    const items = d.meals_by_slot[slot] || [];
-                    return (
-                      <div key={slot} className="flex items-center justify-between p-2.5 rounded-lg border border-border/60">
-                        <span className="text-sm font-medium">{slot}</span>
-                        {items.length > 0 ? (
-                          <span className="text-xs font-semibold text-emerald-600">{Math.round((items || []).reduce((s:any,f:any)=>s+(f.calories||0),0))} kcal</span>
-                        ) : (
-                          <Link href="/tracker" className="text-xs text-primary font-medium hover:underline">+ Add</Link>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3">Today's Meals</h3>
+              <div className="space-y-2">
+                {["Breakfast", "Lunch", "Dinner"].map((slot) => {
+                  const items = d.meals_by_slot[slot] || [];
+                  return (
+                    <div key={slot} className="flex items-center justify-between p-2.5 rounded-lg border border-border/60">
+                      <span className="text-sm font-medium">{slot}</span>
+                      {items.length > 0 ? (
+                        <span className="text-xs font-semibold text-emerald-600">{Math.round((items || []).reduce((s:any,f:any)=>s+(f.calories||0),0))} kcal</span>
+                      ) : (
+                        <Link href="/tracker" className="text-xs text-primary font-medium hover:underline">+ Add</Link>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -236,7 +237,7 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
             </div>
           )}
 
-          {/* LLM AI Analysis */}
+          {/* LLM AI Analysis - Now with proper markdown rendering */}
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             <div className="px-5 py-4 bg-primary/5 border-b border-border flex items-center gap-2">
               <Brain className="w-4 h-4 text-primary" />
@@ -250,7 +251,9 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
                   <p className="text-sm text-muted-foreground">Analyzing your profile...</p>
                 </div>
               ) : llmAnalysis ? (
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{llmAnalysis}</p>
+                <div className="text-sm text-muted-foreground leading-relaxed prose prose-sm max-w-none">
+                  <ReactMarkdown>{llmAnalysis}</ReactMarkdown>
+                </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">Click to generate AI-powered health analysis based on your profile.</p>
               )}

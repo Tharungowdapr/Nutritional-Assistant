@@ -55,5 +55,5 @@ Created a comprehensive 8-layer architecture plan with:
 
 ### Verification Results
 - Python Backend: Serving on **port 8000** (Verified via `/docs`)
-- Next.js Frontend: Compiling and serving on **port 3000** (Verified via localhost)
+- Next.js Frontend: Compiling and serving on **port 3001** (Verified via localhost)
 - Git: Full source code pushed to `Tharungowdapr/Nutritional-Assistant` main branch.

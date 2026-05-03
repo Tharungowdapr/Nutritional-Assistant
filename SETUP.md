@@ -24,7 +24,7 @@ docker compose logs -f backend
 curl http://localhost:8000/api/health
 
 # open frontend
-open http://localhost:3000
+open http://localhost:3001
 ```
 
 Notes:
@@ -84,7 +84,7 @@ npm run dev -p 3001
 ## Troubleshooting
 
 - Docker daemon not running: `sudo systemctl start docker` (Linux) or open Docker Desktop.
-- Port collisions (3000/3001/8000/11434): stop conflicting processes or adjust ports in `docker-compose.yml` / `.env`.
+- Port collisions (3001/8000/11434): stop conflicting processes or adjust ports in `docker-compose.yml` / `.env`.
 - If ChromaDB is missing, run `python -m rag.ingest` to (re)create the vector store.
 
 ## Running tests
