@@ -3,23 +3,23 @@
 .gitignore
 
 # Node
-node_modules/
+**/node_modules/
 npm-debug.log
 yarn-error.log
 
 # Python
-__pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
-venv/
-.venv
+**/env/
+**/venv/
+**/.venv
 *.egg-info/
 dist/
 build/
-.pytest_cache/
+**/.pytest_cache/
 
 # IDE
 .vscode/
@@ -38,7 +38,7 @@ docs/
 .env.local
 
 # Other
-.git
-.gitignore
-README.md
 LICENSE
+README.md
+Dockerfile*
+docker-compose.yml

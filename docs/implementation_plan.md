@@ -394,7 +394,7 @@ Nutritional-Assistant/
 |---|---|---|---|
 | `ollama` | `ollama/ollama` | 11434 | GPU passthrough if available |
 | `backend` | Custom (FastAPI) | 8000 | + Celery worker in same container |
-| `frontend` | Custom (Next.js) | 3000 | SSR mode |
+| `frontend` | Custom (Next.js) | 3001 | SSR mode |
 | `redis` | `redis:alpine` | 6379 | Celery broker + cache |
 | `chromadb` | `chromadb/chroma` | 8001 | Vector store |
 | `mongodb` | `mongo:7` | 27017 | Meal plans + logs |

@@ -196,7 +196,17 @@ class LLMRouter:
                     "Content-Type": "application/json",
                 },
             )
-            resp.raise_for_status()
+            if resp.status_code != 200:
+                err_text = ""
+                try:
+                    data = resp.json()
+                    err_text = data.get("error", {}).get("message", data.get("message", ""))
+                except Exception:
+                    err_text = ""
+                if err_text and "decommissioned" in err_text.lower():
+                    # Indicate deprecation to caller so a fallback can be tried
+                    raise RuntimeError("Groq model deprecated")
+                resp.raise_for_status()
             return resp.json()["choices"][0]["message"]["content"]
 
     async def _stream_groq(self, prompt: str, system: str, temperature: float, max_tokens: int = 8192):

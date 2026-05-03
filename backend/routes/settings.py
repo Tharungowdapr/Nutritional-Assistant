@@ -118,9 +118,16 @@ async def save_provider(
     """Save/update a provider config with encrypted API key."""
     configs = _get_provider_configs(user)
     encrypted = _encrypt(req.api_key, _get_secret())
+    # Normalize model to supported Groq model if deprecated values are provided
+    safe_model = req.model
+    deprecated_models = {"llama3-8b-8192", "llama3-8b8192"}
+    if isinstance(safe_model, str) and safe_model.lower() in {m.lower() for m in deprecated_models}:
+        safe_model = "llama3-70b-8192"  # recommended replacement
+        logger.warning(f"Provided Groq model '{req.model}' is deprecated. Using '{safe_model}' instead.")
+
     configs[req.provider] = {
         **configs.get(req.provider, {}),
-        "model": req.model,
+        "model": safe_model,
         "encrypted_key": encrypted,
         "is_active": configs.get(req.provider, {}).get("is_active", False),
     }
