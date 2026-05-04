@@ -325,8 +325,9 @@ Please provide a detailed, evidence-based answer using the retrieved knowledge a
         # 1. Classify intent
         intent = await self.classify_intent(query)
         
-        # 2. Retrieve
-        chunks = self.retrieve(query, collection_name="nutrisync")
+        # 2. Retrieve (Offload to thread to avoid blocking event loop)
+        import asyncio
+        chunks = await asyncio.to_thread(self.retrieve, query, collection_name="nutrisync")
         
         # 3. Build augmented prompt
         context = self._build_context(chunks)
