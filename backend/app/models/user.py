@@ -205,6 +205,17 @@ class LLMConfigDB(Base):
     updated_at = Column(DateTime, default=utc_now_default, onupdate=utc_now_default)
 
 
+class UserMemoryDB(Base):
+    """Long-term memory facts for individual users."""
+    __tablename__ = "user_memories"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=False, index=True)
+    fact = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=utc_now_default)
+    is_active = Column(Boolean, default=True)
+
+
 def init_db():
     """Create all tables."""
     Base.metadata.create_all(bind=engine)

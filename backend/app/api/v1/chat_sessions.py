@@ -139,7 +139,8 @@ async def send_chat_message(
             message_data.message, 
             user_profile=user.profile, 
             history=history,
-            user_id=user.id
+            user_id=user.id,
+            db=db
         )
         assistant_message = rag_response.get("answer", "")
         sources = rag_response.get("sources", [])

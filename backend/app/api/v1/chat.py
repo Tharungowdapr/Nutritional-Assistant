@@ -96,6 +96,7 @@ async def chat(
         history=history,
         user_id=user.id if user else None,
         user_provider_override=active_provider,
+        db=db,
     )
 
     if user is not None:
@@ -150,6 +151,7 @@ async def chat_stream(
                     history=history,
                     user_id=user.id if user else None,
                     user_provider_override=active_provider,
+                    db=db,
                 ):
                     full_response += token
                     yield f"data: {json.dumps({'token': token})}\n\n"

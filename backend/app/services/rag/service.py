@@ -3,7 +3,8 @@ AaharAI NutriSync — RAG Service
 Orchestrates: user query → hybrid search → rerank → augment prompt → generate response.
 """
 import logging
-from typing import Optional
+from typing import Optional, List, Dict, Any
+from sqlalchemy.orm import Session
 
 import chromadb
 
@@ -178,8 +179,8 @@ class RAGService:
         
         return "\n".join(parts) + "\n\n- - -\n\n"
 
-    def _build_user_context(self, user_profile: Optional[dict], user_id: int = None) -> str:
-        """Format user profile and meal memory into context string."""
+    def _build_user_context(self, user_profile: Optional[dict], user_id: int = None, db: Optional[Session] = None) -> str:
+        """Format user profile, meal memory, and long-term facts into context string."""
         if not user_profile and not user_id:
             return ""
 
@@ -208,6 +209,16 @@ class RAGService:
                     parts.append(f"\n{meal_text}")
             except Exception as e:
                 logger.debug(f"Could not load meal memory: {e}")
+
+        # Add long-term memory facts
+        if user_id and db:
+            try:
+                from app.services.memory.long_term import LongTermMemory
+                memory_text = LongTermMemory.format_memories_for_prompt(user_id, db)
+                if memory_text:
+                    parts.append(memory_text)
+            except Exception as e:
+                logger.debug(f"Could not load long-term memory: {e}")
 
         return "\n\n".join(parts) if parts else ""
 
@@ -257,11 +268,18 @@ class RAGService:
         if "CLINICAL_ADVICE" in intent: return "CLINICAL_ADVICE"
         return "GENERAL_CHAT"
 
-    async def chat(self, query: str, user_profile: Optional[dict] = None, history: Optional[list] = None, user_id: int = None, user_provider_override: dict = None) -> dict:
+    async def chat(self, query: str, user_profile: Optional[dict] = None, 
+                 history: Optional[list] = None, user_id: int = None, 
+                 user_provider_override: dict = None, db: Optional[Session] = None) -> dict:
         """Enhanced RAG pipeline with intent routing and tool use."""
         import asyncio
         
-        # 1. Run intent classification and retrieval in PARALLEL
+        # 1. Process "Remember" commands
+        if user_id and db:
+            from app.services.memory.long_term import LongTermMemory
+            LongTermMemory.extract_and_save_fact(user_id, query, db)
+
+        # 2. Run intent classification and retrieval in PARALLEL
         intent_task = asyncio.create_task(self.classify_intent(query, user_provider_override))
         # retrieve is synchronous, wrap it in a thread to keep event loop free
         retrieve_task = asyncio.to_thread(self.retrieve, query, collection_name="nutrisync")
@@ -271,7 +289,7 @@ class RAGService:
 
         # 2. Build augmented prompt
         context = self._build_context(chunks)
-        user_ctx = self._build_user_context(user_profile, user_id)
+        user_ctx = self._build_user_context(user_profile, user_id, db)
         history_str = self._format_history(history or [])
         
         prompt = f"""{user_ctx}
@@ -334,9 +352,15 @@ Please provide a detailed, evidence-based answer. Cite sources. Always maintain 
         }
 
     async def chat_stream(self, query: str, user_profile: Optional[dict] = None, 
-                          history: Optional[list] = None, user_id: int = None, user_provider_override: dict = None):
+                          history: Optional[list] = None, user_id: int = None, 
+                          user_provider_override: dict = None, db: Optional[Session] = None):
         """Streaming RAG pipeline with context and history."""
-        # 1. Classify intent
+        # 1. Process "Remember" commands
+        if user_id and db:
+            from app.services.memory.long_term import LongTermMemory
+            LongTermMemory.extract_and_save_fact(user_id, query, db)
+
+        # 2. Classify intent
         intent = await self.classify_intent(query)
         
         # 2. Retrieve (Offload to thread to avoid blocking event loop)
@@ -345,7 +369,7 @@ Please provide a detailed, evidence-based answer. Cite sources. Always maintain 
         
         # 3. Build augmented prompt
         context = self._build_context(chunks)
-        user_ctx = self._build_user_context(user_profile, user_id)
+        user_ctx = self._build_user_context(user_profile, user_id, db)
         history_str = self._format_history(history or [])
 
         prompt = f"""{user_ctx}
