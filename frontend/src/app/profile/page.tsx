@@ -23,12 +23,12 @@ export default function ProfilePage() {
   const [age, setAge] = useState(user?.profile?.age?.toString() || "");
   const [weight, setWeight] = useState(user?.profile?.weight?.toString() || "");
   const [height, setHeight] = useState(user?.profile?.height?.toString() || "");
-  const [gender, setGender] = useState(user?.profile?.gender || "male");
-  const [activityLevel, setActivityLevel] = useState(user?.profile?.activity_level || "moderate");
+  const [gender, setGender] = useState(user?.profile?.sex?.toLowerCase() || "male");
+  const [activityLevel, setActivityLevel] = useState(user?.profile?.physical_activity || "moderate");
   
   // Health Info
   const [dietType, setDietType] = useState(user?.profile?.diet_type || "VEG");
-  const [goal, setGoal] = useState(user?.profile?.goal || "Maintenance");
+  const [goal, setGoal] = useState(user?.profile?.goals || "Maintenance");
   const [allergies, setAllergies] = useState(user?.profile?.conditions?.join(", ") || "");
   const [medicalConditions, setMedicalConditions] = useState(user?.profile?.medical_conditions?.join(", ") || "");
 
@@ -42,10 +42,10 @@ export default function ProfilePage() {
       setAge(user.profile?.age?.toString() || "");
       setWeight(user.profile?.weight?.toString() || "");
       setHeight(user.profile?.height?.toString() || "");
-      setGender(user.profile?.gender || "male");
-      setActivityLevel(user.profile?.activity_level || "moderate");
+      setGender(user.profile?.sex?.toLowerCase() || "male");
+      setActivityLevel(user.profile?.physical_activity || "moderate");
       setDietType(user.profile?.diet_type || "VEG");
-      setGoal(user.profile?.goal || "Maintenance");
+      setGoal(user.profile?.goals || "Maintenance");
       setAllergies(user.profile?.conditions?.join(", ") || "");
       setMedicalConditions(user.profile?.medical_conditions?.join(", ") || "");
     }
@@ -63,12 +63,11 @@ export default function ProfilePage() {
         physical_activity: activityLevel,
         diet_type: dietType,
         goals: goal,
-        conditions: allergies.split(",").map(s => s.trim()).filter(Boolean),
+        conditions: allergies.split(",").map((s: string) => s.trim()).filter(Boolean),
         phone,
         location,
         bio,
-        activity_level: activityLevel,
-        medical_conditions: medicalConditions.split(",").map(s => s.trim()).filter(Boolean),
+        medical_conditions: medicalConditions.split(",").map((s: string) => s.trim()).filter(Boolean),
       });
       toast.success("Profile updated successfully");
     } catch (err: any) {

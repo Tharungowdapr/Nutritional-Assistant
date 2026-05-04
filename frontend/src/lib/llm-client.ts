@@ -256,24 +256,34 @@ export class LLMClient {
 
   private async completeOllama(prompt: string, system?: string): Promise<string> {
     const url = `${this.baseUrl.replace(/\/$/, "")}/api/generate`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: this.model,
-        prompt,
-        system: system || "",
-        stream: false,
-        options: { temperature: this.temperature, num_predict: this.maxTokens },
-      }),
-    });
+    
+    // Use a generous timeout (120s) — LLM generation can take time
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
 
-    if (!response.ok) {
-      throw new Error(`Ollama API Error: ${response.status}. Is Ollama running at ${this.baseUrl}?`);
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: this.model,
+          prompt,
+          system: system || "",
+          stream: false,
+          options: { temperature: this.temperature, num_predict: this.maxTokens },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ollama API Error: ${response.status}. Is Ollama running at ${this.baseUrl}?`);
+      }
+
+      const data = await response.json();
+      return data.response || "";
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    const data = await response.json();
-    return data.response || "";
   }
 }
 

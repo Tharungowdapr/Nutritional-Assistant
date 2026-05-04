@@ -27,6 +27,7 @@ const ProgressBar = React.memo(({ value, max, color = "var(--primary)" }: { valu
     </div>
   );
 });
+ProgressBar.displayName = 'ProgressBar';
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -37,19 +38,13 @@ export default function Dashboard() {
   const [llmLoading, setLlmLoading] = useState(false);
   const todayIST = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 
-  useEffect(() => {
-    if (!user) { setLoadingProfile(false); return; }
-    apiFetch<any>("/api/analysis/customer-profile")
-      .then((data) => {
-        setProfile(data);
-        return data;
-      })
-      .then((data) => {
-        // Generate LLM analysis based on profile
-        const p = data;
-        if (p?.body_metrics) {
-          setLlmLoading(true);
-          const prompt = `As a clinical nutritionist, analyze this Indian user's profile and provide a concise health summary (max 150 words):
+  const generateAnalysis = useCallback(() => {
+    if (!profile || llmLoading) return;
+    
+    const p = profile;
+    if (p?.body_metrics) {
+      setLlmLoading(true);
+      const prompt = `As a clinical nutritionist, analyze this Indian user's profile and provide a concise health summary (max 150 words):
 Age: ${p.profile_summary?.age}, Gender: ${p.profile_summary?.gender}
 BMI: ${p.body_metrics?.bmi} (${p.body_metrics?.status}), Weight: ${p.body_metrics?.weight_kg}kg, Height: ${p.body_metrics?.height_cm}cm
 TDEE: ${p.body_metrics?.tdee} kcal/day, BMR: ${p.body_metrics?.bmr}
@@ -60,13 +55,21 @@ ${p.disease_protocol ? `Condition: ${p.disease_protocol.condition}` : ""}
 ${p.regional_concern ? `Region: ${p.regional_concern.region} — ${p.regional_concern.detail}` : ""}
 
 Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.`;
-          frontendLLM.generate(prompt, "You are an Indian clinical nutritionist. Give concise, actionable advice.", user.id)
-            .then((res) => {
-              if (res.content) setLlmAnalysis(res.content);
-            })
-            .catch(console.error)
-            .finally(() => setLlmLoading(false));
-        }
+
+      frontendLLM.generate(prompt, "You are an Indian clinical nutritionist. Give concise, actionable advice.")
+        .then((res) => {
+          if (res.content) setLlmAnalysis(res.content);
+        })
+        .catch(console.error)
+        .finally(() => setLlmLoading(false));
+    }
+  }, [profile, llmLoading]);
+
+  useEffect(() => {
+    if (!user) { setLoadingProfile(false); return; }
+    apiFetch<any>("/api/analysis/customer-profile")
+      .then((data) => {
+        setProfile(data);
       })
       .catch(console.error)
       .finally(() => setLoadingProfile(false));
@@ -255,7 +258,18 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
                   <ReactMarkdown>{llmAnalysis}</ReactMarkdown>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">Click to generate AI-powered health analysis based on your profile.</p>
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-4">AI-powered health analysis based on your profile.</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={generateAnalysis}
+                    className="rounded-full px-6 border-primary/20 hover:border-primary hover:bg-primary/5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 mr-2 text-primary" />
+                    Generate Expert Summary
+                  </Button>
+                </div>
               )}
             </div>
           </div>

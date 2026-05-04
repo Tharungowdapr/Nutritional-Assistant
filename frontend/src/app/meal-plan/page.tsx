@@ -175,17 +175,18 @@ export default function MealPlanPage() {
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   const loadHistory = useCallback(async () => {
-    const token = localStorage.getItem("nutrisync_token");
     try {
-      const res = await fetch(`${API_BASE}/api/meal-plan/history?limit=20`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      const response = await fetch(`${API_BASE}/api/meal-plan/history`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("nutrisync_token")}` }
       });
-      if (res.ok) {
-        const data = await res.json();
+      if (response.ok) {
+        const data = await response.json();
         setHistory(data.plans || []);
       }
-    } catch (e) {}
-  }, []);
+    } catch (error) {
+      console.error("Failed to fetch history:", error);
+    }
+  }, [API_BASE]);
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -241,6 +242,9 @@ export default function MealPlanPage() {
     ].filter(Boolean).join(". ");
 
     try {
+      // Get current local LLM config to pass as override
+      const llmConfig = (await import("@/lib/llm-provider")).frontendLLM.getConfig();
+      
       const res = await fetch(`${API_BASE}/api/meal-plan/stream`, {
         method: "POST",
         headers: {
@@ -250,7 +254,14 @@ export default function MealPlanPage() {
         body: JSON.stringify({
           days: q.days, num_people: q.people, budget_per_day_inr: q.budget,
           suggestions: suggestions || undefined,
-          user_profile: { ...user?.profile, diet_type: q.dietType, goal: q.goal },
+          user_profile: { 
+            ...user?.profile, 
+            diet_type: q.dietType, 
+            goal: q.goal,
+            llm_provider: llmConfig.provider,
+            llm_api_key: llmConfig.apiKey,
+            llm_model: llmConfig.model
+          },
         }),
       });
       if (!res.ok) throw new Error(`Generation failed: ${res.status}`);

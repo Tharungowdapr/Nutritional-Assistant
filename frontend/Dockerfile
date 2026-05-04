@@ -1,38 +1,40 @@
-# Multi-stage build for Next.js frontend
-# Stage 1: Build
+# ── Stage 1: Builder ──────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json ./
+# Install dependencies first (better layer caching)
+COPY package.json package-lock.json* ./
+RUN npm ci --frozen-lockfile
 
-# Install dependencies
-RUN npm ci
-
-# Copy source code
+# Copy source and build
 COPY . .
-
-# Build Next.js application
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN npm run build
 
-# Stage 2: Runtime
-FROM node:20-alpine
+# ── Stage 2: Runtime ──────────────────────────────────────────────
+FROM node:20-alpine AS runtime
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json ./
+ENV NODE_ENV=production
 
-# Install only production dependencies
-RUN npm ci --only=production
+# Create non-root user
+RUN addgroup -S nutrisync && adduser -S nutrisync -G nutrisync
 
-# Copy built application from builder
-COPY --from=builder /app/.next ./.next
+# Copy only what's needed for production
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Expose port
+RUN chown -R nutrisync:nutrisync /app
+
+USER nutrisync
+
 EXPOSE 3000
 
-# Start application
-CMD ["npm", "start"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+    CMD wget -qO- http://localhost:3000 || exit 1
+
+CMD ["node", "server.js"]

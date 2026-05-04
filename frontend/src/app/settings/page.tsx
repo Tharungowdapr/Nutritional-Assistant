@@ -10,7 +10,9 @@ import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { frontendLLM, LLMConfig, LLMProviderType, PROVIDER_MODELS, PROVIDERS, getOllamaModels } from "@/lib/llm-provider";
+import { frontendLLM, LLMConfig, LLMProviderType, PROVIDER_MODELS, PROVIDERS } from "@/lib/llm-provider";
+import { settingsApi } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
 
 const LANGUAGES = [
   { code: "en", name: "English" },
@@ -39,6 +41,8 @@ export default function SettingsPage() {
   const [testResult, setTestResult] = useState<{ success: boolean; latency?: number; error?: string } | null>(null);
   const [ollamaModels, setOllamaModels] = useState<{ id: string; name: string; context: string }[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
+  const [backendProviders, setBackendProviders] = useState<any[]>([]);
+  const [loadingProviders, setLoadingProviders] = useState(false);
 
   // Password Form
   const [passwordForm, setPasswordForm] = useState({
@@ -56,7 +60,21 @@ export default function SettingsPage() {
     if (config.apiKey) {
       setApiKey(config.apiKey);
     }
+    fetchBackendProviders();
   }, []);
+
+  const fetchBackendProviders = async () => {
+    if (!user) return;
+    setLoadingProviders(true);
+    try {
+      const data = await settingsApi.listProviders();
+      setBackendProviders(data.providers || []);
+    } catch (err) {
+      console.error("Failed to load providers", err);
+    } finally {
+      setLoadingProviders(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -74,7 +92,8 @@ export default function SettingsPage() {
   const fetchOllamaModels = async () => {
     setLoadingModels(true);
     try {
-      const models = await getOllamaModels(ollamaUrl);
+      const data = await settingsApi.getOllamaModels();
+      const models = (data.models || []).map((m: string) => ({ id: m, name: m, context: "Local" }));
       setOllamaModels(models.length > 0 ? models : []);
     } catch {
       setOllamaModels([]);
@@ -86,6 +105,7 @@ export default function SettingsPage() {
   const handleSaveLlmConfig = async () => {
     setIsSaving(true);
     try {
+      // 1. Save to local storage for instant feedback
       const config: LLMConfig = {
         provider: llmConfig.provider,
         model: selectedModel,
@@ -93,7 +113,25 @@ export default function SettingsPage() {
         baseUrl: llmConfig.provider === "ollama" ? ollamaUrl : undefined,
       };
       frontendLLM.saveConfig(config);
-      toast.success("AI Configuration saved");
+
+      // 2. Save to backend for security & persistence
+      if (user && user.id) {
+        try {
+          await settingsApi.saveProvider({
+            provider: llmConfig.provider,
+            api_key: apiKey || ollamaUrl,
+            model: selectedModel
+          });
+          await settingsApi.activateProvider(llmConfig.provider);
+          fetchBackendProviders();
+        } catch (backendErr) {
+          console.warn("Could not sync to cloud, saved locally only", backendErr);
+          toast.info("Saved locally (login to sync with cloud)");
+          return;
+        }
+      }
+
+      toast.success("AI Configuration saved and activated");
     } catch (err: any) {
       toast.error(err.message || "Failed to save configuration");
     } finally {
@@ -105,16 +143,21 @@ export default function SettingsPage() {
     setIsTesting(true);
     setTestResult(null);
     try {
-      const config: LLMConfig = {
+      // Use backend proxy to test connection (fixes CORS)
+      const result = await settingsApi.testProvider({
         provider: llmConfig.provider,
-        model: selectedModel,
-        apiKey: llmConfig.provider !== "ollama" ? apiKey : undefined,
-        baseUrl: llmConfig.provider === "ollama" ? ollamaUrl : undefined,
-      };
-      const result = await frontendLLM.testConnection(config);
-      setTestResult(result);
-      if (result.success) {
-        toast.success(`Connection successful (${result.latency}ms)`);
+        api_key: llmConfig.provider === "ollama" ? ollamaUrl : apiKey,
+        model: selectedModel
+      });
+
+      setTestResult({
+        success: result.valid,
+        latency: result.latency_ms,
+        error: result.error
+      });
+
+      if (result.valid) {
+        toast.success(`Connection successful (${result.latency_ms}ms)`);
       } else {
         toast.error(result.error || "Connection failed");
       }
@@ -331,7 +374,7 @@ export default function SettingsPage() {
             <div className="flex gap-3">
               <Button onClick={handleSaveLlmConfig} disabled={isSaving} className="px-6 h-12">
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                Save Configuration
+                Save & Set Active
               </Button>
               <Button 
                 onClick={handleTestConnection} 
@@ -343,6 +386,67 @@ export default function SettingsPage() {
                 Test Connection
               </Button>
             </div>
+
+            {/* Configured Providers List */}
+            {backendProviders.length > 0 && (
+              <div className="pt-6 border-t">
+                <label className="text-sm font-medium mb-4 block">Securely Saved Providers</label>
+                <div className="space-y-3">
+                  {backendProviders.map((bp) => (
+                    <div key={bp.provider} className={cn(
+                      "p-4 rounded-2xl border flex items-center justify-between",
+                      bp.is_active ? "border-primary bg-primary/5" : "border-border bg-card/50"
+                    )}>
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center",
+                          bp.is_active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                        )}>
+                          <Brain className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold capitalize flex items-center gap-2">
+                            {bp.provider}
+                            {bp.is_active && <Badge className="bg-primary text-[10px] h-4">Active</Badge>}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{bp.model}</div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {!bp.is_active && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={async () => {
+                              await settingsApi.activateProvider(bp.provider);
+                              frontendLLM.saveConfig({ provider: bp.provider as LLMProviderType, model: bp.model });
+                              setLlmConfig({ provider: bp.provider as LLMProviderType, model: bp.model });
+                              setSelectedModel(bp.model);
+                              fetchBackendProviders();
+                              toast.success(`${bp.provider} set as active`);
+                            }}
+                          >
+                            Activate
+                          </Button>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-destructive hover:text-destructive"
+                          onClick={async () => {
+                            await settingsApi.deleteProvider(bp.provider);
+                            fetchBackendProviders();
+                            toast.success(`${bp.provider} removed`);
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

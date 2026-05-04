@@ -168,42 +168,24 @@ export default function RecipesPage() {
     if (!aiPrompt.trim()) return;
     setAiLoading(true); setAiError("");
     try {
-      const prompt = `Generate a highly detailed Indian recipe for: "${aiPrompt}".
-Return ONLY a valid JSON object matching this exact structure (no markdown tags):
-{
-  "id": "ai_generated",
-  "name": "Recipe Name",
-  "category": "Breakfast, Lunch, Dinner, or Snack",
-  "diet_type": "VEG" or "NON-VEG",
-  "region": "Indian Region",
-  "prep_time_min": 30,
-  "servings": 2,
-  "cal": 400,
-  "protein_g": 15,
-  "iron_mg": 5,
-  "calcium_mg": 100,
-  "badge": "High Protein" (or High Iron, etc),
-  "badge_color": "teal" (teal for protein, red for iron, purple for calcium),
-  "ingredients": [
-    "200g specific ingredient with detailed prep instructions (e.g. finely chopped)",
-    "1 tbsp specific spice"
-  ],
-  "steps": [
-    "Aromatics Extraction: detailed instruction...",
-    "Base Building: detailed instruction..."
-  ],
-  "tips": ["Chef tip 1", "Chef tip 2"]
-}
-Make the ingredients very specific (with quantities) and the steps professionally culinary.`;
+      // Get current local LLM config to pass as override
+      const llmConfig = frontendLLM.getConfig();
+      const payload: any = { 
+        prompt: aiPrompt,
+        user_profile: {
+          ...user?.profile,
+          llm_provider: llmConfig.provider,
+          llm_api_key: llmConfig.apiKey,
+          llm_model: llmConfig.model
+        }
+      };
 
-      const res = await frontendLLM.generate(prompt, "You are a master Indian chef and nutritionist. Return ONLY valid JSON.", user?.id);
-      if (res.error) throw new Error(res.error);
+      const res = await apiFetch<any>("/api/recipes/generate", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
       
-      let raw = res.content.trim();
-      if (raw.includes("\`\`\`json")) raw = raw.split("\`\`\`json")[1].split("\`\`\`")[0];
-      else if (raw.includes("\`\`\`")) raw = raw.split("\`\`\`")[1];
-      
-      const newRecipe: Recipe = JSON.parse(raw);
+      const newRecipe: Recipe = res;
       newRecipe.id = "custom_" + Date.now();
       
       // Auto-save to local storage and update list
