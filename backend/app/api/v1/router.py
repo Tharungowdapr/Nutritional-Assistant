@@ -10,6 +10,7 @@ from app.api.v1.recipes import router as recipes_router
 from app.api.v1.chat_sessions import router as chat_sessions_router
 from app.api.v1.customer_profile import router as customer_profile_router
 from app.api.v1.settings import router as settings_router
+from app.api.v1.llm import router as llm_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
@@ -23,3 +24,4 @@ api_router.include_router(recipes_router)
 api_router.include_router(chat_sessions_router)
 api_router.include_router(customer_profile_router)
 api_router.include_router(settings_router)
+api_router.include_router(llm_router)

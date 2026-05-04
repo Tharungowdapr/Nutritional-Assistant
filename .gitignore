@@ -19,8 +19,7 @@ backend/.env
 backend/*.db
 backend/*.sqlite3
 
-# Vector DB (re-generate with: make ingest)
-backend/app/db/static/chroma_db/
+# backend/app/db/static/chroma_db/ (Allowed to commit for ready-to-use RAG)
 
 # Node.js
 frontend/node_modules/

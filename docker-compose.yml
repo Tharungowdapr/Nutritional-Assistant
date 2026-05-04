@@ -25,6 +25,9 @@ services:
       - LOG_FORMAT=json
       - APP_ENV=production
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - CHROMA_MODE=http
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8000
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -32,6 +35,9 @@ services:
       - ./backend/app/db/static:/app/app/db/static
       # Persist SQLite database outside the container
       - nutrisync_db:/app/data
+    depends_on:
+      chroma:
+        condition: service_started
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
@@ -39,6 +45,17 @@ services:
       timeout: 10s
       start_period: 20s
       retries: 3
+
+  chroma:
+    image: chromadb/chroma
+    container_name: nutrisync-chroma
+    networks:
+      - nutrisync-net
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/data
+    restart: unless-stopped
 
   frontend:
     build:
@@ -66,4 +83,6 @@ services:
 
 volumes:
   nutrisync_db:
+    driver: local
+  chroma_data:
     driver: local

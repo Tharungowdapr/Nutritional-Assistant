@@ -211,7 +211,7 @@ async def stream_meal_plan(request: Request, meal_request: MealPlanRequest,
     # 2. Fallback to backend config for authenticated users
     if not active_provider:
         from app.api.v1.settings import get_user_active_provider
-        active_provider = get_user_active_provider(user) if user else None
+        active_provider = get_user_active_provider(user, db) if user else None
 
     profile = meal_request.user_profile.model_dump() if hasattr(meal_request.user_profile, "model_dump") else dict(meal_request.user_profile)
     profile["budget_per_day_inr"] = meal_request.budget_per_day_inr
@@ -348,7 +348,7 @@ async def generate_meal_plan(request: Request, meal_request: MealPlanRequest,
     # 2. Fallback to backend config for authenticated users
     if not active_provider:
         from app.api.v1.settings import get_user_active_provider
-        active_provider = get_user_active_provider(user) if user else None
+        active_provider = get_user_active_provider(user, db) if user else None
 
     profile = meal_request.user_profile.model_dump() if hasattr(meal_request.user_profile, "model_dump") else dict(meal_request.user_profile)
     profile["budget_per_day_inr"] = meal_request.budget_per_day_inr

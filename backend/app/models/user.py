@@ -190,6 +190,21 @@ class MealPlanHistoryDB(Base):
     created_at = Column(DateTime, default=utc_now_default)
 
 
+class LLMConfigDB(Base):
+    """Encrypted LLM configurations for individual users."""
+    __tablename__ = "llm_configs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=False, index=True)
+    provider = Column(String(50), nullable=False)  # e.g., "openai", "groq"
+    model = Column(String(100), nullable=True)
+    api_key_encrypted = Column(Text, nullable=True)
+    base_url = Column(String(500), nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=utc_now_default)
+    updated_at = Column(DateTime, default=utc_now_default, onupdate=utc_now_default)
+
+
 def init_db():
     """Create all tables."""
     Base.metadata.create_all(bind=engine)

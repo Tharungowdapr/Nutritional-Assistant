@@ -126,12 +126,21 @@ async def send_chat_message(
     if not session:
         raise HTTPException(status_code=404, detail="Chat session not found")
     
+    # Get session history for context
+    from app.api.v1.chat import _get_session_history
+    history = _get_session_history(db, session_id)
+
     # Get RAG response
     try:
         if rag_service is None:
             raise HTTPException(status_code=503, detail="Knowledge base not ready")
 
-        rag_response = await rag_service.chat(message_data.message, user_profile=user.profile, history=None)
+        rag_response = await rag_service.chat(
+            message_data.message, 
+            user_profile=user.profile, 
+            history=history,
+            user_id=user.id
+        )
         assistant_message = rag_response.get("answer", "")
         sources = rag_response.get("sources", [])
         llm_provider = rag_response.get("llm_provider", "")

@@ -14,23 +14,37 @@ async def stream_generate_override(prompt: str, system: str, config: dict):
             "mistral": "https://api.mistral.ai/v1",
             "openai": "https://api.openai.com/v1",
         }
-        url = f"{base_urls[provider]}/chat/completions" if provider != "azure" else model # for azure, model is often the endpoint
+        url = f"{base_urls[provider]}/chat/completions" if provider != "azure" else model
         payload = {
             "model": model, "temperature": 0.7, "stream": True,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}]
         }
+        
+        import logging
+        logger = logging.getLogger("app.services.rag.override")
+        logger.info(f"🚀 Overriding LLM with {provider} ({model})")
+        
         async with httpx.AsyncClient(timeout=30) as client:
-            async with client.stream("POST", url, json=payload, headers={"Authorization": f"Bearer {api_key}"}) as resp:
-                resp.raise_for_status()
-                async for line in resp.aiter_lines():
-                    try:
-                        data = line[6:]
-                        if not data or data.strip() == "[DONE]": break
-                        part = json.loads(data)
-                        delta = part["choices"][0]["delta"].get("content", "")
-                        if delta: yield delta
-                    except Exception as e:
-                        continue
+            try:
+                async with client.stream("POST", url, json=payload, headers={"Authorization": f"Bearer {api_key}"}) as resp:
+                    if resp.status_code != 200:
+                        error_text = await resp.aread()
+                        logger.error(f"❌ {provider} API failed ({resp.status_code}): {error_text.decode()}")
+                        yield f"Error from {provider}: {resp.status_code}"
+                        return
+                        
+                    async for line in resp.aiter_lines():
+                        try:
+                            data = line[6:]
+                            if not data or data.strip() == "[DONE]": break
+                            part = json.loads(data)
+                            delta = part["choices"][0]["delta"].get("content", "")
+                            if delta: yield delta
+                        except Exception as e:
+                            continue
+            except Exception as e:
+                logger.error(f"💥 {provider} Connection Error: {e}")
+                yield f"Connection error: {str(e)}"
 
     elif provider == "gemini":
         import google.generativeai as genai

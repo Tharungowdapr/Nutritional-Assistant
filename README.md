@@ -272,6 +272,23 @@ Open:
 
 ---
 
+## ⚡ 8. Speed & Performance: Local vs Cloud
+
+One common question is: *"If I use a super-fast cloud API like Groq, why is the first response still taking a few seconds?"*
+
+### Inference vs. Retrieval
+The AaharAI RAG pipeline has two distinct stages:
+
+1.  **Retrieval (Local)**: The system must convert your question into a "vector" (a list of numbers) to search the database. This **embedding** process happens locally on your machine using Ollama or a CPU-based model (`MiniLM`). Even if the LLM is in the cloud, the "searching" part is local.
+2.  **Inference (Cloud)**: Once the relevant facts are found, they are sent to the cloud (Groq/OpenAI) to generate the readable answer. Groq is incredibly fast at this stage.
+
+### How to make it faster:
+*   **Use a GPU for Ollama**: If you have a GPU (NVIDIA or Mac M1/M2), ensure Ollama is using it. Embedding will take milliseconds instead of seconds.
+*   **Embedding Model**: By default, we use `nomic-embed-text`. If it's too slow, you can switch to `all-MiniLM-L6-v2` which is optimized for CPUs.
+*   **Skip RAG for simple chat**: If you don't need clinical data for a specific query, the system is faster (but less accurate).
+
+---
+
 ## 🧠 7. Vector Database (ChromaDB) — Full Explanation
 
 ### What is a Vector Database?
@@ -600,7 +617,7 @@ This re-builds the vector database from your Excel/PDF data.
 ### "Database error" on startup
 ```bash
 # Reset the database (WARNING: deletes all data)
-rm backend/nutrisync.db
+rm backend/data/nutrisync.db
 # Then restart — it will auto-create a fresh one
 ```
 

@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/chat", tags=["Chat"])
 limiter = Limiter(key_func=get_remote_address)
 
 
-def _get_active_provider(user, user_profile: dict | None):
+def _get_active_provider(user, user_profile: dict | None, db: Session):
     """Resolve the user's active LLM provider from settings or profile fallback."""
     # 1. Front-end override takes precedence
     if user_profile:
@@ -36,8 +36,10 @@ def _get_active_provider(user, user_profile: dict | None):
             }
             
     # 2. Fallback to backend config for authenticated users
-    from app.api.v1.settings import get_user_active_provider
-    return get_user_active_provider(user) if user else None
+    if user:
+        from app.api.v1.settings import get_user_active_provider
+        return get_user_active_provider(user, db)
+    return None
 
 
 def _get_session_history(db: Session, session_id: str) -> list:
@@ -86,7 +88,7 @@ async def chat(
 
     session_id = data.session_id or str(uuid.uuid4())
     history = _get_session_history(db, session_id)
-    active_provider = _get_active_provider(user, user_profile)
+    active_provider = _get_active_provider(user, user_profile, db)
 
     result = await rag_service.chat(
         data.message,
@@ -135,7 +137,7 @@ async def chat_stream(
 
     session_id = data.session_id or str(uuid.uuid4())
     history = _get_session_history(db, session_id)
-    active_provider = _get_active_provider(user, data.user_profile)
+    active_provider = _get_active_provider(user, data.user_profile, db)
 
     async def event_generator():
         full_response = ""

@@ -70,27 +70,20 @@ class HybridRetriever:
             return []
         
         try:
-            collection = self.chroma_client.get_or_create_collection(
-                name=self.collection_name
-            )
+            from app.services.rag.utils import get_embedding_function
+            embed_fn = get_embedding_function()
             
-            import chromadb.utils.embedding_functions as ef
-            from app.core.config import settings
-            
-            from app.services.rag.utils import is_ollama_online
-            if not is_ollama_online():
-                logger.info("Ollama offline, skipping vector search in hybrid retriever")
-                return []
-                
-            embed_fn = ef.OllamaEmbeddingFunction(
-                url=settings.OLLAMA_BASE_URL + "/api/embeddings",
-                model_name=settings.OLLAMA_EMBED_MODEL,
-            )
-            
-            collection = self.chroma_client.get_or_create_collection(
-                name=self.collection_name,
-                embedding_function=embed_fn
-            )
+            try:
+                collection = self.chroma_client.get_or_create_collection(
+                    name=self.collection_name,
+                    embedding_function=embed_fn
+                )
+            except Exception as e:
+                if "Embedding function conflict" in str(e):
+                    logger.warning(f"⚠️ Embedding conflict in hybrid. Falling back to collection defaults.")
+                    collection = self.chroma_client.get_collection(name=self.collection_name)
+                else:
+                    raise e
             
             results = collection.query(
                 query_texts=[query],

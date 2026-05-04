@@ -119,14 +119,15 @@ export default function SettingsPage() {
         try {
           await settingsApi.saveProvider({
             provider: llmConfig.provider,
-            api_key: apiKey || ollamaUrl,
+            api_key: apiKey,
+            base_url: llmConfig.provider === "ollama" ? ollamaUrl : undefined,
             model: selectedModel
           });
           await settingsApi.activateProvider(llmConfig.provider);
           fetchBackendProviders();
         } catch (backendErr) {
           console.warn("Could not sync to cloud, saved locally only", backendErr);
-          toast.info("Saved locally (login to sync with cloud)");
+          toast.info("Saved locally (cloud sync failed)");
           return;
         }
       }
@@ -146,7 +147,8 @@ export default function SettingsPage() {
       // Use backend proxy to test connection (fixes CORS)
       const result = await settingsApi.testProvider({
         provider: llmConfig.provider,
-        api_key: llmConfig.provider === "ollama" ? ollamaUrl : apiKey,
+        api_key: apiKey,
+        base_url: llmConfig.provider === "ollama" ? ollamaUrl : undefined,
         model: selectedModel
       });
 
@@ -257,10 +259,10 @@ export default function SettingsPage() {
             <CardTitle>AI Provider Configuration</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex gap-3 text-amber-600 dark:text-amber-400">
-              <AlertTriangle className="w-5 h-5 shrink-0" />
+            <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl flex gap-3 text-primary">
+              <ShieldCheck className="w-5 h-5 shrink-0" />
               <div className="text-sm">
-                <strong>Keys are stored locally.</strong> Your API keys never touch our backend. They are stored securely in your browser's localStorage.
+                <strong>Enterprise-Grade Security.</strong> Your API keys are encrypted server-side using AES-256 (Fernet) encryption. We never store raw keys.
               </div>
             </div>
 

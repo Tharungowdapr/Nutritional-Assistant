@@ -37,7 +37,15 @@ class RAGService:
         self._collection = None
         self._chroma_client = None
         try:
-            self._chroma_client = chromadb.PersistentClient(path=str(settings.CHROMA_DB_PATH))
+            if settings.CHROMA_MODE == "http":
+                self._chroma_client = chromadb.HttpClient(
+                    host=settings.CHROMA_HOST,
+                    port=settings.CHROMA_PORT
+                )
+                logger.info(f"🔗 Connected to ChromaDB server at {settings.CHROMA_HOST}:{settings.CHROMA_PORT}")
+            else:
+                self._chroma_client = chromadb.PersistentClient(path=str(settings.CHROMA_DB_PATH))
+                logger.info(f"💾 Using embedded ChromaDB at {settings.CHROMA_DB_PATH}")
         except Exception as e:
             logger.error(f"Failed to initialize ChromaDB client: {e}")
 
@@ -46,26 +54,23 @@ class RAGService:
         return is_ollama_online()
 
     def _get_collection(self, name="nutrisync"):
-        """Lazy-load ChromaDB collection with fallback embedding logic."""
+        """Lazy-load ChromaDB collection with robust embedding logic."""
         try:
             if not self._chroma_client: return None
             
-            import chromadb.utils.embedding_functions as ef
-            # Primary: Ollama-based embeddings - only if online
-            if self._is_ollama_online():
-                try:
-                    embed_fn = ef.OllamaEmbeddingFunction(
-                        url=settings.OLLAMA_BASE_URL + "/api/embeddings",
-                        model_name=settings.OLLAMA_EMBED_MODEL,
-                    )
-                    # Test connectivity by getting collection
-                    return self._chroma_client.get_collection(name, embedding_function=embed_fn)
-                except Exception as e:
-                    logger.warning(f"Ollama embeddings setup failed for {name}: {e}. Falling back.")
-            else:
-                logger.info(f"Ollama offline, skipping vector embedding for {name}")
-                # Fallback: Default embeddings (no-op or local)
-                return self._chroma_client.get_collection(name)
+            from app.services.rag.utils import get_embedding_function
+            embed_fn = get_embedding_function()
+            
+            try:
+                # First try with our preferred (Ollama/Local) embedding function
+                return self._chroma_client.get_collection(name, embedding_function=embed_fn)
+            except Exception as e:
+                if "Embedding function conflict" in str(e):
+                    logger.warning(f"⚠️ Embedding conflict for {name}. Falling back to collection defaults.")
+                    # Fallback: Let Chroma use its own persisted embedding function 
+                    # (Usually fixed to whatever was used during 'make ingest')
+                    return self._chroma_client.get_collection(name)
+                raise e
         except Exception as e:
             logger.error(f"Failed to access ChromaDB collection {name}: {e}")
             return None
@@ -153,9 +158,25 @@ class RAGService:
                 header += f" (page {page})"
             header += "]"
 
-            context_parts.append(f"{header}\n{chunk['text']}")
+            # Format Excel data more nicely if it looks like a row
+            text = chunk['text']
+            context_parts.append(f"{header}\n{text}")
 
         return "\n\n---\n\n".join(context_parts)
+
+    def _format_history(self, history: list) -> str:
+        """Format recent chat history for prompt consumption."""
+        if not history:
+            return ""
+        
+        parts = ["CONVERSATION HISTORY (Last 10 messages for context):"]
+        for turn in history[-10:]: # Use last 10 messages
+            user_msg = turn.get("user_message", "").strip()
+            ai_msg = turn.get("assistant_message", "").strip()
+            if user_msg: parts.append(f"USER: {user_msg}")
+            if ai_msg: parts.append(f"AI: {ai_msg}")
+        
+        return "\n".join(parts) + "\n\n- - -\n\n"
 
     def _build_user_context(self, user_profile: Optional[dict], user_id: int = None) -> str:
         """Format user profile and meal memory into context string."""
@@ -251,24 +272,17 @@ class RAGService:
         # 2. Build augmented prompt
         context = self._build_context(chunks)
         user_ctx = self._build_user_context(user_profile, user_id)
+        history_str = self._format_history(history or [])
         
-        # Format chat history
-        history_str = ""
-        if history:
-            history_parts = ["CONVERSATION HISTORY:"]
-            for h in history[-5:]: # Last 5 turns for context
-                history_parts.append(f"USER: {h.get('user_message')}\nASSISTANT: {h.get('assistant_message')}")
-            history_str = "\n".join(history_parts) + "\n\n"
-
         prompt = f"""{user_ctx}
 
-{history_str}RETRIEVED KNOWLEDGE (from IFCT 2017 database + ICMR-NIN 2024 RDA):
+{history_str}RETRIEVED KNOWLEDGE (IFCT 2017 & ICMR-NIN 2024):
 {context}
 
 USER QUESTION:
 {query}
 
-Please provide a detailed, evidence-based answer using the retrieved knowledge above. Cite sources. If the user is following up on a previous question, use the conversation history context."""
+Please provide a detailed, evidence-based answer. Cite sources. Always maintain continuity with the conversation history."""
 
         if user_provider_override:
             from app.services.rag.override import generate_override
@@ -332,24 +346,17 @@ Please provide a detailed, evidence-based answer using the retrieved knowledge a
         # 3. Build augmented prompt
         context = self._build_context(chunks)
         user_ctx = self._build_user_context(user_profile, user_id)
-        
-        # Format chat history
-        history_str = ""
-        if history:
-            history_parts = ["CONVERSATION HISTORY:"]
-            for h in history[-5:]:
-                history_parts.append(f"USER: {h.get('user_message')}\nASSISTANT: {h.get('assistant_message')}")
-            history_str = "\n".join(history_parts) + "\n\n"
+        history_str = self._format_history(history or [])
 
         prompt = f"""{user_ctx}
 
-{history_str}RETRIEVED KNOWLEDGE (from IFCT 2017 database + ICMR-NIN 2024 RDA):
+{history_str}RETRIEVED KNOWLEDGE (IFCT 2017 & ICMR-NIN 2024):
 {context}
 
 USER QUESTION:
 {query}
 
-Provide a detailed, evidence-based answer. Respond token-by-token."""
+Please provide a detailed, evidence-based answer. Respond token-by-token. Continuity with history is essential."""
 
         if user_provider_override:
             from app.services.rag.override import stream_generate_override

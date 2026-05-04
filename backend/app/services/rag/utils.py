@@ -30,3 +30,24 @@ def is_ollama_online() -> bool:
         _ollama_status_cache["online"] = False
         _ollama_status_cache["timestamp"] = now
         return False
+
+def get_embedding_function():
+    """Retrieve embedding function with Ollama -> SentenceTransformer fallback."""
+    import chromadb.utils.embedding_functions as ef
+    
+    # Check if Ollama is online AND has the model
+    if is_ollama_online():
+        try:
+            # We already checked tags in is_ollama_online, 
+            # but tag check only confirms Ollama's presence, not the model.
+            # However, for runtime speed, we'll try to use it and catch errors.
+            return ef.OllamaEmbeddingFunction(
+                url=settings.OLLAMA_BASE_URL + "/api/embeddings",
+                model_name=settings.OLLAMA_EMBED_MODEL,
+            )
+        except Exception as e:
+            logger.warning(f"Ollama embedding model '{settings.OLLAMA_EMBED_MODEL}' failed: {e}")
+
+    # Local fallback
+    logger.info("⚡ Using local SentenceTransformer embeddings (all-MiniLM-L6-v2)")
+    return ef.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")

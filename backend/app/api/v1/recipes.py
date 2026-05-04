@@ -242,6 +242,7 @@ async def generate_recipe_ai(
     request: Request,
     gen_req: RecipeGenerateRequest,
     user: Optional[UserDB] = Depends(require_user),
+    db: Session = Depends(get_db),
 ):
     """Generate a recipe using LLM with optional override."""
     from main import get_llm_router
@@ -265,7 +266,7 @@ async def generate_recipe_ai(
     # 2. Fallback to backend config for authenticated users
     if not active_provider:
         from app.api.v1.settings import get_user_active_provider
-        active_provider = get_user_active_provider(user) if user else None
+        active_provider = get_user_active_provider(user, db) if user else None
 
     system_prompt = "You are a master Indian chef and nutritionist. Return ONLY valid JSON."
     prompt = f"""Generate a highly detailed Indian recipe for: "{gen_req.prompt}".

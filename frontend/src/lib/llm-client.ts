@@ -83,221 +83,69 @@ export const PROVIDER_MODELS: Record<LLMProvider, { id: string; name: string; co
   ],
 };
 
+import { apiFetch } from "./api";
+
 export class LLMClient {
-  private provider: LLMProvider;
-  private model: string;
-  private apiKey?: string;
-  private baseUrl: string;
-  private temperature: number;
-  private maxTokens: number;
+  private config: LLMConfig;
 
   constructor(config: LLMConfig) {
-    this.provider = config.provider;
-    this.model = config.model || PROVIDER_DEFAULTS[config.provider];
-    this.apiKey = config.apiKey;
-    this.baseUrl = config.baseUrl || "http://localhost:11434";
-    this.temperature = config.temperature ?? 0.7;
-    this.maxTokens = config.maxTokens ?? 4096;
+    this.config = config;
   }
 
   async complete(prompt: string, systemPrompt?: string): Promise<string> {
-    switch (this.provider) {
-      case "openai":
-      case "groq":
-      case "openrouter":
-      case "mistral":
-      case "together":
-        return this.completeOpenAI(prompt, systemPrompt);
-      case "anthropic":
-        return this.completeAnthropic(prompt, systemPrompt);
-      case "gemini":
-        return this.completeGemini(prompt, systemPrompt);
-      case "cohere":
-        return this.completeCohere(prompt, systemPrompt);
-      case "ollama":
-        return this.completeOllama(prompt, systemPrompt);
-      default:
-        throw new Error(`Unsupported provider: ${this.provider}`);
+    try {
+      // Proxy all calls through the backend for security and reliability
+      const response = await apiFetch("/api/v1/llm/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          message: prompt,
+          systemPrompt: systemPrompt,
+          provider: this.config.provider,
+          model: this.config.model,
+        }),
+      });
+      return response.answer || "";
+    } catch (error: any) {
+      console.error(`LLM Proxy Error (${this.config.provider}):`, error);
+      throw error;
     }
   }
 
   async testConnection(): Promise<{ success: boolean; latency?: number; error?: string }> {
     const start = Date.now();
     try {
-      const result = await this.complete("Say 'OK' in exactly one word.", "You are a helpful assistant.");
+      const response = await apiFetch("/api/v1/llm/test", {
+        method: "POST",
+        body: JSON.stringify({
+          provider: this.config.provider,
+          model: this.config.model,
+          apiKey: this.config.apiKey,
+          baseUrl: this.config.baseUrl,
+        }),
+      });
       const latency = Date.now() - start;
-      return { success: result.length > 0, latency };
+      if (response.success) {
+        return { success: true, latency };
+      } else {
+        return { success: false, error: response.error, latency };
+      }
     } catch (error: any) {
       return { success: false, error: error.message, latency: Date.now() - start };
     }
   }
-
-  private async completeOpenAI(prompt: string, system?: string): Promise<string> {
-    const messages: any[] = [];
-    if (system) messages.push({ role: "system", content: system });
-    messages.push({ role: "user", content: prompt });
-
-    const baseUrls: Record<string, string> = {
-      openai: "https://api.openai.com/v1",
-      groq: "https://api.groq.com/openai/v1",
-      openrouter: "https://openrouter.ai/api/v1",
-      mistral: "https://api.mistral.ai/v1",
-      together: "https://api.together.xyz/v1",
-    };
-
-    const base = baseUrls[this.provider] || "https://api.openai.com/v1";
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${this.apiKey}`,
-    };
-    
-    if (this.provider === "openrouter") {
-      headers["HTTP-Referer"] = "http://localhost:3000";
-      headers["X-Title"] = "NutriSync";
-    }
-
-    const response = await fetch(`${base}/chat/completions`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        model: this.model,
-        messages,
-        temperature: this.temperature,
-        max_tokens: this.maxTokens,
-      }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error?.message || `API Error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || "";
-  }
-
-  private async completeAnthropic(prompt: string, system?: string): Promise<string> {
-    const payload: any = {
-      model: this.model,
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: this.maxTokens,
-      temperature: this.temperature,
-    };
-    if (system) payload.system = system;
-
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": this.apiKey || "",
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Anthropic API Error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.content?.[0]?.text || "";
-  }
-
-  private async completeGemini(prompt: string, system?: string): Promise<string> {
-    if (!this.apiKey) throw new Error("Gemini API key not configured");
-    const fullPrompt = system ? `System: ${system}\n\nUser: ${prompt}` : prompt;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
-    
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: fullPrompt }] }],
-        generationConfig: { temperature: this.temperature, maxOutputTokens: this.maxTokens },
-      }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Gemini API Error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  }
-
-  private async completeCohere(prompt: string, system?: string): Promise<string> {
-    const payload: any = {
-      model: this.model,
-      message: prompt,
-      temperature: this.temperature,
-      max_tokens: this.maxTokens,
-    };
-    if (system) payload.preamble = system;
-
-    const response = await fetch("https://api.cohere.ai/v1/chat", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.message || `Cohere API Error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.text || "";
-  }
-
-  private async completeOllama(prompt: string, system?: string): Promise<string> {
-    const url = `${this.baseUrl.replace(/\/$/, "")}/api/generate`;
-    
-    // Use a generous timeout (120s) — LLM generation can take time
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000);
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model: this.model,
-          prompt,
-          system: system || "",
-          stream: false,
-          options: { temperature: this.temperature, num_predict: this.maxTokens },
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Ollama API Error: ${response.status}. Is Ollama running at ${this.baseUrl}?`);
-      }
-
-      const data = await response.json();
-      return data.response || "";
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
 }
 
-export async function getOllamaModels(baseUrl: string = "http://localhost:11434"): Promise<{ id: string; name: string; context: string }[]> {
+export async function getOllamaModels(baseUrl?: string): Promise<{ id: string; name: string; context: string }[]> {
   try {
-    const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/tags`);
-    if (!response.ok) return [];
-    const data = await response.json();
-    return (data.models || []).map((m: any) => ({ 
-      id: m.name, 
-      name: m.name, 
-      context: "varies" 
+    // Call backend to probe Ollama models (fixes Docker network issues)
+    const response = await apiFetch("/api/settings/llm-providers/ollama/models");
+    return (response.models || []).map((name: string) => ({ 
+      id: name, 
+      name, 
+      context: "local" 
     }));
-  } catch {
+  } catch (error) {
+    console.warn("Failed to fetch Ollama models from backend:", error);
     return [];
   }
 }

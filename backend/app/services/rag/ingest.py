@@ -143,11 +143,18 @@ def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
         health_url = f"{settings.OLLAMA_BASE_URL}/api/tags"
         resp = requests.get(health_url, timeout=2)
         if resp.status_code == 200:
-            embed_fn = ef.OllamaEmbeddingFunction(
-                url=settings.OLLAMA_BASE_URL + "/api/embeddings",
-                model_name=settings.OLLAMA_EMBED_MODEL,
-            )
-            logger.info(f"🧠 Using Ollama embeddings: {settings.OLLAMA_EMBED_MODEL}")
+            # Check if the specific embedding model is pulled
+            models = resp.json().get("models", [])
+            model_names = [m.get("name") for m in models]
+            if settings.OLLAMA_EMBED_MODEL in model_names or f"{settings.OLLAMA_EMBED_MODEL}:latest" in model_names:
+                embed_fn = ef.OllamaEmbeddingFunction(
+                    url=settings.OLLAMA_BASE_URL + "/api/embeddings",
+                    model_name=settings.OLLAMA_EMBED_MODEL,
+                )
+                logger.info(f"🧠 Using Ollama embeddings: {settings.OLLAMA_EMBED_MODEL}")
+            else:
+                logger.warning(f"⚠️ Ollama model '{settings.OLLAMA_EMBED_MODEL}' not found. Run 'ollama pull {settings.OLLAMA_EMBED_MODEL}' for best results.")
+                logger.info("⚡ Falling back to default ChromaDB embeddings (all-MiniLM-L6-v2)")
         else:
             logger.warning(f"⚠️ Ollama not responding ({resp.status_code}), using default embeddings")
     except Exception as e:

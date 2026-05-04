@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     EXCEL_PATH: Path = DATA_DIR / "AaharAI_NutriSync_Enhanced.xlsx"
     IFCT_PDF_PATH: Path = DATA_DIR / "IFCT.pdf"
     CHROMA_DB_PATH: Path = DATA_DIR / "chroma_db"
+    CHROMA_MODE: Literal["embedded", "http"] = "embedded"
+    CHROMA_HOST: str = "localhost"
+    CHROMA_PORT: int = 8000
 
     # ── Database ───────────────────────────────────────────────
     DATABASE_URL: str = ""

@@ -310,9 +310,9 @@ export const analysisApi = {
 // ── Settings ──
 export const settingsApi = {
   listProviders: () => apiFetch("/api/settings/llm-providers"),
-  saveProvider: (data: { provider: string; api_key: string; model: string }) =>
+  saveProvider: (data: { provider: string; api_key: string; model: string; base_url?: string }) =>
     apiFetch("/api/settings/llm-providers", { method: "PUT", body: JSON.stringify(data) }),
-  testProvider: (data: { provider: string; api_key: string; model: string }) =>
+  testProvider: (data: { provider: string; api_key: string; model: string; base_url?: string }) =>
     apiFetch("/api/settings/llm-providers/test", { method: "POST", body: JSON.stringify(data) }),
   activateProvider: (provider: string) =>
     apiFetch(`/api/settings/llm-providers/${provider}/activate`, { method: "PUT" }),

@@ -34,6 +34,12 @@ setup: check-tools ## Full one-command setup (installs all dependencies)
 dev: run ## Alias for make run
 
 run: ## Run backend + frontend simultaneously (Ctrl+C to stop both)
+	@if [ ! -d "backend/app/db/static/chroma_db" ]; then \
+		echo "$(YELLOW)⚠️  Vector database (ChromaDB) not found!$(RESET)"; \
+		echo "   Run $(GREEN)make ingest$(RESET) to populate the knowledge base."; \
+		echo "   RAG features (Chat) will operate in degraded mode until ingestion is done."; \
+		echo ""; \
+	fi
 	@echo "$(CYAN)Starting AaharAI NutriSync...$(RESET)"
 	@echo "  Frontend : http://localhost:3001"
 	@echo "  Backend  : http://localhost:8000"
@@ -103,7 +109,7 @@ migrate-create: ## Create a new migration (usage: make migrate-create MSG="add u
 db-reset: ## ⚠️  Reset SQLite database (deletes all data!)
 	@echo "$(YELLOW)⚠️  WARNING: This will delete all user data!$(RESET)"
 	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ]
-	rm -f backend/nutrisync.db
+	rm -f backend/data/nutrisync.db
 	cd backend && source venv/bin/activate && python3 -c "from app.models.user import init_db; init_db()"
 	@echo "$(GREEN)✅ Database reset$(RESET)"
 
