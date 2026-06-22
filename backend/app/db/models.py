@@ -9,11 +9,13 @@ from typing import Optional
 class UserProfile(BaseModel):
     """User profile submitted during onboarding."""
     age: int = Field(..., ge=1, le=120)
-    sex: str = Field(..., pattern="^(Male|Female|Other)$")
+    gender: str = Field(..., pattern="^(Male|Female|Other)$")
+    sex: Optional[str] = None  # kept for backward compat
     weight_kg: float = Field(..., ge=10, le=300)
     height_cm: float = Field(..., ge=50, le=250)
     life_stage: str  # e.g. "Teen (Girl)", "Pregnant T2", "Elderly Male"
-    profession: str  # e.g. "Sedentary", "Heavy Manual"
+    activity_level: str  # e.g. "Sedentary", "Heavy Manual"
+    profession: Optional[str] = None  # kept for backward compat
     region_zone: str  # e.g. "South"
     region_state: Optional[str] = None  # e.g. "Karnataka"
     diet_type: str = Field(..., pattern="^(VEG|NON-VEG|VEGAN)$")
@@ -34,6 +36,7 @@ class ChatRequest(BaseModel):
     message: str
     user_profile: Optional[dict] = None
     session_id: Optional[str] = None  # UUID for conversation grouping
+    api_key: Optional[str] = None  # pass-through API key from frontend
 
 
 class ChatResponse(BaseModel):
@@ -49,6 +52,7 @@ class MealPlanRequest(BaseModel):
     num_people: int = Field(1, ge=1, le=10)
     budget_per_day_inr: Optional[float] = None
     suggestions: Optional[str] = None
+    api_key: Optional[str] = None  # pass-through API key from frontend
 
 
 class GroceryRequest(BaseModel):

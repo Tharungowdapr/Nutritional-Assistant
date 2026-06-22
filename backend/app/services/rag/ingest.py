@@ -12,8 +12,9 @@ import fitz  # PyMuPDF
 import pandas as pd
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-# Add parent dir to path so config can be imported
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Add backend dir to path so config can be imported
+# From rag/ingest.py, go up 4 levels to reach the backend root
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 from app.core.config import settings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s — %(message)s")
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 def extract_pdf_text(pdf_path: Path) -> list[dict]:
     """Extract text from IFCT PDF, page by page."""
     docs = []
-    logger.info(f"📄 Opening PDF: {pdf_path.name} ({pdf_path.stat().st_size / 1e6:.1f} MB)")
+    logger.info(f"Opening PDF: {pdf_path.name} ({pdf_path.stat().st_size / 1e6:.1f} MB)")
     with fitz.open(str(pdf_path)) as pdf:
         total = len(pdf)
         for page_num in range(total):
@@ -40,7 +41,7 @@ def extract_pdf_text(pdf_path: Path) -> list[dict]:
                 })
             if (page_num + 1) % 50 == 0:
                 logger.info(f"   Extracted {page_num + 1}/{total} pages...")
-    logger.info(f"✅ Extracted {len(docs)} pages from IFCT PDF")
+    logger.info(f"Extracted {len(docs)} pages from IFCT PDF")
     return docs
 
 
@@ -89,11 +90,11 @@ def excel_to_documents(excel_path: Path) -> list[dict]:
 
                 docs.append({"text": text, "metadata": metadata})
 
-            logger.info(f"   📊 {sheet_name}: {len(df)} rows")
+            logger.info(f"   {sheet_name}: {len(df)} rows")
         except Exception as e:
-            logger.warning(f"   ⚠️ Could not load sheet '{sheet_name}': {e}")
+            logger.warning(f"   Could not load sheet '{sheet_name}': {e}")
 
-    logger.info(f"✅ Created {len(docs)} documents from Excel sheets")
+    logger.info(f"Created {len(docs)} documents from Excel sheets")
     return docs
 
 
@@ -116,7 +117,7 @@ def chunk_documents(docs: list[dict], chunk_size: int = 512,
                 "metadata": {**doc["metadata"], "chunk_index": str(i)},
             })
 
-    logger.info(f"✅ Created {len(chunks)} chunks from {len(docs)} documents")
+    logger.info(f"Created {len(chunks)} chunks from {len(docs)} documents")
     return chunks
 
 
@@ -131,7 +132,7 @@ def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
     # Delete existing collection if exists
     try:
         client.delete_collection(collection_name)
-        logger.info("🗑️ Deleted existing collection")
+        logger.info("Deleted existing collection")
     except Exception:
         pass
 
@@ -151,14 +152,14 @@ def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
                     url=settings.OLLAMA_BASE_URL + "/api/embeddings",
                     model_name=settings.OLLAMA_EMBED_MODEL,
                 )
-                logger.info(f"🧠 Using Ollama embeddings: {settings.OLLAMA_EMBED_MODEL}")
+                logger.info(f"Using Ollama embeddings: {settings.OLLAMA_EMBED_MODEL}")
             else:
-                logger.warning(f"⚠️ Ollama model '{settings.OLLAMA_EMBED_MODEL}' not found. Run 'ollama pull {settings.OLLAMA_EMBED_MODEL}' for best results.")
-                logger.info("⚡ Falling back to default ChromaDB embeddings (all-MiniLM-L6-v2)")
+                logger.warning(f"Ollama model '{settings.OLLAMA_EMBED_MODEL}' not found. Run 'ollama pull {settings.OLLAMA_EMBED_MODEL}' for best results.")
+                logger.info("Falling back to default ChromaDB embeddings (all-MiniLM-L6-v2)")
         else:
-            logger.warning(f"⚠️ Ollama not responding ({resp.status_code}), using default embeddings")
+            logger.warning(f"Ollama not responding ({resp.status_code}), using default embeddings")
     except Exception as e:
-        logger.warning(f"⚠️ Ollama unavailable ({e}), using default embeddings")
+        logger.warning(f"Ollama unavailable ({e}), using default embeddings")
 
     # Create collection with embedding function
     if embed_fn:
@@ -197,34 +198,34 @@ def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
         if batch_num % 5 == 0 or batch_num == total_batches:
             logger.info(f"   Inserted batch {batch_num}/{total_batches}")
 
-    logger.info(f"✅ Ingested {len(chunks)} chunks into ChromaDB collection '{collection_name}'")
+    logger.info(f"Ingested {len(chunks)} chunks into ChromaDB collection '{collection_name}'")
     return collection
 
 
 def run_ingestion():
     """Full ingestion pipeline: PDF + Excel → ChromaDB."""
     logger.info("=" * 60)
-    logger.info("🚀 AaharAI NutriSync — RAG Ingestion Pipeline")
+    logger.info("AaharAI NutriSync — RAG Ingestion Pipeline")
     logger.info("=" * 60)
 
     # 1. Extract documents
-    logger.info("\n📄 Step 1: Extracting PDF text...")
+    logger.info("\nStep 1: Extracting PDF text...")
     pdf_docs = extract_pdf_text(settings.IFCT_PDF_PATH)
 
-    logger.info("\n📊 Step 2: Converting Excel sheets...")
+    logger.info("\nStep 2: Converting Excel sheets...")
     excel_docs = excel_to_documents(settings.EXCEL_PATH)
     all_docs = pdf_docs + excel_docs
 
     # 2. Chunk
-    logger.info("\n✂️ Step 3: Chunking documents...")
+    logger.info("\nStep 3: Chunking documents...")
     chunks = chunk_documents(all_docs, settings.RAG_CHUNK_SIZE, settings.RAG_CHUNK_OVERLAP)
 
     # 3. Ingest into ChromaDB
-    logger.info("\n💾 Step 4: Ingesting into ChromaDB...")
+    logger.info("\nStep 4: Ingesting into ChromaDB...")
     ingest_to_chroma(chunks)
 
     logger.info("\n" + "=" * 60)
-    logger.info(f"✅ Ingestion complete!")
+    logger.info(f"Ingestion complete!")
     logger.info(f"   PDF pages: {len(pdf_docs)}")
     logger.info(f"   Excel rows: {len(excel_docs)}")
     logger.info(f"   Total chunks: {len(chunks)}")

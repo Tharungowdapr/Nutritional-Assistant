@@ -35,10 +35,10 @@ export default function ChatPage() {
   }, [messages, loading]);
 
   useEffect(() => {
-    if (sessions.length > 0 && !currentSession) {
+    if (!sessionsLoading && sessions.length > 0 && !currentSession) {
       selectSession(sessions[0].id);
     }
-  }, [sessions, currentSession, selectSession]);
+  }, [sessions, sessionsLoading, currentSession, selectSession]);
 
   const handleNewChat = async () => {
     await createSession();
@@ -55,7 +55,7 @@ export default function ChatPage() {
     } catch (err: any) {
       toast.error(err.message || "Failed to send message");
     } finally {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      inputRef.current?.focus();
     }
   };
 
@@ -66,10 +66,14 @@ export default function ChatPage() {
 
   const handleDeleteSession = async (e: React.FormEvent, id: string) => {
     e.stopPropagation();
-    if (confirm("Delete this chat?")) {
-      await deleteSession(id);
-      toast.success("Chat deleted");
+    if (!window.confirm("Delete this chat?")) return;
+    const wasCurrent = currentSession?.id === id;
+    await deleteSession(id);
+    if (wasCurrent && sessions.length > 1) {
+      const next = sessions.find(s => s.id !== id);
+      if (next) selectSession(next.id);
     }
+    toast.success("Chat deleted");
   };
 
   const getSessionTitle = (session: ChatSession) => session.title || "New Chat";
@@ -92,13 +96,14 @@ export default function ChatPage() {
       <button
         className="md:hidden fixed bottom-20 right-4 z-50 p-3 rounded-full bg-primary text-primary-foreground shadow-lg"
         onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label={sidebarOpen ? "Close chat history sidebar" : "Open chat history sidebar"}
       >
         <Menu className="w-5 h-5" />
       </button>
 
       {/* Sidebar */}
       <div className={`
-        fixed md:relative inset-y-0 left-0 z-40 w-72 bg-card border-r border-border transform transition-transform duration-300
+        fixed md:relative inset-y-0 left-0 z-40 w-72 bg-background/90 backdrop-blur-xl border-r border-border/60 transform transition-transform duration-300
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         flex flex-col
       `}>
@@ -152,7 +157,7 @@ export default function ChatPage() {
       <div className="flex-1 flex flex-col min-w-0 bg-background">
 
         {/* Header */}
-        <div className="shrink-0 px-4 py-3 border-b border-border flex items-center gap-3 bg-card">
+        <div className="shrink-0 px-4 py-3 border-b border-border/60 flex items-center gap-3 bg-background/70 backdrop-blur-sm">
           <MessageSquare className="w-5 h-5 text-primary" />
           <div>
             <h1 className="text-sm font-semibold">
@@ -217,9 +222,9 @@ export default function ChatPage() {
                         </>
                       ) : (
                         <div className="flex gap-1.5 py-1">
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-bounce [animation-delay:-0.3s]" />
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-bounce [animation-delay:-0.15s]" />
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-bounce" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse [animation-delay:-0.3s]" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse [animation-delay:-0.15s]" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" />
                         </div>
                       )}
                     </div>
@@ -249,7 +254,7 @@ export default function ChatPage() {
         </div>
 
         {/* Input */}
-        <div className="shrink-0 p-4 border-t border-border bg-card">
+        <div className="shrink-0 p-4 border-t border-border/60 bg-background/70 backdrop-blur-sm">
           <form onSubmit={handleSend} className="max-w-3xl mx-auto flex items-center gap-2">
             <Input
               ref={inputRef}

@@ -38,7 +38,7 @@ export function AnalysisSection({ profile, loadingProfile }: AnalysisSectionProp
     <div>
       <h2 className="text-lg font-semibold mb-4">Your Analysis</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="glass-card rounded-xl p-5 animate-fade-up stagger-1">
           <div className="flex items-center gap-2 mb-4">
             <Activity className="w-4 h-4 text-primary" />
             <span className="text-xs font-semibold text-muted-foreground">ICMR Profile</span>
@@ -54,7 +54,7 @@ export function AnalysisSection({ profile, loadingProfile }: AnalysisSectionProp
           <p className="text-[10px] text-muted-foreground mt-3">Source: ICMR-NIN 2024</p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="glass-card rounded-xl p-5 animate-fade-up stagger-2">
           <div className="flex items-center gap-2 mb-3">
             <MapPin className="w-4 h-4 text-primary" />
             <span className="text-xs font-semibold text-muted-foreground">Regional Diet</span>
@@ -65,14 +65,14 @@ export function AnalysisSection({ profile, loadingProfile }: AnalysisSectionProp
           <p className="text-sm text-muted-foreground leading-relaxed">{profile.regional_concern?.detail ?? "Regional diet analysis based on your location."}</p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="glass-card rounded-xl p-5 animate-fade-up stagger-3">
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="w-4 h-4 text-accent" />
             <span className="text-xs font-semibold text-muted-foreground">Nutritional Risks</span>
           </div>
           <div className="space-y-2">
             {profile.deficiency_risks?.slice(0, 3).map((r: any, idx: number) => (
-              <div key={idx} className="p-2 text-xs bg-white/5 border border-border rounded">{r.nutrient}: {r.value}</div>
+                  <div key={idx} className="p-2 text-xs bg-muted/30 border border-border/60 rounded-lg">{r.nutrient}: {r.reason || r.fix || "—"}</div>
             ))}
           </div>
         </div>

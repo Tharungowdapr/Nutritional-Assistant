@@ -34,25 +34,26 @@ class UserResponse(BaseModel):
 class ProfileUpdateRequest(BaseModel):
     name: Optional[str] = None
     age: Optional[int] = None
-    sex: Optional[str] = None
+    gender: Optional[str] = None
+    sex: Optional[str] = None  # kept for backward compat
     weight_kg: Optional[float] = None
     height_cm: Optional[float] = None
     life_stage: Optional[str] = None
-    profession: Optional[str] = None
+    activity_level: Optional[str] = None
+    profession: Optional[str] = None  # kept for backward compat
+    physical_activity: Optional[str] = None  # kept for backward compat
     region_zone: Optional[str] = None
     region_state: Optional[str] = None
     diet_type: Optional[str] = None
     conditions: Optional[list[str]] = None
-    goal: Optional[str] = None
+    goal: Optional[str] = None  # kept for backward compat
     sleep_hours: Optional[float] = None
     focus_score: Optional[int] = None
     daily_budget_inr: Optional[float] = None
-    physical_activity: Optional[str] = None
     # Additional fields for extended profile
     phone: Optional[str] = None
     location: Optional[str] = None
     bio: Optional[str] = None
-    activity_level: Optional[str] = None
     medical_conditions: Optional[list[str]] = None
     goals: Optional[str] = None
 

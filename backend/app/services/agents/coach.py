@@ -45,8 +45,8 @@ class CoachAgent:
             parts.append(f"Age: {profile['age']}")
         
         # Goals
-        if profile.get("goal"):
-            parts.append(f"Goal: {profile['goal']}")
+        if profile.get("goal") or profile.get("goals"):
+            parts.append(f"Goal: {profile.get('goal') or profile.get('goals')}")
         
         # Health conditions
         if profile.get("conditions") and profile["conditions"]:
@@ -81,16 +81,20 @@ class CoachAgent:
         analysis_context: str,
         user_profile: Optional[Dict] = None,
         conversation_history: Optional[List[Dict]] = None,
+        provider_override: Optional[Dict] = None,
     ) -> str:
-        """Generate final response."""
-        if not self.llm_router:
+        """Generate final response with optional provider override.
+        
+        For complex queries, decomposes into sub-questions, answers each,
+        then synthesizes a cohesive response.
+        """
+        if not self.llm_router and not provider_override:
             return "AI service unavailable. Please try again."
         
         # Build context
         profile_ctx = self.format_profile_context(user_profile)
         full_context = f"{profile_ctx}\n\n{analysis_context}"
         
-        # Add conversation history if available
         history_ctx = ""
         if conversation_history and len(conversation_history) > 0:
             history_parts = ["Recent conversation:"]
@@ -101,46 +105,106 @@ class CoachAgent:
                     history_parts.append(f"You: {h.get('content', '')}")
             history_ctx = "\n".join(history_parts) + "\n\n"
         
-        # Build prompt
-        prompt = f"""{history_ctx}Context:
+        # Decompose complex queries into sub-questions
+        sub_answers = await self._decompose_and_answer(query, full_context, provider_override)
+        
+        # Synthesize final response from sub-answers
+        synthesis_prompt = f"""{history_ctx}Context:
 {full_context}
 
 User Question:
 {query}
 
-Provide a helpful, personalized response."""
+Analysis breakdown:
+{sub_answers}
+
+Provide a cohesive, personalized response that synthesizes the above information."""
         
         try:
             response, provider = await self.llm_router.generate(
-                prompt=prompt,
+                prompt=synthesis_prompt,
                 system=SYSTEM_COACH,
                 temperature=0.7,
+                provider_override=provider_override,
             )
             return response.strip()
         except Exception as e:
             logger.error(f"Coach generation failed: {e}")
             return "I apologize, but I couldn't generate a response. Please try again."
     
+    async def _decompose_and_answer(
+        self,
+        query: str,
+        context: str,
+        provider_override: Optional[Dict] = None,
+    ) -> str:
+        """Break complex queries into sub-questions and answer each independently."""
+        decompose_prompt = f"""Analyze this nutrition query and break it into 2-4 specific sub-questions that together answer it fully.
+
+Query: {query}
+
+Return ONLY a numbered list of specific sub-questions, one per line."""
+        
+        try:
+            raw, _ = await self.llm_router.generate(
+                prompt=decompose_prompt,
+                system="You break nutrition questions into factual sub-questions. Be specific, not generic.",
+                temperature=0.3,
+                max_tokens=512,
+                provider_override=provider_override,
+            )
+        except Exception:
+            return ""
+        
+        sub_questions = [q.strip() for q in raw.strip().split("\n") if q.strip() and q[0].isdigit()]
+        
+        if len(sub_questions) <= 1:
+            return raw.strip()
+        
+        answers = []
+        for sq in sub_questions[:4]:
+            sq_prompt = f"""Context:
+{context}
+
+Sub-question: {sq}
+
+Answer concisely with specific data from the context."""
+            try:
+                ans, _ = await self.llm_router.generate(
+                    prompt=sq_prompt,
+                    system="Answer the sub-question with facts only. Be concise.",
+                    temperature=0.4,
+                    max_tokens=1024,
+                    provider_override=provider_override,
+                )
+                answers.append(f"{sq}\n{ans.strip()}")
+            except Exception as e:
+                logger.warning(f"Sub-question failed: {sq} - {e}")
+        
+        return "\n\n".join(answers) if answers else raw.strip()
+    
     async def generate_suggestion(
         self,
         query: str,
         recommendations: List[str],
         user_profile: Optional[Dict] = None,
+        provider_override: Optional[Dict] = None,
     ) -> str:
         """Generate suggestion-style response."""
         if not recommendations:
-            return await self.generate_response(query, "No specific recommendations available.", user_profile)
+            return await self.generate_response(query, "No specific recommendations available.", user_profile, provider_override=provider_override)
         
         # Format recommendations
         rec_text = "Recommended options:\n" + "\n".join(f"- {r}" for r in recommendations)
         
-        return await self.generate_response(query, rec_text, user_profile)
+        return await self.generate_response(query, rec_text, user_profile, provider_override=provider_override)
     
     async def generate_meal_plan(
         self,
         days: int,
         targets: Dict[str, Any],
         preferences: Dict[str, Any],
+        provider_override: Optional[Dict] = None,
     ) -> str:
         """Generate meal plan response."""
         plan_parts = [
@@ -162,14 +226,17 @@ Provide a helpful, personalized response."""
         
         plan_text = "\n".join(plan_parts)
         
-        if self.llm_router:
+        if self.llm_router or provider_override:
             prompt = f"""{plan_text}
 
 Generate a detailed meal plan with breakfast, lunch, dinner, and snacks for each day.
 Include specific foods and portions (e.g., "1 katori cooked rice")."""
             
             try:
-                response, _ = await self.llm_router.generate(prompt, SYSTEM_COACH, temperature=0.7)
+                response, _ = await self.llm_router.generate(
+                    prompt, SYSTEM_COACH, temperature=0.7,
+                    provider_override=provider_override,
+                )
                 return response.strip()
             except Exception as e:
                 logger.error(f"Meal plan generation failed: {e}")

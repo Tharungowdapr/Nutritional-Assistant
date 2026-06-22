@@ -16,12 +16,16 @@ class AnalyzerAgent:
         self.llm_router = llm_router
     
     async def retrieve_knowledge(self, query: str, collection: str = "nutrisync") -> List[Dict[str, Any]]:
-        """Retrieve relevant knowledge from RAG."""
+        """Retrieve relevant knowledge from RAG (runs sync method in thread to avoid blocking)."""
         if not self.rag_service:
             return []
         
         try:
-            chunks = self.rag_service.retrieve(query, collection_name=collection, top_k=5)
+            import asyncio
+            chunks = await asyncio.to_thread(
+                self.rag_service.retrieve, query,
+                collection_name=collection, top_k=5
+            )
             return chunks
         except Exception as e:
             logger.warning(f"RAG retrieval failed: {e}")

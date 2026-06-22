@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
     # Load Knowledge Base
     try:
         db.load()
-        logger.info("✅ Database loaded")
+        logger.info("Database loaded")
     except Exception as e:
         logger.warning(f"Database load failed: {e}. Degraded mode active.")
 
@@ -65,7 +65,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Service initialization failed: {e}")
 
-    logger.info("🚀 API ready!")
+    logger.info("API ready!")
     yield
     logger.info("Shutting down...")
 

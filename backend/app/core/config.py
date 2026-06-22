@@ -33,7 +33,7 @@ class Settings(BaseSettings):
             raise ValueError("SECRET_KEY must be set in the environment!")
 
     # ── Security ───────────────────────────────────────────────
-    SECRET_KEY: str = ""
+    SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 1440
 

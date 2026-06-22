@@ -80,7 +80,7 @@ class HybridRetriever:
                 )
             except Exception as e:
                 if "Embedding function conflict" in str(e):
-                    logger.warning(f"⚠️ Embedding conflict in hybrid. Falling back to collection defaults.")
+                    logger.warning(f"Embedding conflict in hybrid. Falling back to collection defaults.")
                     collection = self.chroma_client.get_collection(name=self.collection_name)
                 else:
                     raise e
@@ -137,17 +137,22 @@ class HybridRetriever:
         return [r["text"] for r in results]
 
 
-def create_hybrid_retriever(collection_name: str = "nutrisync") -> HybridRetriever:
-    """Factory function to create hybrid retriever."""
-    from app.core.config import settings
-    
-    chroma_client = None
-    try:
-        import chromadb
-        chroma_client = chromadb.PersistentClient(
-            path=str(settings.CHROMA_DB_PATH)
-        )
-    except Exception as e:
-        logger.warning(f"Could not create ChromaDB client: {e}")
-    
+def create_hybrid_retriever(collection_name: str = "nutrisync",
+                           chroma_client=None) -> HybridRetriever:
+    """Factory function to create hybrid retriever.
+
+    Args:
+        collection_name: ChromaDB collection name
+        chroma_client: Reusable ChromaDB client (preferred). Creates new if None.
+    """
+    if chroma_client is None:
+        from app.core.config import settings
+        try:
+            import chromadb
+            chroma_client = chromadb.PersistentClient(
+                path=str(settings.CHROMA_DB_PATH)
+            )
+        except Exception as e:
+            logger.warning(f"Could not create ChromaDB client: {e}")
+
     return HybridRetriever(chroma_client, collection_name)

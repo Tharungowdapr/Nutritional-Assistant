@@ -56,7 +56,7 @@ class LongTermMemory:
                 new_memory = UserMemoryDB(user_id=user_id, fact=fact)
                 db.add(new_memory)
                 db.commit()
-                logger.info(f"🧠 Memory saved for user {user_id}: {fact}")
+                logger.info(f"Memory saved for user {user_id}: {fact}")
                 return fact
         except Exception as e:
             logger.error(f"Failed to save long-term memory: {e}")

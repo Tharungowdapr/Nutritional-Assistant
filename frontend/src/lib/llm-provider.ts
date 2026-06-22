@@ -1,69 +1,13 @@
 import { getStorageKey } from "./utils";
-import { LLMClient, type LLMConfig as ClientLLMConfig, getOllamaModels as fetchOllamaModels } from "./llm-client";
+import { LLMClient, type LLMConfig as ClientLLMConfig, type LLMProvider, getOllamaModels as fetchOllamaModels, PROVIDER_MODELS } from "./llm-client";
 
-export type LLMProviderType = 
-  | "openai" 
-  | "anthropic" 
-  | "groq" 
-  | "gemini" 
-  | "cohere" 
-  | "ollama" 
-  | "openrouter" 
-  | "mistral" 
-  | "together";
+export type LLMProviderType = LLMProvider;
 
 export interface LLMConfig extends ClientLLMConfig {
   provider: LLMProviderType;
 }
 
-// Define PROVIDER_MODELS locally to avoid circular reference
-export const PROVIDER_MODELS: Record<LLMProviderType, { id: string; name: string; context: string }[]> = {
-  openai: [
-    { id: "gpt-4o", name: "GPT-4o (Best)", context: "128k" },
-    { id: "gpt-4o-mini", name: "GPT-4o Mini (Fast, Cheap)", context: "128k" },
-    { id: "gpt-4-turbo", name: "GPT-4 Turbo", context: "128k" },
-    { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo (Fastest)", context: "16k" },
-  ],
-  anthropic: [
-    { id: "claude-opus-4-5", name: "Claude Opus 4.5 (Best)", context: "200k" },
-    { id: "claude-sonnet-4-5", name: "Claude Sonnet 4.5 (Balanced)", context: "200k" },
-    { id: "claude-3-haiku-20240307", name: "Claude 3 Haiku (Fast)", context: "200k" },
-  ],
-  groq: [
-    { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B (Best)", context: "128k" },
-    { id: "llama-3.1-70b-versatile", name: "Llama 3.1 70B", context: "128k" },
-    { id: "llama-3.1-8b-instant", name: "Llama 3.1 8B (Fastest)", context: "128k" },
-    { id: "mixtral-8x7b-32768", name: "Mixtral 8x7B", context: "32k" },
-    { id: "gemma2-9b-it", name: "Gemma2 9B", context: "8k" },
-  ],
-  gemini: [
-    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro (Best)", context: "1M" },
-    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash (Fast)", context: "1M" },
-    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", context: "1M" },
-  ],
-  cohere: [
-    { id: "command-r-plus", name: "Command R+ (Best)", context: "128k" },
-    { id: "command-r", name: "Command R (Balanced)", context: "128k" },
-    { id: "command", name: "Command (Fast)", context: "4k" },
-  ],
-  ollama: [], 
-  openrouter: [
-    { id: "meta-llama/llama-3.1-8b-instruct:free", name: "Llama 3.1 8B (Free)", context: "128k" },
-    { id: "mistralai/mistral-7b-instruct:free", name: "Mistral 7B (Free)", context: "32k" },
-    { id: "google/gemma-2-9b-it:free", name: "Gemma 2 9B (Free)", context: "8k" },
-    { id: "microsoft/phi-3-mini-128k-instruct:free", name: "Phi-3 Mini (Free)", context: "128k" },
-  ],
-  mistral: [
-    { id: "mistral-large-latest", name: "Mistral Large (Best)", context: "128k" },
-    { id: "mistral-small-latest", name: "Mistral Small", context: "128k" },
-    { id: "open-mistral-7b", name: "Mistral 7B", context: "32k" },
-  ],
-  together: [
-    { id: "meta-llama/Llama-3-70b-chat-hf", name: "Llama 3 70B", context: "8k" },
-    { id: "Qwen/Qwen2.5-72B-Instruct", name: "Qwen 2.5 72B", context: "32k" },
-    { id: "mistralai/Mistral-7B-Instruct-v0.3", name: "Mistral 7B", context: "32k" },
-  ],
-};
+export { PROVIDER_MODELS } from "./llm-client";
 
 export const PROVIDERS = [
   { id: "ollama" as LLMProviderType, name: "Ollama (Local)", tier: "Free", defaultModel: "gemma3:4b", link: "https://ollama.ai", placeholder: "http://localhost:11434" },

@@ -22,23 +22,44 @@ router = APIRouter(prefix="/api/chat", tags=["Chat"])
 limiter = Limiter(key_func=get_remote_address)
 
 
-def _get_active_provider(user, user_profile: dict | None, db: Session):
-    """Resolve the user's active LLM provider from settings or profile fallback."""
-    # 1. Front-end override takes precedence
-    if user_profile:
-        llm_p = user_profile.get("llm_provider")
-        llm_k = user_profile.get("llm_api_key")
-        if llm_p and llm_k:
-            return {
-                "provider": llm_p,
-                "model": user_profile.get("llm_model", ""),
-                "api_key": llm_k,
-            }
-            
-    # 2. Fallback to backend config for authenticated users
+def _get_active_provider(user, user_profile: dict | None, db: Session, request_api_key: str | None = None):
+    """Resolve the user's active LLM provider.
+    Priority: 1) pass-through api_key from request, 2) DB settings, 3) fallback.
+    Returns None for 'ollama' (always resolved by LLMRouter) or when nothing is found."""
+    profile_provider = (user_profile or {}).get("llm_provider", "")
+    profile_model = (user_profile or {}).get("llm_model", "")
+    if profile_provider == "ollama":
+        return None
+
+    # 1. Pass-through API key from frontend (highest priority)
+    if request_api_key:
+        return {
+            "provider": profile_provider or "groq",
+            "model": profile_model or "",
+            "api_key": request_api_key,
+            "base_url": None,
+        }
+
+    # 2. DB-saved config for authenticated users
     if user:
         from app.api.v1.settings import get_user_active_provider
-        return get_user_active_provider(user, db)
+        active = get_user_active_provider(user, db)
+        if active:
+            return active
+        if profile_provider:
+            from app.models.user import LLMConfigDB
+            config = db.query(LLMConfigDB).filter(
+                LLMConfigDB.user_id == user.id,
+                LLMConfigDB.provider == profile_provider
+            ).first()
+            if config:
+                from app.core.crypt import decrypt_api_key
+                return {
+                    "provider": config.provider,
+                    "model": profile_model or config.model,
+                    "api_key": decrypt_api_key(config.api_key_encrypted) if config.api_key_encrypted else None,
+                    "base_url": config.base_url,
+                }
     return None
 
 
@@ -88,7 +109,7 @@ async def chat(
 
     session_id = data.session_id or str(uuid.uuid4())
     history = _get_session_history(db, session_id)
-    active_provider = _get_active_provider(user, user_profile, db)
+    active_provider = _get_active_provider(user, user_profile, db, data.api_key)
 
     result = await rag_service.chat(
         data.message,
@@ -138,7 +159,7 @@ async def chat_stream(
 
     session_id = data.session_id or str(uuid.uuid4())
     history = _get_session_history(db, session_id)
-    active_provider = _get_active_provider(user, data.user_profile, db)
+    active_provider = _get_active_provider(user, data.user_profile, db, data.api_key)
 
     async def event_generator():
         full_response = ""
@@ -170,7 +191,9 @@ async def chat_stream(
             # Persist to history
             if user is not None and session_id and full_response:
                 try:
-                    provider = getattr(rag_service.llm_router, "active_provider", "ollama")
+                    provider = (active_provider.get("provider", "ollama")
+                                if active_provider else
+                                getattr(rag_service.llm_router, "active_provider", "ollama"))
                     db.add(ChatHistoryDB(
                         user_id=user.id,
                         session_id=session_id,
@@ -199,21 +222,22 @@ async def chat_stream(
 @router.get("/history")
 async def get_chat_history(
     limit: int = 50,
+    offset: int = 0,
     user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Get chat history for the logged-in user."""
+    """Get chat history for the logged-in user (paginated)."""
     if user is None:
         return {"messages": []}
 
     messages = (
         db.query(ChatHistoryDB)
         .filter(ChatHistoryDB.user_id == user.id)
-        .order_by(ChatHistoryDB.created_at.desc())
+        .order_by(ChatHistoryDB.created_at.asc())
+        .offset(offset)
         .limit(limit)
         .all()
     )
-    messages.reverse()
 
     return {
         "messages": [

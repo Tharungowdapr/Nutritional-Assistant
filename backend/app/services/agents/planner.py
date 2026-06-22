@@ -22,7 +22,10 @@ class PlannerAgent:
     def __init__(self, llm_router=None):
         self.llm_router = llm_router
     
-    def classify_intent(self, query: str) -> str:
+    def _has_llm(self) -> bool:
+        return self.llm_router is not None
+
+    async def classify_intent(self, query: str) -> str:
         """Classify query intent using keyword matching + LLM fallback."""
         query_lower = query.lower()
         
@@ -39,15 +42,15 @@ class PlannerAgent:
             return INTENT_CLINICAL
         
         # LLM fallback for ambiguous queries
-        if self.llm_router:
+        if self._has_llm():
             try:
-                return self._llm_classify(query)
+                return await self._llm_classify(query)
             except Exception as e:
                 logger.warning(f"LLM classification failed: {e}")
         
         return INTENT_GENERAL
     
-    def _llm_classify(self, query: str) -> str:
+    async def _llm_classify(self, query: str) -> str:
         """Use LLM for intent classification."""
         prompt = f"""Classify this nutrition query into ONE word:
 - plan (meal planning, diet creation)
@@ -60,7 +63,7 @@ class PlannerAgent:
 Query: {query}
 Reply with only one word."""
         
-        result, _ = self.llm_router.generate(prompt, "You are an intent classifier.", temperature=0)
+        result, _ = await self.llm_router.generate(prompt, "You are an intent classifier.", temperature=0)
         result = result.strip().lower()
         
         # Map to valid intents
@@ -77,9 +80,9 @@ Reply with only one word."""
         
         return INTENT_GENERAL
     
-    def analyze_intent(self, query: str) -> Dict[str, Any]:
+    async def analyze_intent(self, query: str) -> Dict[str, Any]:
         """Structured intent analysis with routing hints."""
-        intent = self.classify_intent(query)
+        intent = await self.classify_intent(query)
         
         # Determine required agents
         needs_rag = intent not in [INTENT_GENERAL]
@@ -87,9 +90,10 @@ Reply with only one word."""
         needs_profile = intent in [INTENT_RECOMMEND, INTENT_PLAN]
         
         # Determine collection (for RAG)
+        # Only "nutrisync" collection exists; metadata filtering handles domain-specific queries
         collection_map = {
-            INTENT_SEARCH: "nutrisync_foods",
-            INTENT_CLINICAL: "nutrisync_clinical",
+            INTENT_SEARCH: "nutrisync",
+            INTENT_CLINICAL: "nutrisync",
             INTENT_PLAN: "nutrisync",
             INTENT_ANALYZE: "nutrisync",
             INTENT_RECOMMEND: "nutrisync",

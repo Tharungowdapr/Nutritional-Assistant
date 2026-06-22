@@ -36,13 +36,13 @@ class LLMRouter:
 
         if self._ollama_available:
             self._active_provider = "ollama"
-            logger.info(f"✅ LLM Router: Using Ollama (local) — model: {self.ollama_model}")
+            logger.info(f"LLM Router: Using Ollama (local) — model: {self.ollama_model}")
         elif self._groq_available:
             self._active_provider = "groq"
-            logger.info(f"⚡ LLM Router: Using Groq (cloud) — model: {self.groq_model}")
+            logger.info(f"LLM Router: Using Groq (cloud) — model: {self.groq_model}")
         else:
             self._active_provider = "none"
-            logger.warning("❌ LLM Router: No LLM provider available!")
+            logger.warning("LLM Router: No LLM provider available!")
 
     async def _check_ollama(self) -> bool:
         try:
@@ -75,10 +75,31 @@ class LLMRouter:
            time.time() - self._last_ollama_check > self.retry_interval:
             if await self._check_ollama():
                 self._active_provider = "ollama"
-                logger.info("🔄 LLM Router: Ollama is back! Switching to local.")
+                logger.info("LLM Router: Ollama is back! Switching to local.")
 
     async def generate(self, prompt: str, system: str = "",
-                       temperature: float = 0.7, max_tokens: int = 4096) -> tuple[str, str]:
+                       temperature: float = 0.7, max_tokens: int = 4096,
+                       provider_override: dict = None) -> tuple[str, str]:
+        """Generate with optional dynamic provider override.
+        
+        When provider_override is provided (e.g. from user's saved LLM config),
+        it takes precedence over the built-in Ollama/Groq fallback chain.
+        Format: {"provider": str, "api_key": str, "model": str, "base_url": str?}
+        """
+        if provider_override:
+            from app.services.rag.override import generate_override
+            try:
+                content = await generate_override(prompt, system, provider_override)
+                if content == "INVALID_API_KEY":
+                    return "**Invalid API Key** — Update your LLM provider settings.", provider_override["provider"]
+                if content == "RATE_LIMITED":
+                    return "**Rate Limit Exceeded** — Check your LLM provider billing tier.", provider_override["provider"]
+                if content.startswith("Error from") or content.startswith("Connection error"):
+                    return f"**LLM Error** — {content[:100]}", provider_override["provider"]
+                return content, provider_override["provider"]
+            except Exception as e:
+                logger.error(f"Provider override failed ({provider_override.get('provider')}): {e}. Falling back.")
+        
         await self._maybe_retry_ollama()
 
         if self._active_provider == "ollama":
@@ -108,8 +129,27 @@ class LLMRouter:
         return "I'm sorry, no LLM provider is available.", "none"
 
     async def stream_generate(self, prompt: str, system: str = "",
-                              temperature: float = 0.7, max_tokens: int = 4096):
-        """Streaming version of generate."""
+                              temperature: float = 0.7, max_tokens: int = 4096,
+                              provider_override: dict = None):
+        """Streaming version of generate with optional provider override."""
+        if provider_override:
+            from app.services.rag.override import stream_generate_override
+            try:
+                async for chunk in stream_generate_override(prompt, system, provider_override):
+                    if chunk == "INVALID_API_KEY":
+                        yield "**Invalid API Key** — Update your LLM provider settings."
+                        return
+                    if chunk == "RATE_LIMITED":
+                        yield "**Rate Limit Exceeded** — Check your LLM provider billing tier."
+                        return
+                    if chunk.startswith("Error from") or chunk.startswith("Connection error"):
+                        yield f"**LLM Error** — {chunk[:100]}"
+                        return
+                    yield chunk
+                return
+            except Exception as e:
+                logger.error(f"Provider override stream failed ({provider_override.get('provider')}): {e}. Falling back.")
+        
         await self._maybe_retry_ollama()
 
         if self._active_provider == "ollama":

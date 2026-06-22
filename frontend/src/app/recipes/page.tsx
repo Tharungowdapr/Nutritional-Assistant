@@ -51,7 +51,7 @@ function RecipeDetail({ recipe, onBack }: { recipe: Recipe; onBack: () => void }
               {recipe.ifct_code && <span className="text-primary/60">IFCT {recipe.ifct_code}</span>}
             </div>
           </div>
-          <div className="bg-card border border-border rounded-xl p-4 text-center shrink-0">
+          <div className="glass-card rounded-xl p-4 text-center shrink-0">
             <p className="text-xs text-muted-foreground mb-0.5">per serving</p>
             <p className="text-3xl font-bold" style={{color:"var(--color-calories)"}}>{recipe.cal}</p>
             <p className="text-xs text-muted-foreground">kcal</p>
@@ -59,7 +59,7 @@ function RecipeDetail({ recipe, onBack }: { recipe: Recipe; onBack: () => void }
         </div>
 
         {/* Nutrition */}
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="glass-card rounded-xl p-5">
           <p className="text-xs font-medium text-muted-foreground mb-4">Nutrition per serving</p>
           <div className="grid grid-cols-3 md:grid-cols-7 gap-3">
             {[
@@ -78,7 +78,7 @@ function RecipeDetail({ recipe, onBack }: { recipe: Recipe; onBack: () => void }
             ))}
           </div>
           {recipe.ifct_note && (
-            <div className="mt-4 p-3 bg-primary/5 rounded-lg border-l-2 border-primary/40 text-sm text-muted-foreground italic">
+            <div className="mt-4 p-3 bg-primary/5 rounded-lg text-sm text-muted-foreground italic">
               {recipe.ifct_note}
             </div>
           )}
@@ -86,7 +86,7 @@ function RecipeDetail({ recipe, onBack }: { recipe: Recipe; onBack: () => void }
 
         {/* Content */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
+          <div className="lg:col-span-2 glass-card rounded-xl p-5">
             <p className="text-xs font-medium text-muted-foreground mb-4">Ingredients</p>
             <div className="space-y-2.5">
               {recipe.ingredients.map((ing, i) => (
@@ -98,7 +98,7 @@ function RecipeDetail({ recipe, onBack }: { recipe: Recipe; onBack: () => void }
             </div>
           </div>
 
-          <div className="lg:col-span-3 bg-card border border-border rounded-xl p-5">
+          <div className="lg:col-span-3 glass-card rounded-xl p-5">
             <p className="text-xs font-medium text-muted-foreground mb-4">Instructions</p>
             <div className="space-y-4">
               {recipe.steps.map((step, i) => (
@@ -155,7 +155,8 @@ export default function RecipesPage() {
 
   const filtered = allRecipes.filter(r => {
     const q = search.toLowerCase();
-    if (q && !r.name.toLowerCase().includes(q)) return false;
+    const recipeName = r.name || r.title || "";
+    if (q && !recipeName.toLowerCase().includes(q)) return false;
     if (category !== "All" && r.category !== category) return false;
     if (dietFilter !== "All" && r.diet_type !== dietFilter) return false;
     if (goalFilter === "High Iron" && r.iron_mg < 4) return false;
@@ -175,7 +176,6 @@ export default function RecipesPage() {
         user_profile: {
           ...user?.profile,
           llm_provider: llmConfig.provider,
-          llm_api_key: llmConfig.apiKey,
           llm_model: llmConfig.model
         }
       };
@@ -261,7 +261,7 @@ export default function RecipesPage() {
             <div
               key={r.id}
               onClick={() => setSelected(r)}
-              className="bg-card border border-border rounded-xl overflow-hidden cursor-pointer hover:border-primary/30 transition-colors group"
+              className="glass-card rounded-xl overflow-hidden cursor-pointer hover-lift"
             >
               <div className="p-5">
                 <div className="flex flex-wrap gap-1.5 mb-3">

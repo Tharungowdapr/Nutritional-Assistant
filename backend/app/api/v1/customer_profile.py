@@ -243,16 +243,20 @@ def _calc_streak(user_id: int, db_session: Session) -> int:
     """Count consecutive days with at least 1 food log."""
     ist = ZoneInfo("Asia/Kolkata")
     today = datetime.now(ist).date()
+    thirty_days_ago = (today - timedelta(days=29)).isoformat()
+
+    logs = db_session.query(DailyLogDB.log_date).filter(
+        DailyLogDB.user_id == user_id,
+        DailyLogDB.log_date >= thirty_days_ago,
+    ).distinct().all()
+    logged_dates = {row[0] for row in logs}
+
     streak = 0
     for i in range(30):
         day = (today - timedelta(days=i)).isoformat()
-        count = db_session.query(DailyLogDB).filter(
-            DailyLogDB.user_id == user_id,
-            DailyLogDB.log_date == day,
-        ).count()
-        if count > 0:
+        if day in logged_dates:
             streak += 1
-        elif i > 0:  # allow today to be 0 (haven't logged yet)
+        elif i > 0:
             break
     return streak
 

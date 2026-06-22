@@ -119,7 +119,7 @@ export function SettingsCard({
   className?: string;
 }) {
   return (
-    <div className={cn("bg-card border border-border rounded-xl p-6", className)}>
+    <div className={cn("glass-card rounded-xl p-6", className)}>
       <div className="mb-6">
         <h3 className="text-base font-semibold">{title}</h3>
         {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}

@@ -112,9 +112,15 @@ class LLMProxy:
         messages = []
         if system: messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
+        if not model:
+            model = {"groq": "llama-3.1-8b-instant", "openai": "gpt-4o-mini", "openrouter": "meta-llama/llama-3.1-8b-instruct:free", "mistral": "mistral-small-latest", "together": "meta-llama/Llama-3-70b-chat-hf"}.get(provider, "")
         payload = {"model": model, "messages": messages, "temperature": temp, "max_tokens": tokens}
         async with httpx.AsyncClient(timeout=60) as client:
             resp = await client.post(url, json=payload, headers=headers)
+            if resp.status_code == 401 or resp.status_code == 403:
+                raise PermissionError(f"Invalid API key for {provider}. Please update your LLM provider settings.")
+            if resp.status_code == 429:
+                raise ConnectionError(f"Rate limit exceeded for {provider}. Check your billing tier.")
             resp.raise_for_status()
             return resp.json()["choices"][0]["message"]["content"]
 
@@ -132,9 +138,17 @@ class LLMProxy:
         messages = []
         if system: messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
+        if not model:
+            model = {"groq": "llama-3.1-8b-instant", "openai": "gpt-4o-mini", "openrouter": "meta-llama/llama-3.1-8b-instruct:free", "mistral": "mistral-small-latest", "together": "meta-llama/Llama-3-70b-chat-hf"}.get(provider, "")
         payload = {"model": model, "messages": messages, "temperature": temp, "max_tokens": tokens, "stream": True}
         async with httpx.AsyncClient(timeout=60) as client:
             async with client.stream("POST", url, json=payload, headers=headers) as resp:
+                if resp.status_code == 401 or resp.status_code == 403:
+                    yield "Error: Invalid API key for " + provider + ". Please update your LLM provider settings."
+                    return
+                if resp.status_code == 429:
+                    yield "Error: Rate limit exceeded for " + provider + ". Check your billing tier."
+                    return
                 resp.raise_for_status()
                 async for line in resp.aiter_lines():
                     if not line.startswith("data: "): continue

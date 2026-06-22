@@ -112,7 +112,7 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Ses
                 logging.getLogger(__name__).warning(f"Failed to send reset email: {e}")
         else:
             import logging
-            logging.getLogger(__name__).info(f"RESEND_API_KEY not set — reset token for {user.email}: {token}")
+            logging.getLogger(__name__).info(f"RESEND_API_KEY not set — email based password reset unavailable")
 
     return {"message": "If that email exists, password reset instructions have been sent."}
 
@@ -174,10 +174,19 @@ async def update_profile(
     if request.name is not None:
         user.name = request.name
 
-    # Merge profile data
+    # Merge profile data — whitelist allowed fields
+    ALLOWED_PROFILE_FIELDS = {
+        "age", "gender", "weight_kg", "height_cm", "activity_level",
+        "diet_type", "region", "state", "conditions", "health_conditions",
+        "medications", "goal", "goals", "budget", "cuisine", "allergies",
+        "dietary_preferences", "meal_preferences", "profession", "physical_activity",
+        "sex", "sleep_hours", "stress_level", "meal_timing",
+    }
     current_profile = user.profile
     update_data = request.model_dump(exclude_none=True, exclude={"name"})
-    current_profile.update(update_data)
+    for key in update_data:
+        if key in ALLOWED_PROFILE_FIELDS:
+            current_profile[key] = update_data[key]
     user.profile_json = json.dumps(current_profile)
 
     db.commit()

@@ -143,7 +143,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setLoading(true);
 
     try {
-      // Get current local LLM config to pass as override
+      // Get current local LLM config to pass as override (pass-through API key)
       const llmConfig = (await import("./llm-provider")).frontendLLM.getConfig();
       
       const res = await fetch(`${API_BASE}/api/chat/stream`, {
@@ -157,10 +157,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           user_profile: {
             ...userProfile,
             llm_provider: llmConfig.provider,
-            llm_api_key: llmConfig.apiKey,
             llm_model: llmConfig.model
           },
           session_id: sessionId,
+          api_key: llmConfig.apiKey,
         }),
       });
 

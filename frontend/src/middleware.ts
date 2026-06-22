@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 // Routes that require a valid JWT token
 const PROTECTED_PREFIXES = [
+  "/dashboard",
   "/tracker",
   "/meal-plan",
   "/recipes",
@@ -39,7 +40,7 @@ export function middleware(req: NextRequest) {
   // Redirect authenticated users away from login/signup
   if (isAuthOnly && tokenCookie) {
     const homeUrl = req.nextUrl.clone();
-    homeUrl.pathname = "/";
+    homeUrl.pathname = "/dashboard";
     return NextResponse.redirect(homeUrl);
   }
 

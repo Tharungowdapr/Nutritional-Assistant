@@ -5,11 +5,11 @@ Utility functions for profile, meal plans, recipes, and data processing.
 def calculate_profile_completion(profile: dict) -> int:
     """
     Calculate profile completion percentage (0-100).
-    Based on 6 essential fields: age, sex, weight_kg, height_cm, diet_type, life_stage.
+    Based on 6 essential fields: age, gender, weight_kg, height_cm, diet_type, life_stage.
     """
     essential_fields = {
         'age': profile.get('age'),
-        'sex': profile.get('sex'),
+        'gender': profile.get('gender') or profile.get('sex'),
         'weight_kg': profile.get('weight_kg'),
         'height_cm': profile.get('height_cm'),
         'diet_type': profile.get('diet_type'),

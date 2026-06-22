@@ -250,23 +250,9 @@ async def generate_recipe_ai(
     if not llm:
         raise HTTPException(status_code=503, detail="LLM service unavailable")
 
-    # 1. Front-end override takes precedence
-    active_provider = None
-    if gen_req.user_profile:
-        up = gen_req.user_profile
-        llm_p = up.get("llm_provider")
-        llm_k = up.get("llm_api_key")
-        if llm_p and llm_k:
-            active_provider = {
-                "provider": llm_p,
-                "model": up.get("llm_model", ""),
-                "api_key": llm_k
-            }
-
-    # 2. Fallback to backend config for authenticated users
-    if not active_provider:
-        from app.api.v1.settings import get_user_active_provider
-        active_provider = get_user_active_provider(user, db) if user else None
+    # Use backend-stored LLM config for authenticated users
+    from app.api.v1.settings import get_user_active_provider
+    active_provider = get_user_active_provider(user, db) if user else None
 
     system_prompt = "You are a master Indian chef and nutritionist. Return ONLY valid JSON."
     prompt = f"""Generate a highly detailed Indian recipe for: "{gen_req.prompt}".

@@ -131,7 +131,7 @@ def get_weekly_trends(user_id: int) -> Dict[str, Any]:
     meals = get_recent_meals(user_id, days=7)
     
     if not meals:
-        return {"趋势": "No data available"}
+        return {"days": 0, "trends": "No data available"}
     
     # Group by date
     by_date = {}

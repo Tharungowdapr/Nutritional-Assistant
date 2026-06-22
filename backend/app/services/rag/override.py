@@ -1,7 +1,7 @@
 import json
 import httpx
 
-async def stream_generate_override(prompt: str, system: str, config: dict):
+async def stream_generate_override(prompt: str, system: str, config: dict, json_mode: bool = False, max_tokens: int = 1024):
     provider = config["provider"]
     api_key = config["api_key"]
     model = config["model"]
@@ -15,35 +15,46 @@ async def stream_generate_override(prompt: str, system: str, config: dict):
             "openai": "https://api.openai.com/v1",
         }
         url = f"{base_urls[provider]}/chat/completions" if provider != "azure" else model
+        if not model:
+            model = {"groq": "llama-3.1-8b-instant", "openai": "gpt-4o-mini", "openrouter": "meta-llama/llama-3.1-8b-instruct:free", "mistral": "mistral-small-latest", "together": "meta-llama/Llama-3-70b-chat-hf"}.get(provider, "")
         payload = {
-            "model": model, "temperature": 0.7, "stream": True,
+            "model": model, "temperature": 0.7, "max_tokens": max_tokens, "stream": True,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}]
         }
+        if json_mode:
+            payload["response_format"] = {"type": "json_object"}
         
         import logging
         logger = logging.getLogger("app.services.rag.override")
-        logger.info(f"🚀 Overriding LLM with {provider} ({model})")
+        logger.info(f"Overriding LLM with {provider} ({model})")
         
-        async with httpx.AsyncClient(timeout=30) as client:
+        async with httpx.AsyncClient(timeout=120) as client:
             try:
                 async with client.stream("POST", url, json=payload, headers={"Authorization": f"Bearer {api_key}"}) as resp:
+                    if resp.status_code == 401 or resp.status_code == 403:
+                        yield "INVALID_API_KEY"
+                        return
+                    if resp.status_code == 429 or resp.status_code == 413:
+                        yield "RATE_LIMITED"
+                        return
                     if resp.status_code != 200:
                         error_text = await resp.aread()
-                        logger.error(f"❌ {provider} API failed ({resp.status_code}): {error_text.decode()}")
+                        logger.error(f"{provider} API failed ({resp.status_code}): {error_text.decode()}")
                         yield f"Error from {provider}: {resp.status_code}"
                         return
                         
                     async for line in resp.aiter_lines():
                         try:
-                            data = line[6:]
-                            if not data or data.strip() == "[DONE]": break
-                            part = json.loads(data)
+                            if not line.startswith("data: "): continue
+                            raw = line[6:]
+                            if raw.strip() == "[DONE]": break
+                            part = json.loads(raw)
                             delta = part["choices"][0]["delta"].get("content", "")
                             if delta: yield delta
                         except Exception as e:
                             continue
             except Exception as e:
-                logger.error(f"💥 {provider} Connection Error: {e}")
+                logger.error(f"{provider} Connection Error: {e}")
                 yield f"Connection error: {str(e)}"
 
     elif provider == "gemini":
@@ -77,7 +88,7 @@ async def stream_generate_override(prompt: str, system: str, config: dict):
                     try:
                         part = json.loads(line)
                         if "response" in part: yield part["response"]
-                    except: continue
+                    except Exception: continue
     elif provider == "cohere":
         import cohere
         co = cohere.Client(api_key=api_key)
@@ -91,8 +102,8 @@ async def stream_generate_override(prompt: str, system: str, config: dict):
     else:
         yield f"Provider '{provider}' stream not supported yet. Targeted for {model}."
 
-async def generate_override(prompt: str, system: str, config: dict):
+async def generate_override(prompt: str, system: str, config: dict, json_mode: bool = False, max_tokens: int = 2048):
     res = ""
-    async for t in stream_generate_override(prompt, system, config):
+    async for t in stream_generate_override(prompt, system, config, json_mode=json_mode, max_tokens=max_tokens):
         res += t
     return res

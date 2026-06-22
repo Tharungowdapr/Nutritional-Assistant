@@ -74,10 +74,21 @@ async def save_provider(
     return {"success": True, "provider": req.provider}
 
 @router.post("/llm-providers/test")
-async def test_provider(req: ProviderTestRequest, user: UserDB = Depends(require_user)):
+async def test_provider(req: ProviderTestRequest, user: UserDB = Depends(require_user),
+                        db: Session = Depends(get_db)):
     """Validate an API key by sending a short test prompt. Returns latency."""
     from app.services.llm.proxy import LLMProxy
+    from app.core.crypt import decrypt_api_key
     import time
+    
+    api_key = req.api_key
+    if api_key == "********":
+        config = db.query(LLMConfigDB).filter(
+            LLMConfigDB.user_id == user.id,
+            LLMConfigDB.provider == req.provider
+        ).first()
+        if config and config.api_key_encrypted:
+            api_key = decrypt_api_key(config.api_key_encrypted)
     
     start = time.time()
     try:
@@ -85,7 +96,7 @@ async def test_provider(req: ProviderTestRequest, user: UserDB = Depends(require
             provider=req.provider,
             model=req.model,
             prompt="Say 'OK'",
-            api_key=req.api_key if req.api_key != "********" else None,
+            api_key=api_key,
             base_url=req.base_url
         )
         latency = round((time.time() - start) * 1000)

@@ -47,7 +47,7 @@ export default function SignupPage() {
           </p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-6">
+        <div className="glass-card rounded-xl p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>

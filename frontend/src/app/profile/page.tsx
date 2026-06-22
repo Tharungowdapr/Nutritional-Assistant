@@ -23,8 +23,8 @@ export default function ProfilePage() {
   const [age, setAge] = useState(user?.profile?.age?.toString() || "");
   const [weight, setWeight] = useState(user?.profile?.weight?.toString() || "");
   const [height, setHeight] = useState(user?.profile?.height?.toString() || "");
-  const [gender, setGender] = useState(user?.profile?.sex?.toLowerCase() || "male");
-  const [activityLevel, setActivityLevel] = useState(user?.profile?.physical_activity || "moderate");
+  const [gender, setGender] = useState((user?.profile?.gender || user?.profile?.sex || "Male").toLowerCase());
+  const [activityLevel, setActivityLevel] = useState(user?.profile?.activity_level || user?.profile?.physical_activity || "moderate");
   
   // Health Info
   const [dietType, setDietType] = useState(user?.profile?.diet_type || "VEG");
@@ -42,8 +42,8 @@ export default function ProfilePage() {
       setAge(user.profile?.age?.toString() || "");
       setWeight(user.profile?.weight?.toString() || "");
       setHeight(user.profile?.height?.toString() || "");
-      setGender(user.profile?.sex?.toLowerCase() || "male");
-      setActivityLevel(user.profile?.physical_activity || "moderate");
+      setGender((user.profile?.gender || user.profile?.sex || "Male").toLowerCase());
+      setActivityLevel(user.profile?.activity_level || user.profile?.physical_activity || "moderate");
       setDietType(user.profile?.diet_type || "VEG");
       setGoal(user.profile?.goals || "Maintenance");
       setAllergies(user.profile?.conditions?.join(", ") || "");
@@ -57,10 +57,10 @@ export default function ProfilePage() {
       await updateProfile({
         name,
         age: age ? parseInt(age) : undefined,
-        sex: gender === "male" ? "Male" : gender === "female" ? "Female" : "Other",
+        gender: gender === "male" ? "Male" : gender === "female" ? "Female" : "Other",
         weight_kg: weight ? parseFloat(weight) : undefined,
         height_cm: height ? parseFloat(height) : undefined,
-        physical_activity: activityLevel,
+        activity_level: activityLevel,
         diet_type: dietType,
         goals: goal,
         conditions: allergies.split(",").map((s: string) => s.trim()).filter(Boolean),
@@ -77,7 +77,14 @@ export default function ProfilePage() {
     }
   };
 
-  const bmi = (weight && height) ? (parseFloat(weight) / ((parseFloat(height)/100) ** 2)).toFixed(1) : null;
+  const calcBmi = () => {
+    if (!weight || !height) return null;
+    const w = parseFloat(weight);
+    const h = parseFloat(height);
+    if (isNaN(w) || isNaN(h) || h <= 0) return null;
+    return (w / ((h / 100) ** 2)).toFixed(1);
+  };
+  const bmi = calcBmi();
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">

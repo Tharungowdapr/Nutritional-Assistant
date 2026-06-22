@@ -83,8 +83,6 @@ export const PROVIDER_MODELS: Record<LLMProvider, { id: string; name: string; co
   ],
 };
 
-import { apiFetch } from "./api";
-
 export class LLMClient {
   private config: LLMConfig;
 
@@ -94,17 +92,26 @@ export class LLMClient {
 
   async complete(prompt: string, systemPrompt?: string): Promise<string> {
     try {
-      // Proxy all calls through the backend for security and reliability
-      const response = await apiFetch("/api/v1/llm/chat", {
+      // Use raw fetch (no auth) — this endpoint doesn't require it, and sending
+      // an expired/invalid token would cause a 401 even for anonymous access.
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${API_BASE}/api/v1/llm/chat`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: prompt,
           systemPrompt: systemPrompt,
           provider: this.config.provider,
           model: this.config.model,
+          apiKey: this.config.apiKey,
         }),
       });
-      return response.answer || "";
+      if (!res.ok) {
+        const err = await res.text().catch(() => "");
+        throw new Error(`LLM request failed (${res.status}): ${err}`);
+      }
+      const data = await res.json();
+      return data.answer || "";
     } catch (error: any) {
       console.error(`LLM Proxy Error (${this.config.provider}):`, error);
       throw error;

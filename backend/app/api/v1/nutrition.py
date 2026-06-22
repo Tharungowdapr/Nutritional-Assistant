@@ -31,8 +31,8 @@ async def compute_targets(request: Request, profile: UserProfile):
     w = float(p.get("weight_kg") or 65)
     h = float(p.get("height_cm") or 165)
     a = float(p.get("age") or 25)
-    g = p.get("sex") or "Male"
-    act = (p.get("profession") or "moderate").lower()
+    g = p.get("gender") or p.get("sex") or "Male"
+    act = (p.get("activity_level") or p.get("profession") or p.get("physical_activity") or "moderate").lower()
 
     bmr = _calc_bmr(w, h, a, g)
     pal = PAL_MAP.get(act, 1.6)

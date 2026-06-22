@@ -20,8 +20,8 @@ def format_user_profile(profile: Optional[Dict[str, Any]]) -> str:
         parts.append(f"Name: {profile['name']}")
     if profile.get("age"):
         parts.append(f"Age: {profile['age']} years")
-    if profile.get("sex"):
-        parts.append(f"Sex: {profile['sex']}")
+    if profile.get("gender") or profile.get("sex"):
+        parts.append(f"Gender: {profile.get('gender') or profile.get('sex', 'Unknown')}")
     
     # Body metrics
     if profile.get("weight_kg"):
@@ -36,12 +36,12 @@ def format_user_profile(profile: Optional[Dict[str, Any]]) -> str:
         try:
             bmi = weight / ((height / 100) ** 2)
             bmi_cat = "Normal"
-            if bmi < 18.5:
-                bmi_cat = "Underweight"
+            if bmi >= 30:
+                bmi_cat = "Obese"
             elif bmi >= 25:
                 bmi_cat = "Overweight"
-            elif bmi >= 30:
-                bmi_cat = "Obese"
+            elif bmi < 18.5:
+                bmi_cat = "Underweight"
             parts.append(f"BMI: {bmi:.1f} ({bmi_cat})")
         except:
             pass
@@ -51,8 +51,8 @@ def format_user_profile(profile: Optional[Dict[str, Any]]) -> str:
         parts.append(f"Diet: {profile['diet_type']}")
     
     # Health goals
-    if profile.get("goal"):
-        parts.append(f"Goal: {profile['goal']}")
+    if profile.get("goal") or profile.get("goals"):
+        parts.append(f"Goal: {profile.get('goal') or profile.get('goals')}")
     
     # Health conditions
     if profile.get("conditions") and profile["conditions"]:
@@ -63,10 +63,8 @@ def format_user_profile(profile: Optional[Dict[str, Any]]) -> str:
         parts.append(f"Allergies: {profile['allergies']}")
     
     # Lifestyle
-    if profile.get("profession"):
-        parts.append(f"Profession: {profile['profession']}")
-    if profile.get("physical_activity"):
-        parts.append(f"Activity: {profile['physical_activity']}")
+    if profile.get("activity_level") or profile.get("profession") or profile.get("physical_activity"):
+        parts.append(f"Activity: {profile.get('activity_level') or profile.get('profession') or profile.get('physical_activity')}")
     
     # Region
     if profile.get("region_zone"):
@@ -104,7 +102,7 @@ def get_user_preferences(profile: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         "budget": profile.get("daily_budget_inr"),
         "conditions": profile.get("conditions", []),
         "allergies": profile.get("allergies"),
-        "goal": profile.get("goal"),
+        "goal": profile.get("goal") or profile.get("goals"),
     }
 
 

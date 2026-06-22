@@ -31,40 +31,52 @@ class OrchestratorAgent:
         user_profile: Optional[Dict] = None,
         meals: Optional[List[Dict]] = None,
         conversation_history: Optional[List[Dict]] = None,
+        provider_override: Optional[Dict] = None,
     ) -> Dict[str, Any]:
-        """Process query through the agent pipeline."""
-        # Step 1: Plan - classify intent
-        intent_analysis = self.planner.analyze_intent(query)
+        """Process query through the agent pipeline with task decomposition."""
+        # Step 1: Plan - classify intent (fast, no LLM needed for most)
+        intent_analysis = await self.planner.analyze_intent(query)
         logger.info(f"Orchestrator: intent={intent_analysis['intent']}")
         
-        # Step 2: Analyze - get knowledge and meal data
+        # Step 2a: Analyze - get knowledge and meal data in parallel
         knowledge = []
         meal_analysis = None
         
-        if intent_analysis.get("needs_rag"):
-            try:
-                knowledge = await self.analyzer.retrieve_knowledge(
-                    query,
-                    intent_analysis["collection"]
-                )
-            except Exception as e:
-                logger.warning(f"RAG retrieval failed: {e}")
+        import asyncio
         
-        if intent_analysis.get("needs_meal_data") and meals:
-            meal_analysis = self.analyzer.analyze_meals(meals)
+        async def _retrieve():
+            if intent_analysis.get("needs_rag"):
+                try:
+                    return await self.analyzer.retrieve_knowledge(
+                        query, intent_analysis["collection"]
+                    )
+                except Exception as e:
+                    logger.warning(f"RAG retrieval failed: {e}")
+            return []
+        
+        async def _analyze_meals():
+            if intent_analysis.get("needs_meal_data") and meals:
+                return self.analyzer.analyze_meals(meals)
+            return None
+        
+        rag_task = asyncio.create_task(_retrieve())
+        meal_task = asyncio.create_task(_analyze_meals())
+        
+        knowledge, meal_analysis = await asyncio.gather(rag_task, meal_task)
         
         # Build analysis text
         analysis_text = self.analyzer.generate_analysis_text({
-            "knowledge": knowledge,
+            "knowledge": knowledge[:3],
             "meal_analysis": meal_analysis,
         })
         
-        # Step 3: Coach - generate response
+        # Step 3: Coach - generate response with decomposition
         response_text = await self.coach.generate_response(
             query=query,
             analysis_context=analysis_text,
             user_profile=user_profile,
             conversation_history=conversation_history,
+            provider_override=provider_override,
         )
         
         # Validate and structure output
@@ -82,7 +94,7 @@ class OrchestratorAgent:
             answer=response_text,
             sources=sources,
             intent=intent_analysis["intent"],
-            analysis={"knowledge": knowledge, "meal_analysis": meal_analysis},
+            analysis={"knowledge": knowledge[:3], "meal_analysis": meal_analysis},
         )
     
     def _validate_response(self, output: str) -> str:
@@ -112,8 +124,9 @@ class OrchestratorAgent:
         user_profile: Dict,
         days: int = 7,
         preferences: Dict = None,
+        provider_override: Optional[Dict] = None,
     ) -> Dict[str, Any]:
-        """Process meal plan request."""
+        """Process meal plan request with day-by-day decomposition."""
         try:
             from app.services.rag.service import RAGService
             
@@ -143,6 +156,7 @@ class OrchestratorAgent:
             days=days,
             targets=targets,
             preferences=preferences or {},
+            provider_override=provider_override,
         )
         
         return {
@@ -157,10 +171,10 @@ class OrchestratorAgent:
         weight = profile.get("weight_kg", 70)
         
         # Estimate BMR (Mifflin-St Jeor)
-        if profile.get("sex") == "Male":
-            bmr = 10 * weight + 6.25 * profile.get("height_cm", 170) - 5 * profile.get("age", 30) + 5
-        else:
+        if (profile.get("gender") or profile.get("sex")) == "Female":
             bmr = 10 * weight + 6.25 * profile.get("height_cm", 160) - 5 * profile.get("age", 30) - 161
+        else:
+            bmr = 10 * weight + 6.25 * profile.get("height_cm", 170) - 5 * profile.get("age", 30) + 5
         
         # Activity multiplier
         activity_mult = {
@@ -169,12 +183,12 @@ class OrchestratorAgent:
             "Moderate": 1.55,
             "Active": 1.725,
             "Very Active": 1.9,
-        }.get(profile.get("profession", "Moderate"), 1.375)
+        }.get(profile.get("activity_level") or profile.get("profession") or "Moderate", 1.375)
         
         tdee = bmr * activity_mult
         
         # Adjust for goal
-        goal = profile.get("goal", "").lower()
+        goal = (profile.get("goal") or profile.get("goals") or "").lower()
         if "loss" in goal or "reduce" in goal:
             tdee -= 500
         elif "gain" in goal or "muscle" in goal:

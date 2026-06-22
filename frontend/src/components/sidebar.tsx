@@ -86,7 +86,7 @@ function DesktopNav() {
       </nav>
 
       {/* Bottom section */}
-      <div className="p-4 border-t border-border space-y-1">
+      <div className="p-4 border-t border-border/60 space-y-1">
         {/* API Usage */}
         <div className="px-1 pb-3">
           <div className="rounded-xl bg-muted/50 p-3 text-xs text-muted-foreground flex flex-col gap-1.5">
@@ -155,12 +155,12 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[260px] border-r border-border bg-card/50 backdrop-blur-sm flex-col z-40">
+      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[260px] border-r border-border/60 bg-background/70 backdrop-blur-xl flex-col z-40">
         <DesktopNav />
       </aside>
 
       {/* Mobile bottom tab bar — 5 items, no Explore/Settings (Settings via Profile icon) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-sm border-t border-border flex items-center justify-around z-40 px-2">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background/85 backdrop-blur-xl border-t border-border/60 flex items-center justify-around z-40 px-2">
         {MOBILE_NAV.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
           const mobileLabel = "mobileLabel" in item ? item.mobileLabel : item.label;

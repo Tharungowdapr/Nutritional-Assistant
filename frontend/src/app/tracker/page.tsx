@@ -1,47 +1,30 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { nutritionApi, trackerApi } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
-import { toast } from 'sonner';
-import { Plus, Trash2, TrendingUp, Target, Flame, Activity, Search, Loader2, Utensils } from 'lucide-react';
-import { cn, getStorageKey } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import { Plus, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { nutritionApi, trackerApi } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
+import { getStorageKey } from "@/lib/utils";
+import { DailySummary } from "./types";
+import SummaryCards from "./components/summary-cards";
+import TrendsChart from "./components/trends-chart";
+import MealSlots from "./components/meal-slots";
+import AddFoodDialog from "./components/add-food-dialog";
 import RECIPES_DATA from "@/lib/recipes-db.json";
 
 const RECIPES = RECIPES_DATA as any[];
-
-interface MealLog {
-  id: number;
-  food_name: string;
-  quantity_g: number;
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-  [key: string]: any;
-}
-
-interface DailySummary {
-  log_date: string;
-  total_calories: number;
-  total_protein_g: number;
-  total_carbs_g: number;
-  total_fat_g: number;
-  meal_count: number;
-  meals_by_slot: { [key: string]: MealLog[] };
-}
+const MEAL_SLOTS = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
 export default function TrackerPage() {
   const { user } = useAuth();
-  const [todayDate, setTodayDate] = useState('');
+  const [todayDate, setTodayDate] = useState("");
   const [dailySummary, setDailySummary] = useState<DailySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAddFood, setShowAddFood] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<string>('Breakfast');
-  const [foodSearch, setFoodSearch] = useState('');
+  const [selectedSlot, setSelectedSlot] = useState("Breakfast");
+  const [foodSearch, setFoodSearch] = useState("");
   const [foodResults, setFoodResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(100);
@@ -74,7 +57,7 @@ export default function TrackerPage() {
 
   const loadDailySummary = async (date: string) => {
     try { setLoading(true); setDailySummary(await trackerApi.getDailySummary(date)); }
-    catch { toast.error('Failed to load summary'); }
+    catch { toast.error("Failed to load summary"); }
     finally { setLoading(false); }
   };
 
@@ -83,367 +66,74 @@ export default function TrackerPage() {
     setSearchLoading(true);
     try {
       const q = query.toLowerCase();
-      // 1. Search in IFCT database
       const data = await nutritionApi.searchFoods(query, undefined, undefined, undefined, 1, 8);
       const apiFoods = data.foods || [];
-
-      // 2. Search in hardcoded recipes
-      const recipeMatches = RECIPES.filter(r => 
-        (r.title || r.name).toLowerCase().includes(q)
-      ).map(r => ({
-        ...r,
-        'Food Name': r.title || r.name,
-        'Food Group': 'Recipe',
-        'Energy (kcal)': r.cal,
-        'isRecipe': true
-      }));
-
-      // 3. Search in user's custom recipes
+      const recipeMatches = RECIPES.filter(r => (r.title || r.name).toLowerCase().includes(q)).map(r => ({ ...r, "Food Name": r.title || r.name, "Food Group": "Recipe", "Energy (kcal)": r.cal, isRecipe: true }));
       let customMatches: any[] = [];
       const savedStr = localStorage.getItem(getStorageKey("custom_recipes", user?.id));
       if (savedStr) {
         const custom = JSON.parse(savedStr);
-        customMatches = custom.filter((r: any) => 
-          (r.title || r.name).toLowerCase().includes(q)
-        ).map((r: any) => ({
-          ...r,
-          'Food Name': r.title || r.name,
-          'Food Group': 'Custom Recipe',
-          'Energy (kcal)': r.cal || r.nutrition_per_serving?.cal,
-          'isRecipe': true
-        }));
+        customMatches = custom.filter((r: any) => (r.title || r.name).toLowerCase().includes(q)).map((r: any) => ({ ...r, "Food Name": r.title || r.name, "Food Group": "Custom Recipe", "Energy (kcal)": r.cal || r.nutrition_per_serving?.cal, isRecipe: true }));
       }
-
       setFoodResults([...customMatches, ...recipeMatches, ...apiFoods].slice(0, 10));
     } catch { setFoodResults([]); }
     finally { setSearchLoading(false); }
   };
 
   const handleAddFood = async () => {
-    if (!selectedFood || !selectedSlot) { toast.error('Select food and meal'); return; }
+    if (!selectedFood || !selectedSlot) { toast.error("Select food and meal"); return; }
     try {
       if (selectedFood.isRecipe) {
-        // Log recipe by servings
-        const n = selectedFood.nutrition_per_serving || {
-          cal: selectedFood.cal,
-          protein_g: selectedFood.protein_g,
-          carbs_g: selectedFood.carbs_g || 0,
-          fat_g: selectedFood.fat_g || 0,
-          iron_mg: selectedFood.iron_mg || 0,
-          calcium_mg: selectedFood.calcium_mg || 0,
-          fibre_g: selectedFood.fibre_g || 0
-        };
-
-        await trackerApi.logFood(
-          selectedSlot,
-          selectedFood['Food Name'],
-          selectedQuantity, // This is number of servings
-          todayDate,
-          {
-            manual_calories: n.cal * selectedQuantity,
-            manual_protein_g: n.protein_g * selectedQuantity,
-            manual_carbs_g: n.carbs_g * selectedQuantity,
-            manual_fat_g: n.fat_g * selectedQuantity,
-            manual_iron_mg: n.iron_mg * selectedQuantity,
-            manual_calcium_mg: n.calcium_mg * selectedQuantity,
-            manual_fibre_g: n.fibre_g * selectedQuantity,
-          }
-        );
+        const n = selectedFood.nutrition_per_serving || { cal: selectedFood.cal, protein_g: selectedFood.protein_g, carbs_g: selectedFood.carbs_g || 0, fat_g: selectedFood.fat_g || 0, iron_mg: selectedFood.iron_mg || 0, calcium_mg: selectedFood.calcium_mg || 0, fibre_g: selectedFood.fibre_g || 0 };
+        await trackerApi.logFood(selectedSlot, selectedFood["Food Name"], selectedQuantity, todayDate, {
+          manual_calories: n.cal * selectedQuantity, manual_protein_g: n.protein_g * selectedQuantity,
+          manual_carbs_g: n.carbs_g * selectedQuantity, manual_fat_g: n.fat_g * selectedQuantity,
+          manual_iron_mg: n.iron_mg * selectedQuantity, manual_calcium_mg: n.calcium_mg * selectedQuantity, manual_fibre_g: n.fibre_g * selectedQuantity,
+        });
       } else {
-        await trackerApi.logFood(selectedSlot, selectedFood['Food Name'], selectedQuantity, todayDate);
+        await trackerApi.logFood(selectedSlot, selectedFood["Food Name"], selectedQuantity, todayDate);
       }
-      
-      toast.success(`${selectedFood['Food Name']} logged`);
-      setShowAddFood(false); setSelectedFood(null); setFoodSearch(''); setFoodResults([]);
+      toast.success(`${selectedFood["Food Name"]} logged`);
+      setShowAddFood(false); setSelectedFood(null); setFoodSearch(""); setFoodResults([]);
       loadDailySummary(todayDate); loadHistory(historyRange);
-    } catch (err: any) { 
-      toast.error(err.message || 'Failed to log food'); 
-    }
+    } catch (err: any) { toast.error(err.message || "Failed to log food"); }
   };
 
-  const handleDeleteLog = async (logId: number) => {
-    try {
-      await trackerApi.deleteLog(logId);
-      toast.success('Removed');
-      loadDailySummary(todayDate); loadHistory(historyRange);
-    } catch { toast.error('Failed to delete'); }
-  };
+  const rawTargets = user?.profile?.rda_match || user?.profile?.icmr_match || {};
+  const targets = Object.keys(rawTargets).length > 0 ? rawTargets : { energy: 2000, protein_g: 60, carbs_g: 300, fat_g: 65 };
 
-  const mealSlots = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
-  const targets = user?.profile?.icmr_match || { energy: 2000, protein_g: 60, carbs_g: 300, fat_g: 65 };
-
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="w-6 h-6 animate-spin text-primary" />
-    </div>
-  );
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto pb-24 fade-in">
-
-      {/* Header */}
+    <div className="p-4 md:p-8 max-w-6xl mx-auto pb-24 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Tracker</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {todayDate && new Date(todayDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+            {todayDate && new Date(todayDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
           </p>
         </div>
-        <Button onClick={() => setShowAddFood(true)} size="sm">
-          <Plus className="w-4 h-4 mr-1.5" /> Log Meal
-        </Button>
+        <Button onClick={() => setShowAddFood(true)} size="sm"><Plus className="w-4 h-4 mr-1.5" /> Log Meal</Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {[
-          { label: 'Energy', val: dailySummary?.total_calories || 0, target: targets.energy, unit: 'kcal', color: 'var(--color-calories)', icon: Flame },
-          { label: 'Protein', val: dailySummary?.total_protein_g || 0, target: targets.protein_g, unit: 'g', color: 'var(--color-protein)', icon: Activity },
-          { label: 'Carbs', val: dailySummary?.total_carbs_g || 0, target: targets.carbs_g, unit: 'g', color: 'var(--color-carbs)', icon: Target },
-          { label: 'Fat', val: dailySummary?.total_fat_g || 0, target: targets.fat_g, unit: 'g', color: 'var(--color-fat)', icon: Utensils },
-        ].map(stat => {
-          const pct = Math.min((stat.val / (stat.target || 1)) * 100, 100);
-          return (
-            <div key={stat.label} className="bg-card border border-border rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
-                <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
-              </div>
-              <p className="text-2xl font-bold mb-1" style={{ color: stat.color }}>{Math.round(stat.val)}</p>
-              <div className="space-y-1.5">
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full transition-all duration-700" style={{ width: `${pct}%`, background: stat.color }} />
-                </div>
-                <div className="flex justify-between text-[10px] text-muted-foreground">
-                  <span>{Math.round(pct)}%</span>
-                  <span>{stat.target}{stat.unit}</span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <SummaryCards summary={dailySummary} targets={targets} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-        {/* Trends */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Trends</h2>
-            <div className="flex p-0.5 rounded-md bg-muted border border-border">
-              {[7, 30].map(r => (
-                <button
-                  key={r}
-                  onClick={() => setHistoryRange(r)}
-                  className={cn("px-3 py-1 rounded text-xs font-medium transition-colors",
-                    historyRange === r ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-                >
-                  {r}d
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-card border border-border rounded-xl p-5">
-            {loadingHistory ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-5 h-5 animate-spin text-primary" />
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Average daily</p>
-                  <p className="text-3xl font-bold">{historyData?.avg_daily_calories?.toFixed(0) || 0} <span className="text-sm text-muted-foreground font-normal">kcal</span></p>
-                </div>
-
-                <div className="h-32 flex items-end gap-1">
-                  {historyData?.daily_data?.map((d: any, i: number) => {
-                    const h = Math.min((d.calories / (targets.energy || 2000)) * 100, 100);
-                    return (
-                      <div key={i} className="flex-1 group relative h-full flex flex-col justify-end">
-                        <div
-                          className="w-full rounded-t bg-primary/20 group-hover:bg-primary/40 transition-colors"
-                          style={{ height: `${h}%` }}
-                        />
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-foreground text-background text-[10px] font-medium px-2 py-1 rounded pointer-events-none whitespace-nowrap z-10">
-                          {Math.round(d.calories)} kcal
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {historyData?.insight && (
-                  <div className="p-3 bg-primary/5 rounded-lg border border-primary/10 flex items-start gap-2">
-                    <TrendingUp className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                    <p className="text-sm text-muted-foreground">{historyData.insight}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+        <div className="lg:col-span-2">
+          <TrendsChart historyData={historyData} loadingHistory={loadingHistory} historyRange={historyRange} onRangeChange={setHistoryRange} targetEnergy={targets.energy} />
         </div>
-
-        {/* Meal Slots */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Today</h2>
-          <div className="space-y-3">
-            {mealSlots.map(slot => {
-              const meals = dailySummary?.meals_by_slot[slot] || [];
-              return (
-                <div key={slot} className="space-y-1.5">
-                  <div className="flex items-center justify-between px-1">
-                    <p className="text-xs font-medium text-muted-foreground">{slot}</p>
-                    <p className="text-[10px] text-muted-foreground">{meals.length} items</p>
-                  </div>
-                  {meals.length === 0 ? (
-                    <button
-                      onClick={() => { setSelectedSlot(slot); setShowAddFood(true); }}
-                      className="w-full py-3 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors"
-                    >
-                      + Add {slot}
-                    </button>
-                  ) : (
-                    meals.map(m => (
-                      <div key={m.id} className="group bg-card border border-border p-3 rounded-lg flex items-center justify-between">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{m.food_name}</p>
-                          <p className="text-[11px] text-muted-foreground">
-                            {m.quantity_g < 20 ? `${m.quantity_g} serving(s)` : `${m.quantity_g}g`} · {Math.round(m.calories)} kcal
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => handleDeleteLog(m.id)}
-                          className="p-1.5 rounded text-muted-foreground/30 hover:text-destructive hover:bg-destructive/5 transition-all opacity-0 group-hover:opacity-100"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <MealSlots summary={dailySummary} mealSlots={MEAL_SLOTS} onAddMeal={(slot) => { setSelectedSlot(slot); setShowAddFood(true); }} onDeleteLog={async (id) => { try { await trackerApi.deleteLog(id); toast.success("Removed"); loadDailySummary(todayDate); loadHistory(historyRange); } catch { toast.error("Failed to delete"); } }} />
       </div>
 
-      {/* Add Food Dialog */}
-      <Dialog open={showAddFood} onOpenChange={setShowAddFood}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Log Food</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Slot Selection */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Meal</label>
-              <div className="flex gap-2 flex-wrap">
-                {mealSlots.map(slot => (
-                  <button
-                    key={slot}
-                    onClick={() => setSelectedSlot(slot)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-md text-sm font-medium transition-colors border",
-                      selectedSlot === slot
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-card text-muted-foreground border-border hover:bg-muted'
-                    )}
-                  >
-                    {slot}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Search */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Search Food</label>
-              <div className="relative">
-                <Search className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4", searchLoading ? "text-primary animate-pulse" : "text-muted-foreground")} />
-                <Input
-                  placeholder="e.g. Ragi, Chicken, Dal..."
-                  value={foodSearch}
-                  onChange={e => setFoodSearch(e.target.value)}
-                  className="pl-9 h-10"
-                />
-              </div>
-
-              {foodResults.length > 0 && (
-                <div className="border border-border rounded-lg overflow-hidden bg-card shadow-md max-h-48 overflow-y-auto">
-                  {foodResults.map((food, i) => (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        setSelectedFood(food);
-                        setSelectedQuantity(food.isRecipe ? 1 : 100);
-                        setFoodSearch(food['Food Name']);
-                        setFoodResults([]);
-                      }}
-                      className="w-full flex items-center justify-between p-3 hover:bg-muted transition-colors text-left border-b border-border last:border-0"
-                    >
-                      <div>
-                        <p className="text-sm font-medium">{food['Food Name']}</p>
-                        <p className={cn("text-[10px] px-1.5 py-0.5 rounded inline-block mt-0.5", 
-                          food.isRecipe ? "bg-primary/10 text-primary font-bold" : "bg-muted text-muted-foreground")}>
-                          {food['Food Group']}
-                        </p>
-                      </div>
-                      <p className="text-sm font-semibold">{Math.round(food['Energy (kcal)'])} <span className="text-xs text-muted-foreground">kcal</span></p>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Selected Food */}
-            {selectedFood && (
-              <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Selected</p>
-                    <h4 className="font-semibold">{selectedFood['Food Name']}</h4>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-primary">
-                      {selectedFood.isRecipe 
-                        ? Math.round(selectedFood['Energy (kcal)'] * selectedQuantity)
-                        : Math.round((selectedFood['Energy (kcal)'] * selectedQuantity) / 100)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">kcal</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center border border-primary/20 rounded-md bg-card">
-                    <input
-                      type="number"
-                      value={selectedQuantity}
-                      onChange={e => {
-                        const val = Number(e.target.value);
-                        const max = selectedFood.isRecipe ? 50 : 2000;
-                        setSelectedQuantity(Math.min(max, Math.max(0, val)));
-                      }}
-                      className="w-20 bg-transparent border-none text-center font-bold text-lg h-10 outline-none"
-                    />
-                    <span className="pr-3 text-xs text-muted-foreground">{selectedFood.isRecipe ? "Servings" : "g"}</span>
-                  </div>
-                  {selectedFood.isRecipe && (
-                    <p className="text-[10px] text-muted-foreground">Logging {selectedQuantity} serving(s)</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-3 pt-2">
-              <Button onClick={() => setShowAddFood(false)} variant="ghost" className="flex-1">Cancel</Button>
-              <Button onClick={handleAddFood} disabled={!selectedFood} className="flex-[2]">
-                Log Food
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AddFoodDialog
+        open={showAddFood} onOpenChange={setShowAddFood}
+        mealSlots={MEAL_SLOTS} selectedSlot={selectedSlot} onSlotChange={setSelectedSlot}
+        foodSearch={foodSearch} onFoodSearchChange={setFoodSearch}
+        searchLoading={searchLoading} foodResults={foodResults}
+        onFoodSelect={(food) => { setSelectedFood(food); setSelectedQuantity(food.isRecipe ? 1 : 100); setFoodSearch(food["Food Name"]); setFoodResults([]); }}
+        selectedFood={selectedFood} selectedQuantity={selectedQuantity} onQuantityChange={setSelectedQuantity}
+        onAddFood={handleAddFood}
+      />
     </div>
   );
 }

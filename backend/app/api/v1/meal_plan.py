@@ -1,6 +1,7 @@
 """
 AaharAI NutriSync — Meal Plan Route (JSON structured output, chunked generation)
 """
+import asyncio
 import json
 import logging
 import re
@@ -22,8 +23,32 @@ logger = logging.getLogger(__name__)
 DAYS_LIST = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 
+def _extract_profile_params(profile: dict) -> dict:
+    """Extract and compute user profile parameters for meal plan generation."""
+    w = float(profile.get("weight_kg") or profile.get("weight") or 65)
+    h = float(profile.get("height_cm") or profile.get("height") or 165)
+    a = float(profile.get("age") or 25)
+    g = profile.get("gender") or profile.get("sex") or "Male"
+    act = (profile.get("activity_level") or profile.get("profession") or profile.get("physical_activity") or "moderate").lower()
+    diet = profile.get("diet_type") or "VEG"
+    goal = profile.get("goal") or profile.get("goals") or "Maintenance"
+    budget = profile.get("budget_per_day_inr") or profile.get("daily_budget_inr") or 300
+    bmr = _calc_bmr(w, h, a, g)
+    pal = PAL_MAP.get(act, 1.6)
+    tdee = round(bmr * pal)
+    rda = _match_rda_profile({"age": a, "gender": g, "activity_level": act})
+    energy = rda["energy"] if rda else tdee
+    protein = rda["protein_g"] if rda else round(w * 0.88)
+    return {
+        "w": w, "h": h, "a": a, "g": g, "act": act, "diet": diet,
+        "goal": goal, "budget": budget, "bmr": bmr, "pal": pal,
+        "tdee": tdee, "rda": rda, "energy": energy, "protein": protein,
+    }
+
+
 def _clean_json(raw: str) -> str:
-    """Extract JSON from LLM output, stripping markdown fences and extra text."""
+    """Extract JSON from LLM output, stripping markdown fences and extra text.
+    Handles both dicts {...} and arrays [...]."""
     raw = raw.strip()
     if "```" in raw:
         match = re.search(r'```(?:json)?\s*\n?(.*?)\n?\s*```', raw, re.DOTALL)
@@ -33,10 +58,53 @@ def _clean_json(raw: str) -> str:
             raw = raw.split("```")[1].strip()
             if raw.startswith("json"):
                 raw = raw[4:].strip()
-    if not raw.startswith("{"):
-        match = re.search(r'\{.*\}', raw, re.DOTALL)
-        if match:
-            raw = match.group(0)
+    # Find the outermost JSON construct, skipping brackets inside strings
+    # First, find all { and [ positions that are not inside string quotes
+    candidates = []
+    in_string = False
+    escape = False
+    for i, ch in enumerate(raw):
+        if escape:
+            escape = False
+            continue
+        if ch == '\\':
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if not in_string and ch in ('{', '['):
+            candidates.append((i, ch))
+    
+    if not candidates:
+        return raw
+    
+    start_pos, start_char = candidates[0]
+    end_char = '}' if start_char == '{' else ']'
+    
+    depth = 0
+    in_string = False
+    escape = False
+    for i in range(start_pos, len(raw)):
+        ch = raw[i]
+        if escape:
+            escape = False
+            continue
+        if ch == '\\':
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == start_char:
+            depth += 1
+        elif ch == end_char:
+            depth -= 1
+            if depth == 0:
+                return raw[start_pos:i+1]
+    
     return raw
 
 
@@ -98,7 +166,14 @@ Return ONLY valid JSON:
     
     if active_provider:
         from app.services.rag.override import generate_override
-        raw = await generate_override(prompt, "Return ONLY valid JSON.", active_provider)
+        raw = await generate_override(prompt, "Return ONLY valid JSON.", active_provider, json_mode=True, max_tokens=2048)
+        if raw == "INVALID_API_KEY":
+            raise PermissionError("Invalid API Key — Update your LLM provider settings.")
+        if raw == "RATE_LIMITED":
+            raise ConnectionError("Rate limit exceeded — Check your LLM provider billing tier.")
+        if raw.startswith("Error from") or raw.startswith("Connection error"):
+            logger.error(f"LLM error on full plan: {raw[:200]}")
+            return None
     else:
         raw, _ = await llm.generate(prompt=prompt, system="Return ONLY valid JSON.", temperature=0.4, max_tokens=16384)
     
@@ -108,6 +183,7 @@ Return ONLY valid JSON:
     except Exception as e:
         logger.error(f"Failed to parse full plan: {e}")
         return None
+
 
 # Grocery generation prompt
 GROCERY_PROMPT = """Generate a grocery list for a {days}-day meal plan.
@@ -122,7 +198,7 @@ Return ONLY valid JSON:
 
 
 async def _generate_chunk(llm, start_day: int, num_days: int, total_days: int, user_params: dict, active_provider: dict = None) -> list:
-    """Generate a chunk of days."""
+    """Generate a chunk of days with retry if LLM returns fewer days than expected."""
     day_labels = ", ".join(DAYS_LIST[start_day-1:start_day-1+num_days])
     day_template = ",".join([f'{{"day":{i},"label":"{DAYS_LIST[i-1]}"}}' for i in range(start_day, start_day + num_days)])
     
@@ -143,20 +219,41 @@ async def _generate_chunk(llm, start_day: int, num_days: int, total_days: int, u
         day_template=day_template,
     )
     
-    if active_provider:
-        from app.services.rag.override import generate_override
-        raw = await generate_override(prompt, "Return ONLY valid JSON array. No markdown.", active_provider)
-    else:
-        raw, _ = await llm.generate(prompt=prompt, system="Return ONLY valid JSON array. No markdown.", temperature=0.4, max_tokens=4096)
+    async def _try() -> list:
+        if active_provider:
+            from app.services.rag.override import generate_override
+            raw = await generate_override(prompt, "Return ONLY valid JSON array. No markdown.", active_provider, json_mode=False, max_tokens=768)
+            if raw == "INVALID_API_KEY":
+                raise PermissionError("Invalid API Key — Update your LLM provider settings.")
+            if raw == "RATE_LIMITED":
+                raise ConnectionError("Rate limit exceeded — Check your LLM provider billing tier.")
+            if raw.startswith("Error from") or raw.startswith("Connection error"):
+                logger.error(f"LLM error on chunk {start_day}-{start_day+num_days-1}: {raw[:200]}")
+                return []
+        else:
+            raw, _ = await llm.generate(prompt=prompt, system="Return ONLY valid JSON array. No markdown.", temperature=0.4, max_tokens=4096)
+        try:
+            cleaned = _clean_json(raw)
+            days = json.loads(cleaned)
+            if isinstance(days, dict):
+                for key in ("days", "chunk", "data", "response"):
+                    if key in days and isinstance(days[key], list):
+                        days = days[key]
+                        break
+            if not isinstance(days, list):
+                days = [days]
+            logger.info(f"Chunk {start_day}-{start_day+num_days-1}: {len(days)} day(s)")
+            return days
+        except Exception as e:
+            logger.error(f"Failed to parse chunk {start_day}-{start_day+num_days-1}: {e} | raw={raw[:200]}")
+            return []
     
     try:
-        days = json.loads(_clean_json(raw))
-        if not isinstance(days, list):
-            days = [days]
-        return days
-    except Exception as e:
-        logger.error(f"Failed to parse chunk {start_day}-{start_day+num_days-1}: {e}")
-        return []
+        return await _try()
+    except ConnectionError as e:
+        logger.warning(f"Rate limit on chunk {start_day}-{start_day+num_days-1}, retrying after 10s...")
+        await asyncio.sleep(10)
+        return await _try()
 
 
 async def _generate_grocery(llm, all_days: list, budget: int, active_provider: dict = None) -> dict:
@@ -176,7 +273,14 @@ async def _generate_grocery(llm, all_days: list, budget: int, active_provider: d
     
     if active_provider:
         from app.services.rag.override import generate_override
-        raw = await generate_override(prompt, "Return ONLY valid JSON.", active_provider)
+        raw = await generate_override(prompt, "Return ONLY valid JSON.", active_provider, json_mode=True, max_tokens=768)
+        if raw == "INVALID_API_KEY":
+            raise PermissionError("Invalid API Key — Update your LLM provider settings.")
+        if raw == "RATE_LIMITED":
+            raise ConnectionError("Rate limit exceeded — Check your LLM provider billing tier.")
+        if raw.startswith("Error from") or raw.startswith("Connection error"):
+            logger.error(f"LLM error on grocery: {raw[:200]}")
+            return {"grocery": [], "grocery_total_inr": 0}
     else:
         raw, _ = await llm.generate(prompt=prompt, system="Return ONLY valid JSON.", temperature=0.4, max_tokens=2048)
     
@@ -195,43 +299,42 @@ async def stream_meal_plan(request: Request, meal_request: MealPlanRequest,
     if llm is None:
         raise HTTPException(status_code=503, detail="LLM not available")
 
-    active_provider = None
-    # 1. Front-end override takes precedence
-    if meal_request.user_profile:
-        u_p = meal_request.user_profile
-        llm_p = u_p.get("llm_provider")
-        llm_k = u_p.get("llm_api_key")
-        if llm_p and llm_k:
-            active_provider = {
-                "provider": llm_p,
-                "model": u_p.get("llm_model", ""),
-                "api_key": llm_k
-            }
-            
-    # 2. Fallback to backend config for authenticated users
-    if not active_provider:
-        from app.api.v1.settings import get_user_active_provider
-        active_provider = get_user_active_provider(user, db) if user else None
-
     profile = meal_request.user_profile.model_dump() if hasattr(meal_request.user_profile, "model_dump") else dict(meal_request.user_profile)
     profile["budget_per_day_inr"] = meal_request.budget_per_day_inr
 
-    w = float(profile.get("weight_kg") or profile.get("weight") or 65)
-    h = float(profile.get("height_cm") or profile.get("height") or 165)
-    a = float(profile.get("age") or 25)
-    g = profile.get("sex") or profile.get("gender") or "Male"
-    act = (profile.get("profession") or profile.get("activity_level") or "moderate").lower()
-    diet = profile.get("diet_type") or "VEG"
-    region = profile.get("region_zone") or profile.get("region") or "India"
-    conds = profile.get("conditions") or []
-    goal = profile.get("goal") or "Maintenance"
-    budget = profile.get("budget_per_day_inr") or profile.get("daily_budget_inr") or 300
-    bmr = _calc_bmr(w, h, a, g)
-    pal = PAL_MAP.get(act, 1.6)
-    tdee = round(bmr * pal)
-    rda = _match_rda_profile({"age": a, "gender": g, "activity_level": act})
-    energy = rda["energy"] if rda else tdee
-    protein = rda["protein_g"] if rda else round(w * 0.88)
+    # Resolve active provider: 1) pass-through API key, 2) DB, 3) LLMRouter fallback
+    active_provider = None
+    profile_provider = profile.get("llm_provider", "")
+    profile_model = profile.get("llm_model", "")
+
+    # 1. Pass-through API key from frontend (highest priority)
+    if meal_request.api_key:
+        active_provider = {
+            "provider": profile_provider or "groq",
+            "model": profile_model or "",
+            "api_key": meal_request.api_key,
+            "base_url": None,
+        }
+    # 2. DB-saved config for authenticated users
+    elif user and profile_provider and profile_provider != "ollama":
+        from app.api.v1.settings import get_user_active_provider
+        active_provider = get_user_active_provider(user, db)
+        if not active_provider:
+            from app.models.user import LLMConfigDB
+            config = db.query(LLMConfigDB).filter(
+                LLMConfigDB.user_id == user.id,
+                LLMConfigDB.provider == profile_provider
+            ).first()
+            if config:
+                from app.core.crypt import decrypt_api_key
+                active_provider = {
+                    "provider": config.provider,
+                    "model": profile_model or config.model,
+                    "api_key": decrypt_api_key(config.api_key_encrypted) if config.api_key_encrypted else None,
+                    "base_url": config.base_url,
+                }
+
+    p = _extract_profile_params(profile)
 
     extra = ""
     suggestions = getattr(meal_request, "suggestions", None)
@@ -239,36 +342,58 @@ async def stream_meal_plan(request: Request, meal_request: MealPlanRequest,
         extra = f"Additional notes: {suggestions}"
 
     user_params = {
-        "age": a, "gender": g, "weight": w, "height": h,
-        "diet_type": diet, "goal": goal, "energy": energy,
-        "protein": protein, "budget": budget,
+        "age": p["a"], "gender": p["g"], "weight": p["w"], "height": p["h"],
+        "diet_type": p["diet"], "goal": p["goal"], "energy": p["energy"],
+        "protein": p["protein"], "budget": p["budget"],
     }
 
     async def event_generator():
         all_days = []
         total_days = meal_request.days
+        CHUNK_SIZE = 2  # 2 days per chunk (max_tokens=768 ~ 5 calls × 1168 tok = 5840 < 6000 TPM)
         
         try:
-            msg = f"Generating {total_days}-day meal plan...\n"
-            yield f"data: {json.dumps({'token': msg})}\n\n"
+            yield f"data: {json.dumps({'token': f'Planning {total_days}-day meal plan...\n'})}\n\n"
             
-            # Generate full plan in one call
-            plan = await _generate_full_plan(llm, total_days, user_params, active_provider)
+            # Generate days in chunks (2 days at a time)
+            for chunk_start in range(1, total_days + 1, CHUNK_SIZE):
+                chunk_end = min(chunk_start + CHUNK_SIZE - 1, total_days)
+                chunk_days = chunk_end - chunk_start + 1
+                
+                yield f"data: {json.dumps({'token': f'Generating days {chunk_start}-{chunk_end}...\n'})}\n\n"
+                
+                chunk = await _generate_chunk(
+                    llm, chunk_start, chunk_days, total_days,
+                    user_params, active_provider
+                )
+                
+                if chunk:
+                    all_days.extend(chunk)
+                else:
+                    logger.warning(f"Empty chunk for days {chunk_start}-{chunk_end}")
+                
+                await asyncio.sleep(3)  # Rate-limit spacing between LLM calls
             
-            if not plan:
-                raise Exception("Failed to generate meal plan")
+            if not all_days:
+                raise Exception("Failed to generate any meal plan days")
             
-            # Ensure we have all days
-            if len(plan.get("days", [])) < total_days:
-                logger.warning(f"Only got {len(plan.get('days', []))} days, expected {total_days}")
+            # Generate grocery list
+            yield f"data: {json.dumps({'token': 'Generating grocery list...\n'})}\n\n"
+            grocery_data = await _generate_grocery(llm, all_days, p["budget"], active_provider)
             
-            plan = _enforce_day_slots(plan)
+            # Build final plan
+            plan = _enforce_day_slots({
+                "summary": f"Personalized {total_days}-day meal plan",
+                "days": all_days,
+                "grocery": grocery_data.get("grocery", []),
+                "grocery_total_inr": grocery_data.get("grocery_total_inr", 0),
+            })
 
             if user is not None:
                 try:
                     plan_db = MealPlanDB(user_id=user.id, plan_text=json.dumps(plan),
-                                         targets_json=json.dumps({"energy": energy}),
-                                         days=meal_request.days, budget=float(budget))
+                                         targets_json=json.dumps({"energy": p["energy"]}),
+                                         days=meal_request.days, budget=float(p["budget"]))
                     db.add(plan_db); db.commit()
                 except Exception as e:
                     logger.error(f"Failed to persist meal plan: {e}")
@@ -332,59 +457,47 @@ async def generate_meal_plan(request: Request, meal_request: MealPlanRequest,
     if llm is None:
         raise HTTPException(status_code=503, detail="LLM not available")
 
-    active_provider = None
-    # 1. Front-end override takes precedence
-    if meal_request.user_profile:
-        u_p = meal_request.user_profile
-        llm_p = u_p.get("llm_provider")
-        llm_k = u_p.get("llm_api_key")
-        if llm_p and llm_k:
-            active_provider = {
-                "provider": llm_p,
-                "model": u_p.get("llm_model", ""),
-                "api_key": llm_k
-            }
-
-    # 2. Fallback to backend config for authenticated users
-    if not active_provider:
-        from app.api.v1.settings import get_user_active_provider
-        active_provider = get_user_active_provider(user, db) if user else None
-
     profile = meal_request.user_profile.model_dump() if hasattr(meal_request.user_profile, "model_dump") else dict(meal_request.user_profile)
     profile["budget_per_day_inr"] = meal_request.budget_per_day_inr
 
-    w = float(profile.get("weight_kg") or profile.get("weight") or 65)
-    h = float(profile.get("height_cm") or profile.get("height") or 165)
-    a = float(profile.get("age") or 25)
-    g = profile.get("sex") or profile.get("gender") or "Male"
-    act = (profile.get("profession") or profile.get("activity_level") or "moderate").lower()
-    diet = profile.get("diet_type") or "VEG"
-    region = profile.get("region_zone") or profile.get("region") or "India"
-    conds = profile.get("conditions") or []
-    goal = profile.get("goal") or "Maintenance"
-    budget = profile.get("budget_per_day_inr") or profile.get("daily_budget_inr") or 300
-    bmr = _calc_bmr(w, h, a, g)
-    pal = PAL_MAP.get(act, 1.6)
-    tdee = round(bmr * pal)
-    rda = _match_rda_profile({"age": a, "gender": g, "activity_level": act})
-    energy = rda["energy"] if rda else tdee
-    protein = rda["protein_g"] if rda else round(w * 0.88)
+    # Resolve active provider: pass-through API key takes priority
+    active_provider = None
+    profile_provider = profile.get("llm_provider", "")
+    profile_model = profile.get("llm_model", "")
+    if meal_request.api_key:
+        active_provider = {
+            "provider": profile_provider or "groq",
+            "model": profile_model or "",
+            "api_key": meal_request.api_key,
+            "base_url": None,
+        }
+    elif user and profile_provider and profile_provider != "ollama":
+        from app.api.v1.settings import get_user_active_provider
+        active_provider = get_user_active_provider(user, db)
+
+    p = _extract_profile_params(profile)
 
     day_labels = ", ".join(DAYS_LIST[:meal_request.days])
 
     prompt = MEAL_PLAN_PROMPT.format(
         days=meal_request.days, num_people=meal_request.num_people,
-        age=a, gender=g, weight=w, height=h, activity=act, pal=pal,
-        diet_type=diet, region=region,
-        conditions=", ".join(conds) if conds else "None",
-        goal=goal, budget=budget, extra="",
-        energy=energy, protein=protein,
+        age=p["a"], gender=p["g"], weight=p["w"], height=p["h"], activity=p["act"], pal=p["pal"],
+        diet_type=p["diet"], region=p.get("region", "India"),
+        conditions=", ".join(profile.get("conditions") or []) if profile.get("conditions") else "None",
+        goal=p["goal"], budget=p["budget"], extra="",
+        energy=p["energy"], protein=p["protein"],
         day_labels=day_labels,
     )
 
     if active_provider:
         from app.services.rag.override import generate_override
-        raw = await generate_override(prompt, "Return ONLY valid JSON.", active_provider)
+        raw = await generate_override(prompt, "Return ONLY valid JSON.", active_provider, json_mode=True, max_tokens=2048)
+        if raw == "INVALID_API_KEY":
+            raise HTTPException(status_code=401, detail="Invalid API Key — Update your LLM provider settings.")
+        if raw == "RATE_LIMITED":
+            raise HTTPException(status_code=429, detail="Rate limit exceeded — Check your LLM provider billing tier.")
+        if raw.startswith("Error from") or raw.startswith("Connection error"):
+            raise HTTPException(status_code=502, detail=raw[:200])
     else:
         raw, _ = await llm.generate(prompt=prompt, system="Return ONLY valid JSON.", temperature=0.4, max_tokens=16384)
 
@@ -396,8 +509,8 @@ async def generate_meal_plan(request: Request, meal_request: MealPlanRequest,
     if user is not None:
         try:
             plan_db = MealPlanDB(user_id=user.id, plan_text=json.dumps(plan),
-                                 targets_json=json.dumps({"energy": energy}),
-                                 days=meal_request.days, budget=float(budget))
+                                 targets_json=json.dumps({"energy": p["energy"]}),
+                                 days=meal_request.days, budget=float(p["budget"]))
             db.add(plan_db); db.commit(); db.refresh(plan_db)
         except Exception as e:
             logger.error(f"Failed to persist meal plan: {e}")
