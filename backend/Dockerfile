@@ -39,12 +39,12 @@ RUN mkdir -p /app/data && chown -R nutrisync:nutrisync /app /app/data
 # Switch to non-root user
 USER nutrisync
 
-# Expose FastAPI port
-EXPOSE 8000
+# Expose FastAPI port (Render uses PORT env var, default 10000)
+EXPOSE 10000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD curl -f http://localhost:8000/api/health || exit 1
+# Health check uses PORT env var
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-10000}/api/health || exit 1
 
-# Run with uvicorn (workers configurable via UVICORN_WORKERS env var)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run with uvicorn using PORT env var (Render sets PORT=10000)
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-10000} --workers 1"]
