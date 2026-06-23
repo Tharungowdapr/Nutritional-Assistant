@@ -142,12 +142,17 @@ Budget: ₹{budget}/day
 
 RULES:
 1. {diet_type} only — Indian foods
-2. 5 slots: breakfast, mid_morning, lunch, snack, dinner
-3. Each item: {{"name":str,"qty":str,"cal":int,"protein_g":int}}
-4. Day format: {{"day":{day_num},"label":"{day_label}","breakfast":[],"mid_morning":[],"lunch":[],"snack":[],"dinner":[],"cal_approx":int}}
+ 2. 5 slots: breakfast, mid_morning, lunch, snack, dinner
+ 3. Each item: {{"name":str,"qty":str,"cal":int,"protein_g":int}}
+ 4. Day format: {{"day":{day_num},"label":"{day_label}",
+      "breakfast":[],"mid_morning":[],"lunch":[],"snack":[],
+      "dinner":[],"cal_approx":int}}
 
-Return ONLY valid JSON for day {day_num}:
-{{"day":{day_num},"label":"{day_label}","breakfast":[{{"name":"...","qty":"...","cal":0,"protein_g":0}}],"mid_morning":[],"lunch":[],"snack":[],"dinner":[],"cal_approx":0}}"""
+ Return ONLY valid JSON for day {day_num}:
+ {{"day":{day_num},"label":"{day_label}",
+   "breakfast":[{{"name":"...","qty":"...","cal":0,"protein_g":0}}],
+   "mid_morning":[],"lunch":[],"snack":[],"dinner":[],
+   "cal_approx":0}}"""
 
 
 # Grocery generation prompt
@@ -159,7 +164,9 @@ Categories: Grains & Cereals, Pulses & Legumes, Dairy, Vegetables, Fruits, Oils 
 Each item: {{"name":str,"qty":str,"cost_inr":int}}
 
 Return ONLY valid JSON:
-{{"grocery":[{{"category":"Grains","items":[{{"name":"Rice","qty":"5 kg","cost_inr":400}}]}}],"grocery_total_inr":1400}}"""
+{{"grocery":[{{"category":"Grains","items":
+  [{{"name":"Rice","qty":"5 kg","cost_inr":400}}]}}],
+  "grocery_total_inr":1400}}"""
 
 
 async def _generate_chunk(llm, day_num: int, total_days: int, user_params: dict, active_provider: dict = None) -> dict:

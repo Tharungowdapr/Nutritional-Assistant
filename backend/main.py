@@ -12,6 +12,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
 
+from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.db.loader import db
@@ -40,39 +41,6 @@ def get_llm_router():
     return _llm_router
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Startup: load database, initialize services in background."""
-    global _startup_done
-
-    logger.info("Starting AaharAI NutriSync...")
-
-    # Import routing after logging is set up
-    from app.api.v1.router import api_router
-
-    app.include_router(api_router)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    # Fast init: DB schema only (no data loading, no remote checks)
-    init_db()
-
-    # Deferred background initialization (app starts serving immediately)
-    import asyncio
-
-    asyncio.create_task(_init_background())
-
-    logger.info("API ready! (services initializing in background)")
-    _startup_done = True
-    yield
-    logger.info("Shutting down...")
-
-
 async def _init_background():
     """Initialize data loading, LLM router, and RAG services in background."""
     global _llm_router, _rag_service, _meal_agent
@@ -88,6 +56,7 @@ async def _init_background():
     try:
         from app.services.rag.llm_router import LLMRouter
 
+        global _llm_router
         _llm_router = LLMRouter(
             ollama_base_url=settings.OLLAMA_BASE_URL,
             ollama_model=settings.OLLAMA_MODEL,
@@ -104,6 +73,7 @@ async def _init_background():
     try:
         from app.services.rag.service import RAGService
 
+        global _rag_service, _meal_agent
         _rag_service = RAGService(llm_router=_llm_router)
         from app.services.agents.orchestrator import OrchestratorAgent
 
@@ -111,6 +81,27 @@ async def _init_background():
         logger.info("RAG services ready")
     except Exception as e:
         logger.warning(f"RAG service init deferred: {e}")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup: app serves immediately, heavy init runs in background."""
+    global _startup_done
+
+    logger.info("Starting AaharAI NutriSync...")
+
+    # Fast init: DB schema only (no data loading, no remote checks)
+    init_db()
+
+    # Deferred background initialization (app starts serving immediately)
+    import asyncio
+
+    asyncio.create_task(_init_background())
+
+    logger.info("API ready! (services initializing in background)")
+    _startup_done = True
+    yield
+    logger.info("Shutting down...")
 
 
 # Rate Limiter
@@ -123,6 +114,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Add middleware at app creation (before lifespan runs)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(api_router)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -131,7 +132,8 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 async def global_exception_handler(request, exc):
     logger.error(f"Global Error: {exc}", exc_info=True)
     return JSONResponse(
-        status_code=500, content={"success": False, "error": str(exc) if settings.DEBUG else "Internal server error"}
+        status_code=500,
+        content={"success": False, "error": str(exc) if settings.DEBUG else "Internal server error"},
     )
 
 
