@@ -32,11 +32,13 @@ export function clearToken() {
   }
 }
 
-/** Core fetch wrapper with automatic token refresh on 401 */
+/** Core fetch wrapper with automatic token refresh on 401.
+ *  Set `skipAuthRefresh = true` for public endpoints like login/signup
+ *  where a 401 means bad credentials, not an expired session. */
 export async function apiFetch<T = any>(
   path: string,
   options: RequestInit = {},
-  retry = true
+  skipAuthRefresh = false
 ): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = {
@@ -54,7 +56,7 @@ export async function apiFetch<T = any>(
 
   if (!res.ok) {
     // Handle 401 Unauthorized with automatic token refresh
-    if (res.status === 401 && retry) {
+    if (res.status === 401 && !skipAuthRefresh) {
       try {
         // Attempt silent token refresh
         const refreshRes = await fetch(`${API_BASE}/api/auth/refresh`, {
@@ -69,7 +71,7 @@ export async function apiFetch<T = any>(
           const refreshData = await refreshRes.json();
           setToken(refreshData.access_token);
           // Retry original request with new token
-          return apiFetch<T>(path, options, false);
+          return apiFetch<T>(path, options, true);
         } else {
           // Refresh failed — clear token and redirect to login
           clearToken();
@@ -104,10 +106,10 @@ export class ApiError extends Error {
 // ── Auth ──
 export const authApi = {
   signup: (data: { name: string; email: string; password: string }) =>
-    apiFetch("/api/auth/signup", { method: "POST", body: JSON.stringify(data) }),
+    apiFetch("/api/auth/signup", { method: "POST", body: JSON.stringify(data) }, true),
 
   login: (data: { email: string; password: string }) =>
-    apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify(data) }),
+    apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify(data) }, true),
 
   refresh: () =>
     apiFetch("/api/auth/refresh", { method: "POST" }),

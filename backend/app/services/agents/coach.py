@@ -91,25 +91,25 @@ class CoachAgent:
         if not self.llm_router and not provider_override:
             return "AI service unavailable. Please try again."
         
-        # Build context
         profile_ctx = self.format_profile_context(user_profile)
         full_context = f"{profile_ctx}\n\n{analysis_context}"
         
         history_ctx = ""
-        if conversation_history and len(conversation_history) > 0:
+        if conversation_history:
             history_parts = ["Recent conversation:"]
             for h in conversation_history[-3:]:
-                if h.get("role") == "user":
-                    history_parts.append(f"User: {h.get('content', '')}")
+                role = h.get("role", "")
+                content = h.get("content", "")
+                if role == "user":
+                    history_parts.append(f"User: {content}")
                 else:
-                    history_parts.append(f"You: {h.get('content', '')}")
+                    history_parts.append(f"You: {content}")
             history_ctx = "\n".join(history_parts) + "\n\n"
         
-        # Decompose complex queries into sub-questions
-        sub_answers = await self._decompose_and_answer(query, full_context, provider_override)
-        
-        # Synthesize final response from sub-answers
-        synthesis_prompt = f"""{history_ctx}Context:
+        # Only decompose for long/multi-part queries
+        if len(query) > 80 and any(c in query for c in [",", ".", "and", "also", "plus"]):
+            sub_answers = await self._decompose_and_answer(query, full_context, provider_override)
+            synthesis_prompt = f"""{history_ctx}Context:
 {full_context}
 
 User Question:
@@ -119,6 +119,14 @@ Analysis breakdown:
 {sub_answers}
 
 Provide a cohesive, personalized response that synthesizes the above information."""
+        else:
+            synthesis_prompt = f"""{history_ctx}Context:
+{full_context}
+
+User Question:
+{query}
+
+Provide a personalized response using the above context."""
         
         try:
             response, provider = await self.llm_router.generate(

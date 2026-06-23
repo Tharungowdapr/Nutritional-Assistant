@@ -174,6 +174,9 @@ async def get_summary(
                 "protein": 0,
                 "carbs": 0,
                 "fat": 0,
+                "iron": 0,
+                "calcium": 0,
+                "fibre": 0,
                 "meal_count": 0,
             }
         
@@ -181,6 +184,9 @@ async def get_summary(
         daily_summary[log.log_date]["protein"] += log.protein_g or 0
         daily_summary[log.log_date]["carbs"] += log.carbs_g or 0
         daily_summary[log.log_date]["fat"] += log.fat_g or 0
+        daily_summary[log.log_date]["iron"] += log.iron_mg or 0
+        daily_summary[log.log_date]["calcium"] += log.calcium_mg or 0
+        daily_summary[log.log_date]["fibre"] += log.fibre_g or 0
         daily_summary[log.log_date]["meal_count"] += 1
     
     # Generate list for frontend charts
@@ -189,7 +195,7 @@ async def get_summary(
     current = datetime.now(ist)
     for i in range(days):
         d_str = (current - timedelta(days=i)).strftime("%Y-%m-%d")
-        stats = daily_summary.get(d_str, {"calories": 0, "protein": 0, "carbs": 0, "fat": 0, "meal_count": 0})
+        stats = daily_summary.get(d_str, {"calories": 0, "protein": 0, "carbs": 0, "fat": 0, "iron": 0, "calcium": 0, "fibre": 0, "meal_count": 0})
         chart_data.append({"date": d_str, **stats})
 
     # Link Person Analysis: Contextual Insights
@@ -204,10 +210,18 @@ async def get_summary(
         elif current_user.profile.get("gender") == "Female" and avg_protein < 50:
             insight = "Consider slightly increasing protein for better ICMR/NIN balance."
 
+    day_count = max(len(daily_summary), 1)
     return {
         "range_days": days,
         "daily_data": chart_data[::-1],  # Chronological order
-        "avg_daily_calories": round(sum(d["calories"] for d in daily_summary.values()) / max(len(daily_summary), 1), 1) if daily_summary else 0,
+        "avg_daily_calories": round(sum(d["calories"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0,
+        "avg_daily_protein_g": round(sum(d["protein"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0,
+        "avg_daily_carbs_g": round(sum(d["carbs"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0,
+        "avg_daily_fat_g": round(sum(d["fat"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0,
+        "avg_daily_iron_mg": round(sum(d["iron"] for d in daily_summary.values()) / day_count, 2) if daily_summary else 0,
+        "avg_daily_calcium_mg": round(sum(d["calcium"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0,
+        "avg_daily_fibre_g": round(sum(d["fibre"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0,
+        "days_logged": len(daily_summary),
         "insight": insight
     }
 

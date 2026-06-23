@@ -37,7 +37,7 @@ export default function RootLayout({
             <ChatProvider>
               <Navbar />
               <LeafDecoration />
-              <main className="pt-14 min-h-screen relative z-10">
+              <main className="pt-14 pb-20 lg:pb-0 min-h-screen relative z-10">
                 {children}
               </main>
               <Toaster position="top-right" />

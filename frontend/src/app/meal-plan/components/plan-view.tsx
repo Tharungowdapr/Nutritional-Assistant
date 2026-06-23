@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Target, AlertTriangle, UtensilsCrossed, Flame, TrendingUp, ShoppingCart, CheckCircle, ExternalLink, ChefHat, Wheat, Apple, Milk, Beef, LeafyGreen } from "lucide-react";
+import { ChevronDown, Target, AlertTriangle, UtensilsCrossed, Flame, TrendingUp, ShoppingCart, CheckCircle, ExternalLink, ChefHat, Wheat, Apple, Milk, Beef, LeafyGreen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FoodItem, MealPlan, SLOTS, NUTRI_COLORS } from "../types";
 
@@ -125,7 +125,7 @@ export default function PlanView({
                           <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground">Items</th>
                           <th className="text-right px-3 py-2.5 font-semibold text-muted-foreground w-16">Cal</th>
                           <th className="text-right px-3 py-2.5 font-semibold text-muted-foreground w-16">Protein</th>
-                          <th className="text-center px-3 py-2.5 font-semibold text-muted-foreground w-16">Recipe</th>
+                          <th className="text-center px-3 py-2.5 font-semibold text-muted-foreground w-14">Recipe</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -159,15 +159,6 @@ export default function PlanView({
                                               {expanded ? "less" : item.note.substring(0, 20) + "..."}
                                             </button>
                                           )}
-                                          <a
-                                            href={recipeUrl(item.name)}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="ml-auto text-primary/50 hover:text-primary transition-colors shrink-0"
-                                            title="Search recipe"
-                                          >
-                                            <ExternalLink className="w-3 h-3" />
-                                          </a>
                                         </div>
                                         {expanded && (
                                           <div className="mt-1.5 grid grid-cols-3 md:grid-cols-6 gap-1.5">
@@ -202,7 +193,7 @@ export default function PlanView({
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/5 hover:bg-primary/10 text-primary/60 hover:text-primary transition-colors mx-auto"
-                                      title={`Search recipe for ${item.name}`}
+                                      title={`Recipe for ${item.name}`}
                                     >
                                       <ExternalLink className="w-3 h-3" />
                                     </a>
@@ -249,6 +240,28 @@ export default function PlanView({
             ) : null}
           </div>
 
+          {/* Category cost summary */}
+          {(() => {
+            const catTotals = plan.grocery.map(cat => ({
+              name: cat.category,
+              total: cat.items.reduce((s, i) => s + (i.cost_inr || 0), 0),
+            }));
+            return (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-5 py-3 bg-muted/10 border-b border-border/40">
+                {catTotals.map(ct => (
+                  <div key={ct.name} className="text-center">
+                    <p className="text-[10px] text-muted-foreground">{ct.name}</p>
+                    <p className="text-xs font-semibold">₹{ct.total}</p>
+                  </div>
+                ))}
+                <div className="text-center border-t border-border/40 pt-1 col-span-full flex justify-center gap-6">
+                  <p className="text-xs text-muted-foreground">Total Bill:</p>
+                  <p className="text-sm font-bold text-primary">₹{plan.grocery_total_inr}</p>
+                </div>
+              </div>
+            );
+          })()}
+
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
@@ -261,8 +274,8 @@ export default function PlanView({
               </thead>
               <tbody>
                 {plan.grocery.map((cat, ci) => (
-                  <>
-                    <tr key={`cat-${ci}`} className="border-b border-border/40 bg-muted/10">
+                  <React.Fragment key={ci}>
+                    <tr className="border-b border-border/40 bg-muted/10">
                       <td className="px-4 py-2">
                         <CategoryIcon category={cat.category} />
                       </td>
@@ -283,7 +296,7 @@ export default function PlanView({
                         </tr>
                       );
                     })}
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
               {plan.grocery_total_inr ? (

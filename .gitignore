@@ -16,10 +16,9 @@ backend/.env
 **/.env.*.local
 
 # Database files
-backend/*.db
-backend/*.sqlite3
-
-# backend/app/db/static/chroma_db/ (Allowed to commit for ready-to-use RAG)
+backend/**/*.db
+backend/**/*.sqlite3
+!backend/app/db/static/chroma_db/chroma.sqlite3
 
 # Node.js
 frontend/node_modules/

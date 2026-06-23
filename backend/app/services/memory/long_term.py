@@ -27,22 +27,17 @@ class LongTermMemory:
     """Service to manage persistent user facts with LLM-enhanced extraction."""
 
     @staticmethod
-    def extract_and_save_fact(user_id: int, message: str, db: Session) -> Optional[str]:
+    def extract_and_save_fact(user_id: int, message: str, db: Session, llm_router=None) -> Optional[str]:
         """
         Detects if user wants to remember something and saves it.
-        Uses LLM for complex extraction, falls back to regex for reliability.
+        Uses regex for fast extraction (no LLM cost per message).
         """
         if not user_id or not message:
             return None
 
         message_lower = message.lower().strip()
 
-        # Quick regex check first (fast path)
         fact = LongTermMemory._regex_extract(message, message_lower)
-
-        # If no regex match, try LLM extraction for complex sentences
-        if not fact:
-            fact = LongTermMemory._llm_extract(message)
 
         if not fact:
             return None
@@ -88,69 +83,6 @@ class LongTermMemory:
                 fact = message[start:end].strip()
                 if len(fact) > 5:
                     return fact
-        return None
-
-    @staticmethod
-    def _llm_extract(message: str) -> Optional[str]:
-        """LLM-based fact extraction for complex sentences (async-safe wrapper)."""
-        try:
-            import asyncio
-            from app.services.rag.llm_router import LLMRouter
-            from app.core.config import settings
-
-            extraction_prompt = f"""Extract the key personal health/dietary fact from this message.
-Return ONLY the fact itself, nothing else. If there is no health/dietary fact, return "NONE".
-
-Examples:
-- "I'm allergic to peanuts" → "Allergic to peanuts"
-- "I was diagnosed with Type 2 diabetes last year" → "Has Type 2 diabetes"
-- "Please remember that I'm vegetarian" → "Vegetarian"
-- "I can't eat gluten" → "Cannot eat gluten (gluten intolerant)"
-- "My morning walk is at 6am" → "Morning walk at 6am"
-- "What is protein?" → "NONE"
-
-Message: "{message}"
-Fact:"""
-
-            # Try synchronous LLM call via router
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # We're inside an async context - use a thread
-                    import concurrent.futures
-                    with concurrent.futures.ThreadPoolExecutor() as pool:
-                        router = LLMRouter(
-                            ollama_base_url=settings.OLLAMA_BASE_URL,
-                            ollama_model=settings.OLLAMA_MODEL,
-                            groq_api_key=settings.GROQ_API_KEY,
-                            groq_model=settings.GROQ_MODEL,
-                        )
-                        future = pool.submit(
-                            asyncio.run,
-                            router.generate(extraction_prompt, system="You are a fact extractor.", temperature=0)
-                        )
-                        result = future.result(timeout=10)
-                        response = result[0] if isinstance(result, tuple) else result
-                else:
-                    router = LLMRouter(
-                        ollama_base_url=settings.OLLAMA_BASE_URL,
-                        ollama_model=settings.OLLAMA_MODEL,
-                        groq_api_key=settings.GROQ_API_KEY,
-                        groq_model=settings.GROQ_MODEL,
-                    )
-                    response = asyncio.run(
-                        router.generate(extraction_prompt, system="You are a fact extractor.", temperature=0)
-                    )
-                    response = response[0] if isinstance(response, tuple) else response
-
-                if response and response.strip().upper() != "NONE":
-                    return response.strip().strip('"').strip("'")
-            except Exception as e:
-                logger.debug(f"LLM fact extraction failed (falling back to regex): {e}")
-
-        except Exception as e:
-            logger.debug(f"LLM extraction unavailable: {e}")
-
         return None
 
     @staticmethod

@@ -1,5 +1,6 @@
 import json
 import httpx
+import asyncio
 
 async def stream_generate_override(prompt: str, system: str, config: dict, json_mode: bool = False, max_tokens: int = 1024):
     provider = config["provider"]
@@ -43,6 +44,8 @@ async def stream_generate_override(prompt: str, system: str, config: dict, json_
                         yield f"Error from {provider}: {resp.status_code}"
                         return
                         
+                    buf = ""
+                    last_yield = asyncio.get_event_loop().time()
                     async for line in resp.aiter_lines():
                         try:
                             if not line.startswith("data: "): continue
@@ -50,9 +53,17 @@ async def stream_generate_override(prompt: str, system: str, config: dict, json_
                             if raw.strip() == "[DONE]": break
                             part = json.loads(raw)
                             delta = part["choices"][0]["delta"].get("content", "")
-                            if delta: yield delta
-                        except Exception as e:
+                            if not delta: continue
+                            buf += delta
+                            now = asyncio.get_event_loop().time()
+                            if len(buf) >= 30 or (now - last_yield) >= 0.15:
+                                yield buf
+                                buf = ""
+                                last_yield = now
+                        except Exception:
                             continue
+                    if buf:
+                        yield buf
             except Exception as e:
                 logger.error(f"{provider} Connection Error: {e}")
                 yield f"Connection error: {str(e)}"

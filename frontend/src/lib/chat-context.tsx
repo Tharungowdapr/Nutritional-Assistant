@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react";
 import { apiFetch, setToken, clearToken, API_BASE } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -170,36 +170,54 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let fullResponse = "";
+      let buffer = "";
+      let frameId: number | null = null;
+
+      const flush = () => {
+        if (!buffer) return;
+        const text = fullResponse;
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: "assistant", content: text };
+          return updated;
+        });
+        buffer = "";
+      };
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        // SSE lines come as: "data: {...}\n\n"
         const lines = chunk.split("\n").filter(l => l.startsWith("data: "));
 
         for (const line of lines) {
           try {
-            const json = JSON.parse(line.slice(6)); // strip "data: "
+            const json = JSON.parse(line.slice(6));
             if (json.error) throw new Error(json.error);
             if (json.token) {
               fullResponse += json.token;
-              // Update the last (assistant) message in place
-              setMessages(prev => {
-                const updated = [...prev];
-                updated[updated.length - 1] = {
-                  role: "assistant",
-                  content: fullResponse,
-                };
-                return updated;
-              });
+              buffer += json.token;
+              if (!frameId) {
+                frameId = requestAnimationFrame(() => {
+                  frameId = null;
+                  flush();
+                });
+              }
             }
           } catch {
             // skip malformed SSE lines
           }
         }
       }
+
+      if (frameId) cancelAnimationFrame(frameId);
+      // Final flush — ensure last token is rendered
+      setMessages(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { role: "assistant", content: fullResponse };
+        return updated;
+      });
 
       await refreshSessions();
       return fullResponse;

@@ -20,11 +20,21 @@ const NAV_LINKS = [
   { href: "/recipes", label: "Recipes", icon: Utensils },
 ];
 
+const BOTTOM_NAV_LINKS = [
+  { href: "/dashboard", label: "Home", icon: LayoutDashboard },
+  { href: "/chat", label: "Chat", icon: MessageSquare },
+  { href: "/meal-plan", label: "Meal Plan", icon: CalendarDays },
+  { href: "/tracker", label: "Tracker", icon: CookingPot },
+  { href: "/explore", label: "Foods", icon: Database },
+];
+
 export function Navbar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
+  const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href));
 
   return (
     <>
@@ -40,23 +50,20 @@ export function Navbar() {
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-1">
-          {NAV_LINKS.map((link) => {
-            const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
-            return (
-              <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200",
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
-                  )}
-                >
-                  {link.label}
-                </Link>
-            );
-          })}
+          {NAV_LINKS.map((link) => (
+            <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200",
+                  isActive(link.href)
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                )}
+              >
+                {link.label}
+              </Link>
+          ))}
         </div>
 
         <div className="flex-1" />
@@ -125,29 +132,48 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Bottom Navigation (Instagram-style) */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background/90 backdrop-blur-xl border-t border-border/60 safe-area-bottom">
+        <div className="flex items-center justify-around py-1">
+          {BOTTOM_NAV_LINKS.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg transition-colors",
+                  active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <link.icon className={cn("w-5 h-5", active && "fill-primary/20")} />
+                <span className="text-[10px] font-medium leading-tight">{link.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Mobile Overlay Menu (rarely used now but kept for settings/profile) */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 bg-background/95 backdrop-blur-xl pt-16 lg:hidden animate-fade-in">
           <div className="p-4 space-y-1">
-            {NAV_LINKS.map((link) => {
-              const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
-                >
-                  <link.icon className="w-5 h-5" />
-                  {link.label}
-                </Link>
-              );
-            })}
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                  isActive(link.href)
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <link.icon className="w-5 h-5" />
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       )}

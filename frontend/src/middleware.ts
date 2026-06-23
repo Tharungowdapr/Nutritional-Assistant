@@ -16,32 +16,64 @@ const PROTECTED_PREFIXES = [
   "/admin",
 ];
 
-// Routes that logged-in users should not see (redirect to dashboard)
-const AUTH_ONLY_PATHS = ["/login", "/signup", "/register"];
+/** Decode JWT payload without verifying the signature (middleware has no secret). */
+function decodeToken(token: string): { exp?: number } | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    // Base64-decode (handle URL-safe base64)
+    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+/** Deletes the stale token cookie on a given response. */
+function clearStaleCookie(response: NextResponse) {
+  response.cookies.set("nutrisync_token", "", { maxAge: 0, path: "/" });
+}
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  const tokenCookie = req.cookies.get("nutrisync_token")?.value;
+  const rawToken = req.cookies.get("nutrisync_token")?.value;
+
+  let tokenActive = false;
+  if (rawToken) {
+    const decoded = decodeToken(rawToken);
+    if (decoded && decoded.exp) {
+      tokenActive = decoded.exp * 1000 > Date.now();
+    }
+  }
+  // If the cookie exists but the token is expired, clear it.
+  if (rawToken && !tokenActive) {
+    const isProtected = PROTECTED_PREFIXES.some((prefix) =>
+      pathname.startsWith(prefix)
+    );
+    if (isProtected) {
+      const loginUrl = req.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      loginUrl.searchParams.set("redirect", pathname);
+      const res = NextResponse.redirect(loginUrl);
+      clearStaleCookie(res);
+      return res;
+    }
+    const res = NextResponse.next();
+    clearStaleCookie(res);
+    return res;
+  }
 
   const isProtected = PROTECTED_PREFIXES.some((prefix) =>
     pathname.startsWith(prefix)
   );
-  const isAuthOnly = AUTH_ONLY_PATHS.some((p) => pathname === p);
 
   // Redirect unauthenticated users away from protected pages
-  if (isProtected && !tokenCookie) {
+  if (isProtected && !tokenActive) {
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
-  }
-
-  // Redirect authenticated users away from login/signup
-  if (isAuthOnly && tokenCookie) {
-    const homeUrl = req.nextUrl.clone();
-    homeUrl.pathname = "/dashboard";
-    return NextResponse.redirect(homeUrl);
   }
 
   return NextResponse.next();

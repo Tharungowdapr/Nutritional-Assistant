@@ -12,6 +12,7 @@ import SummaryCards from "./components/summary-cards";
 import TrendsChart from "./components/trends-chart";
 import MealSlots from "./components/meal-slots";
 import AddFoodDialog from "./components/add-food-dialog";
+import AnalysisSection from "./components/analysis-section";
 import RECIPES_DATA from "@/lib/recipes-db.json";
 
 const RECIPES = RECIPES_DATA as any[];
@@ -123,6 +124,10 @@ export default function TrackerPage() {
           <TrendsChart historyData={historyData} loadingHistory={loadingHistory} historyRange={historyRange} onRangeChange={setHistoryRange} targetEnergy={targets.energy} />
         </div>
         <MealSlots summary={dailySummary} mealSlots={MEAL_SLOTS} onAddMeal={(slot) => { setSelectedSlot(slot); setShowAddFood(true); }} onDeleteLog={async (id) => { try { await trackerApi.deleteLog(id); toast.success("Removed"); loadDailySummary(todayDate); loadHistory(historyRange); } catch { toast.error("Failed to delete"); } }} />
+      </div>
+
+      <div className="mt-12">
+        <AnalysisSection />
       </div>
 
       <AddFoodDialog

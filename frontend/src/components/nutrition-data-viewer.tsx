@@ -1,14 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Loader2, Search, BarChart3, Database, FileSpreadsheet } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Loader2, Search, Database, FileSpreadsheet, ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell
-} from "recharts";
 
 interface NutritionDataViewerProps {
   title?: string;
@@ -19,6 +15,8 @@ interface NutritionDataViewerProps {
   headerRowDetection?: boolean;
   searchPlaceholder?: string;
 }
+
+const SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1Qm3f-eEOYL6z4tJYpkTv33k5sgFVG2v1";
 
 export default function NutritionDataViewer({
   title = "Raw Data Analytics",
@@ -36,8 +34,7 @@ export default function NutritionDataViewer({
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [columns, setColumns] = useState<string[]>([]);
-  const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<"table" | "charts">("table");
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set());
   const [workbook, setWorkbook] = useState<any>(null);
   const [localLoading, setLocalLoading] = useState(false);
 
@@ -105,7 +102,7 @@ export default function NutritionDataViewer({
     setData(rows);
     setFilteredData(rows);
     setColumns(filteredCols);
-    setVisibleColumns(filteredCols);
+    setVisibleColumns(new Set(filteredCols));
   };
 
   const handleSheetChange = (sheet: string) => {
@@ -128,9 +125,15 @@ export default function NutritionDataViewer({
   };
 
   const toggleColumn = (col: string) => {
-    setVisibleColumns((prev) =>
-      prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col]
-    );
+    setVisibleColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(col)) {
+        next.delete(col);
+      } else {
+        next.add(col);
+      }
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -146,37 +149,6 @@ export default function NutritionDataViewer({
     );
   }, [search, data]);
 
-  const getTop10Protein = () => {
-    return [...filteredData]
-      .filter((d) => d["Protein (g)"] || d["protein"])
-      .sort(
-        (a, b) =>
-          (b["Protein (g)"] || b["protein"] || 0) -
-          (a["Protein (g)"] || a["protein"] || 0)
-      )
-      .slice(0, 10)
-      .map((d) => ({
-        name: (d["Food Name"] || d["name"] || "Unknown").substring(0, 15),
-        Protein: parseFloat(d["Protein (g)"] || d["protein"] || 0),
-      }));
-  };
-
-  const getMacroDistribution = () => {
-    if (filteredData.length === 0) return [];
-    let avgProtein = 0, avgCarbs = 0, avgFat = 0;
-    filteredData.forEach((d) => {
-      avgProtein += parseFloat(d["Protein (g)"] || d["protein"] || 0) || 0;
-      avgCarbs += parseFloat(d["Carbs (g)"] || d["carbs"] || 0) || 0;
-      avgFat += parseFloat(d["Fat (g)"] || d["fat"] || 0) || 0;
-    });
-    const total = filteredData.length;
-    return [
-      { name: "Protein", value: Math.round(avgProtein / total), fill: "var(--color-protein)" },
-      { name: "Carbs", value: Math.round(avgCarbs / total), fill: "var(--color-carbs)" },
-      { name: "Fat", value: Math.round(avgFat / total), fill: "var(--color-fat)" },
-    ];
-  };
-
   const isLoading = loading || localLoading;
 
   const placeholder = searchPlaceholder || `Search ${filteredData.length} rows...`;
@@ -191,30 +163,15 @@ export default function NutritionDataViewer({
           </h1>
           <p className="text-muted-foreground text-sm mt-1">{description}</p>
         </div>
-        <div className="flex bg-muted/50 p-1 rounded-lg border border-border">
-          <button
-            onClick={() => setViewMode("table")}
-            className={cn(
-              "px-4 py-2 text-sm font-semibold rounded-md transition-colors",
-              viewMode === "table"
-                ? "bg-card shadow-sm text-foreground"
-                : "text-muted-foreground"
-            )}
-          >
-            <FileSpreadsheet className="w-4 h-4 inline-block mr-2" /> Data Grid
-          </button>
-          <button
-            onClick={() => setViewMode("charts")}
-            className={cn(
-              "px-4 py-2 text-sm font-semibold rounded-md transition-colors",
-              viewMode === "charts"
-                ? "bg-card shadow-sm text-foreground"
-                : "text-muted-foreground"
-            )}
-          >
-            <BarChart3 className="w-4 h-4 inline-block mr-2" /> Analytics
-          </button>
-        </div>
+        <a
+          href={SPREADSHEET_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          <ExternalLink className="w-4 h-4" />
+          Analytics
+        </a>
       </div>
 
       {isLoading ? (
@@ -232,7 +189,7 @@ export default function NutritionDataViewer({
                   <select
                     value={activeSheet}
                     onChange={(e) => handleSheetChange(e.target.value)}
-                    className="bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-semibold outline-none focus:border-primary"
+                    className="bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground outline-none focus:border-primary"
                   >
                     {sheets.map((s) => (
                       <option key={s} value={s}>
@@ -264,7 +221,7 @@ export default function NutritionDataViewer({
                   <span className="text-xs font-semibold text-muted-foreground">Show/Hide Columns:</span>
                   <div className="flex flex-wrap gap-1.5 items-center">
                     {columns.map((c) => {
-                      const isVisible = visibleColumns.includes(c);
+                      const isVisible = visibleColumns.has(c);
                       return (
                         <button
                           key={c}
@@ -295,81 +252,37 @@ export default function NutritionDataViewer({
             </div>
           </div>
 
-          {viewMode === "table" && (
-            <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
-              <div className="overflow-x-auto max-h-[600px] relative">
-                <table className="w-full text-xs text-left whitespace-nowrap">
-                  <thead className="sticky top-0 bg-muted/95 backdrop-blur z-10 shadow-sm">
-                    <tr>
-                      {(enableColumnToggle ? visibleColumns : columns).map((col) => (
-                        <th key={col} className="p-3 font-semibold text-muted-foreground border-b border-border">
-                          {col}
-                        </th>
+          <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto max-h-[600px] relative">
+              <table className="w-full text-xs text-left">
+                <thead className="sticky top-0 bg-muted/95 backdrop-blur z-10 shadow-sm">
+                  <tr>
+                    {(enableColumnToggle ? columns.filter((c) => visibleColumns.has(c)) : columns).map((col) => (
+                      <th key={col} className="p-3 font-semibold text-foreground border-b border-border whitespace-nowrap">
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {filteredData.slice(0, 100).map((row, i) => (
+                    <tr key={i} className="hover:bg-muted/30 transition-colors">
+                      {(enableColumnToggle ? columns.filter((c) => visibleColumns.has(c)) : columns).map((col) => (
+                        <td key={col} className="p-3">
+                          <span className="block max-w-[220px] truncate" title={String(row[col] ?? "-")}>
+                            {row[col] !== undefined && row[col] !== null ? String(row[col]) : "-"}
+                          </span>
+                        </td>
                       ))}
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/50">
-                    {filteredData.slice(0, 100).map((row, i) => (
-                      <tr key={i} className="hover:bg-muted/30 transition-colors">
-                        {(enableColumnToggle ? visibleColumns : columns).map((col) => (
-                          <td key={col} className="p-3">
-                            {row[col] !== undefined && row[col] !== null ? String(row[col]) : "-"}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="p-3 bg-muted/30 text-xs text-center text-muted-foreground border-t border-border">
-                Showing {Math.min(100, filteredData.length)} of {filteredData.length} rows (performance limited view)
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
-
-          {viewMode === "charts" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-                <h3 className="text-lg font-bold mb-6">Top 10 High Protein Foods</h3>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={getTop10Protein()} layout="vertical" margin={{ left: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="hsl(var(--border))" />
-                      <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                      <YAxis dataKey="name" type="category" width={100} stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                      <RechartsTooltip cursor={{ fill: "hsl(var(--muted))" }} contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", borderRadius: "8px" }} />
-                      <Bar dataKey="Protein" fill="var(--color-protein)" radius={[0, 4, 4, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-                <h3 className="text-lg font-bold mb-6">Average Macro Distribution</h3>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={getMacroDistribution()}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {getMacroDistribution().map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", borderRadius: "8px" }} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
+            <div className="p-3 bg-muted/30 text-xs text-center text-muted-foreground border-t border-border">
+              Showing {Math.min(100, filteredData.length)} of {filteredData.length} rows (performance limited view)
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>

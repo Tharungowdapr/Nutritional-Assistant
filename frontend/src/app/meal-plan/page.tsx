@@ -89,10 +89,18 @@ export default function MealPlanPage() {
       });
       if (!res.ok) throw new Error(`Generation failed: ${res.status}`);
       if (!res.body) throw new Error("No response body");
-
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let streamError: string | null = null;
+      let buffer = "";
+      let frameId: number | null = null;
+
+      const flush = () => {
+        if (!buffer) return;
+        setStreamText(prev => prev + buffer);
+        buffer = "";
+      };
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -102,7 +110,15 @@ export default function MealPlanPage() {
           try {
             const parsed = JSON.parse(line.slice(6));
             if (parsed.error) { streamError = parsed.error; break; }
-            if (parsed.token) setStreamText(prev => prev + parsed.token);
+            if (parsed.token) {
+              buffer += parsed.token;
+              if (!frameId) {
+                frameId = requestAnimationFrame(() => {
+                  frameId = null;
+                  flush();
+                });
+              }
+            }
             if (parsed.final && parsed.plan) {
               setPlan(parsed.plan);
               loadHistory();
@@ -113,6 +129,9 @@ export default function MealPlanPage() {
         }
         if (streamError) break;
       }
+
+      if (frameId) cancelAnimationFrame(frameId);
+      if (buffer) setStreamText(prev => prev + buffer);
       if (streamError) throw new Error(streamError);
     } catch (e: any) {
       setError(e.message || "Generation failed. Please try again.");
@@ -144,65 +163,196 @@ export default function MealPlanPage() {
     if (!plan) return;
     const XLSX = await import("xlsx");
     const wb = XLSX.utils.book_new();
+
+    // Meals sheet
     const daysData: any[] = [];
     for (const day of plan.days || []) {
       for (const slot of SLOTS) {
         const items = day[slot.key] as FoodItem[] || [];
         for (const item of items) {
-          daysData.push({ Day: day.day, DayLabel: day.label, Meal: slot.label, Food: item.name, Quantity: item.qty, Calories: item.cal || 0, Protein_g: item.protein_g || 0, Carbs_g: item.carbs_g || 0, Fat_g: item.fat_g || 0 });
+          daysData.push({
+            Day: day.day,
+            DayLabel: day.label,
+            Meal: slot.label,
+            Food: item.name,
+            Quantity: item.qty,
+            Calories: item.cal || 0,
+            Protein_g: item.protein_g || 0,
+            Carbs_g: item.carbs_g || 0,
+            Fat_g: item.fat_g || 0,
+            "✓": "",
+          });
         }
       }
     }
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(daysData), "Meals");
+    const mealsSheet = XLSX.utils.json_to_sheet(daysData);
+    mealsSheet["!cols"] = [
+      { wch: 5 }, { wch: 10 }, { wch: 14 }, { wch: 25 },
+      { wch: 12 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 5 },
+    ];
+    XLSX.utils.book_append_sheet(wb, mealsSheet, "Meals");
+
+    // Grocery sheet with checkbox column
     const groceryData: any[] = [];
     for (const cat of plan.grocery || []) {
+      groceryData.push({ "✓": "", Category: cat.category, Item: "", Quantity: "", Cost_INR: "" });
       for (const item of cat.items || []) {
-        groceryData.push({ Category: cat.category, Item: item.name, Quantity: item.qty, Cost_INR: item.cost_inr });
+        groceryData.push({ "✓": "", Category: "", Item: item.name, Quantity: item.qty, Cost_INR: item.cost_inr });
       }
     }
-    if (groceryData.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(groceryData), "Grocery");
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ Label: "Summary", Value: plan.summary || "" }, { Label: "Total Days", Value: plan.days?.length || 0 }, { Label: "Grocery Total (INR)", Value: plan.grocery_total_inr || 0 }]), "Summary");
+    if (groceryData.length > 0) {
+      const grocerySheet = XLSX.utils.json_to_sheet(groceryData);
+      grocerySheet["!cols"] = [{ wch: 5 }, { wch: 20 }, { wch: 30 }, { wch: 12 }, { wch: 10 }];
+      XLSX.utils.book_append_sheet(wb, grocerySheet, "Grocery");
+    }
+
+    // Summary sheet
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
+      { Label: "Summary", Value: plan.summary || "" },
+      { Label: "Total Days", Value: plan.days?.length || 0 },
+      { Label: "Grocery Total (INR)", Value: plan.grocery_total_inr || 0 },
+    ]), "Summary");
+
     XLSX.writeFile(wb, `meal-plan-${new Date().toISOString().split('T')[0]}.xlsx`);
   }, [plan]);
 
   const exportToPDF = useCallback(() => {
     if (!plan) return;
     const doc = new jsPDF();
-    let y = 20;
-    doc.setFontSize(18);
-    doc.text("AaharAI Meal Plan", 105, y, { align: "center" });
-    y += 10;
-    doc.setFontSize(12); doc.setFont("helvetica", "bold");
-    doc.text("Summary", 14, y);
-    doc.setFont("helvetica", "normal"); doc.setFontSize(10);
-    const summaryLines = doc.splitTextToSize(plan.summary || "Meal plan", 180);
-    doc.text(summaryLines, 14, y + 6);
-    y += 20 + summaryLines.length * 4;
-    for (const day of plan.days || []) {
-      if (y > 260) { doc.addPage(); y = 20; }
-      doc.setFontSize(12); doc.setFont("helvetica", "bold");
-      doc.text(`Day ${day.day} - ${day.label}`, 14, y);
+    const pageW = 210;
+    const margin = 14;
+    const contentW = pageW - margin * 2;
+    let y = margin;
+
+    const addPage = () => { doc.addPage(); y = margin; };
+
+    const header = (text: string, size = 18, bold = true) => {
+      if (y > 260) addPage();
+      if (bold) doc.setFont("helvetica", "bold"); else doc.setFont("helvetica", "normal");
+      doc.setFontSize(size);
+      doc.text(text, margin, y);
+      y += size * 0.6;
+    };
+
+    const text = (txt: string, indent = 0, size = 10) => {
+      if (y > 270) addPage();
+      doc.setFont("helvetica", "normal"); doc.setFontSize(size);
+      const lines = doc.splitTextToSize(txt, contentW - indent);
+      for (const line of lines) {
+        if (y > 270) addPage();
+        doc.text(line, margin + indent, y);
+        y += 5;
+      }
+    };
+
+    const line = () => {
+      if (y > 275) addPage();
+      doc.setDrawColor(200);
+      doc.line(margin, y, pageW - margin, y);
+      y += 4;
+    };
+
+    // Title
+    doc.setFont("helvetica", "bold"); doc.setFontSize(20); doc.setTextColor(220, 80, 50);
+    doc.text("AaharAI Meal Plan", margin, y); y += 8;
+    doc.setFontSize(9); doc.setTextColor(120); doc.setFont("helvetica", "normal");
+    doc.text(`Generated: ${new Date().toLocaleDateString()} · ${plan.days?.length || 0}-day plan`, margin, y); y += 4;
+    doc.setTextColor(0); line();
+
+    // Summary
+    if (plan.summary) {
+      header("Summary", 12);
       doc.setFont("helvetica", "normal"); doc.setFontSize(10);
-      y += 6;
+      text(plan.summary);
+      line();
+    }
+
+    // Days
+    for (const day of plan.days || []) {
+      if (y > 220) addPage();
+      doc.setFillColor(245, 245, 245);
+      doc.rect(margin, y - 3, contentW, 8, "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(60);
+      doc.text(`Day ${day.day} — ${day.label}`, margin + 2, y + 3);
+      doc.setTextColor(0);
+      y += 10;
+
+      const dayTotalCal = SLOTS.reduce((s, sl) => {
+        const items = day[sl.key] as FoodItem[] || [];
+        return s + items.reduce((c, i) => c + (i.cal || 0), 0);
+      }, 0);
+      const dayTotalProtein = SLOTS.reduce((s, sl) => {
+        const items = day[sl.key] as FoodItem[] || [];
+        return s + items.reduce((c, i) => c + (i.protein_g || 0), 0);
+      }, 0);
+
       for (const slot of SLOTS) {
         const items = day[slot.key] as FoodItem[] || [];
         if (items.length === 0) continue;
-        doc.text(`${slot.label}:`, 14, y); y += 4;
+        if (y > 265) addPage();
+
+        doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(100);
+        doc.text(`${slot.icon} ${slot.label}`, margin, y); y += 4;
+        doc.setTextColor(0); doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+
         for (const item of items) {
-          doc.text(`  - ${item.name} (${item.qty}) ${item.cal || 0}kcal`, 14, y); y += 4;
+          if (y > 270) addPage();
+          const kcal = item.cal ? `${item.cal} kcal` : "";
+          const prot = item.protein_g ? `${item.protein_g}g` : "";
+          const nutr = [kcal, prot].filter(Boolean).join(" · ");
+          doc.text(`☐ ${item.name} (${item.qty})`, margin + 4, y);
+          if (nutr) {
+            doc.setFontSize(7); doc.setTextColor(140);
+            doc.text(nutr, margin + 90, y);
+            doc.setTextColor(0); doc.setFontSize(9);
+          }
+          y += 4.5;
         }
+        y += 1;
       }
-      y += 4;
+
+      doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(80);
+      doc.text(`Total: ~${dayTotalCal} kcal · ${dayTotalProtein}g protein`, margin, y);
+      doc.setTextColor(0); y += 3;
+      line();
     }
-    if (y > 200) { doc.addPage(); y = 20; }
-    doc.setFontSize(12); doc.setFont("helvetica", "bold");
-    doc.text("Grocery List", 14, y); y += 8; doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+
+    // Grocery list
+    if (y > 200) addPage();
+    header("Grocery List", 14);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8);
+    doc.text("☐ = to buy   ☑ = bought", margin, y, { align: "left" });
+    y += 2;
+    if (plan.grocery_total_inr) {
+      doc.setFont("helvetica", "bold"); doc.setFontSize(9);
+      doc.text(`Total: ₹${plan.grocery_total_inr}`, pageW - margin, y, { align: "right" });
+      doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+    }
+    y += 4;
+
     for (const cat of plan.grocery || []) {
-      doc.setFont("helvetica", "bold"); doc.text(cat.category, 14, y); y += 4; doc.setFont("helvetica", "normal");
-      for (const item of cat.items || []) { doc.text(`  - ${item.name}: ${item.qty} (₹${item.cost_inr})`, 14, y); y += 4; }
-      y += 2;
+      if (y > 260) addPage();
+      doc.setFillColor(250, 245, 240);
+      doc.rect(margin, y - 2, contentW, 6, "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(80);
+      doc.text(cat.category, margin + 2, y + 2);
+      doc.setTextColor(0);
+      y += 8;
+
+      for (const item of cat.items || []) {
+        if (y > 270) addPage();
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+        doc.text(`☐`, margin, y);
+        doc.text(item.name, margin + 6, y);
+        doc.setFontSize(8); doc.setTextColor(120);
+        doc.text(item.qty, margin + 80, y);
+        doc.text(`₹${item.cost_inr}`, margin + 120, y);
+        doc.setTextColor(0);
+        y += 5;
+      }
+      y += 1;
     }
-    if (plan.grocery_total_inr) { y += 4; doc.setFont("helvetica", "bold"); doc.text(`Total: ₹${plan.grocery_total_inr}`, 14, y); }
+
     doc.save(`meal-plan-${new Date().toISOString().split('T')[0]}.pdf`);
   }, [plan]);
 

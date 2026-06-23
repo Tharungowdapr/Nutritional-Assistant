@@ -119,70 +119,21 @@ def _enforce_day_slots(plan: dict) -> dict:
     return plan
 
 
-# Chunk generation prompt - generates N days at a time
-CHUNK_PROMPT = """Generate a {num_days}-day Indian meal plan (days {start_day} to {end_day}).
+# Chunk generation prompt - generates 1 day at a time
+CHUNK_PROMPT = """Generate day {day_num} ({day_label}) of an Indian meal plan.
 
 User: Age {age}, {gender}, {weight}kg, {height}cm, {diet_type}, {goal}
 Target: {energy} kcal/day, protein {protein}g
 Budget: ₹{budget}/day
 
-Days: {day_labels}
-
 RULES:
-1. {diet_type} only
-2. NO repeats across ALL days
-3. 5 slots: breakfast, mid_morning, lunch, snack, dinner
-4. Each item: {{"name":str,"qty":str,"cal":int,"protein_g":int}}
-5. Day format: {{"day":int,"label":str,"breakfast":[],"mid_morning":[],"lunch":[],"snack":[],"dinner":[],"cal_approx":int}}
+1. {diet_type} only — Indian foods
+2. 5 slots: breakfast, mid_morning, lunch, snack, dinner
+3. Each item: {{"name":str,"qty":str,"cal":int,"protein_g":int}}
+4. Day format: {{"day":{day_num},"label":"{day_label}","breakfast":[],"mid_morning":[],"lunch":[],"snack":[],"dinner":[],"cal_approx":int}}
 
-Return ONLY valid JSON array of days (no summary, no grocery):
-[{day_template}]"""
-
-
-async def _generate_full_plan(llm, total_days: int, user_params: dict, active_provider: dict = None) -> dict:
-    """Generate complete plan with all days, summary and grocery in one call."""
-    day_labels = ", ".join(DAYS_LIST[:total_days])
-    day_template = ",".join([f'{{"day":{i},"label":"{DAYS_LIST[i-1]}"}}' for i in range(1, total_days + 1)])
-    
-    prompt = f"""Generate a {total_days}-day Indian meal plan with summary and grocery.
-
-User: Age {user_params["age"]}, {user_params["gender"]}, {user_params["weight"]}kg, {user_params["height"]}cm, {user_params["diet_type"]}, {user_params["goal"]}
-Target: {user_params["energy"]} kcal/day, protein {user_params["protein"]}g
-Budget: ₹{user_params["budget"]}/day
-Days: {day_labels}
-
-RULES:
-1. {user_params["diet_type"]} only
-2. NO repeats across {total_days} days
-3. 5 slots: breakfast, mid_morning, lunch, snack, dinner
-4. Each item: {{"name":str,"qty":str,"cal":int,"protein_g":int}}
-5. Day: {{"day":int,"label":str,"breakfast":[],"mid_morning":[],"lunch":[],"snack":[],"dinner":[],"cal_approx":int}}
-6. Grocery: 7 categories with {{"name":str,"qty":str,"cost_inr":int}}
-
-CRITICAL: Generate EXACTLY {total_days} days. Include summary and full grocery list.
-
-Return ONLY valid JSON:
-{{"summary":"2-line summary","days":[{day_template}],"grocery":[{{"category":"Grains","items":[{{"name":"Rice","qty":"5 kg","cost_inr":400}}]}}],"grocery_total_inr":1400}}"""
-    
-    if active_provider:
-        from app.services.rag.override import generate_override
-        raw = await generate_override(prompt, "Return ONLY valid JSON.", active_provider, json_mode=True, max_tokens=2048)
-        if raw == "INVALID_API_KEY":
-            raise PermissionError("Invalid API Key — Update your LLM provider settings.")
-        if raw == "RATE_LIMITED":
-            raise ConnectionError("Rate limit exceeded — Check your LLM provider billing tier.")
-        if raw.startswith("Error from") or raw.startswith("Connection error"):
-            logger.error(f"LLM error on full plan: {raw[:200]}")
-            return None
-    else:
-        raw, _ = await llm.generate(prompt=prompt, system="Return ONLY valid JSON.", temperature=0.4, max_tokens=16384)
-    
-    try:
-        plan = json.loads(_clean_json(raw))
-        return plan
-    except Exception as e:
-        logger.error(f"Failed to parse full plan: {e}")
-        return None
+Return ONLY valid JSON for day {day_num}:
+{{"day":{day_num},"label":"{day_label}","breakfast":[{{"name":"...","qty":"...","cal":0,"protein_g":0}}],"mid_morning":[],"lunch":[],"snack":[],"dinner":[],"cal_approx":0}}"""
 
 
 # Grocery generation prompt
@@ -197,15 +148,13 @@ Return ONLY valid JSON:
 {{"grocery":[{{"category":"Grains","items":[{{"name":"Rice","qty":"5 kg","cost_inr":400}}]}}],"grocery_total_inr":1400}}"""
 
 
-async def _generate_chunk(llm, start_day: int, num_days: int, total_days: int, user_params: dict, active_provider: dict = None) -> list:
-    """Generate a chunk of days with retry if LLM returns fewer days than expected."""
-    day_labels = ", ".join(DAYS_LIST[start_day-1:start_day-1+num_days])
-    day_template = ",".join([f'{{"day":{i},"label":"{DAYS_LIST[i-1]}"}}' for i in range(start_day, start_day + num_days)])
+async def _generate_chunk(llm, day_num: int, total_days: int, user_params: dict, active_provider: dict = None) -> dict:
+    """Generate exactly 1 day of the meal plan with retry."""
+    day_label = DAYS_LIST[(day_num - 1) % 7]
     
     prompt = CHUNK_PROMPT.format(
-        num_days=num_days,
-        start_day=start_day,
-        end_day=start_day + num_days - 1,
+        day_num=day_num,
+        day_label=day_label,
         age=user_params["age"],
         gender=user_params["gender"],
         weight=user_params["weight"],
@@ -215,45 +164,49 @@ async def _generate_chunk(llm, start_day: int, num_days: int, total_days: int, u
         energy=user_params["energy"],
         protein=user_params["protein"],
         budget=user_params["budget"],
-        day_labels=day_labels,
-        day_template=day_template,
     )
     
-    async def _try() -> list:
+    async def _try() -> dict:
         if active_provider:
             from app.services.rag.override import generate_override
-            raw = await generate_override(prompt, "Return ONLY valid JSON array. No markdown.", active_provider, json_mode=False, max_tokens=768)
+            raw = await generate_override(prompt, "Return ONLY valid JSON. No markdown.", active_provider, json_mode=False, max_tokens=768)
             if raw == "INVALID_API_KEY":
                 raise PermissionError("Invalid API Key — Update your LLM provider settings.")
             if raw == "RATE_LIMITED":
                 raise ConnectionError("Rate limit exceeded — Check your LLM provider billing tier.")
             if raw.startswith("Error from") or raw.startswith("Connection error"):
-                logger.error(f"LLM error on chunk {start_day}-{start_day+num_days-1}: {raw[:200]}")
-                return []
+                logger.error(f"LLM error on day {day_num}: {raw[:200]}")
+                return None
         else:
-            raw, _ = await llm.generate(prompt=prompt, system="Return ONLY valid JSON array. No markdown.", temperature=0.4, max_tokens=4096)
+            raw, _ = await llm.generate(prompt=prompt, system="Return ONLY valid JSON. No markdown.", temperature=0.4, max_tokens=2048)
         try:
             cleaned = _clean_json(raw)
-            days = json.loads(cleaned)
-            if isinstance(days, dict):
-                for key in ("days", "chunk", "data", "response"):
-                    if key in days and isinstance(days[key], list):
-                        days = days[key]
-                        break
-            if not isinstance(days, list):
-                days = [days]
-            logger.info(f"Chunk {start_day}-{start_day+num_days-1}: {len(days)} day(s)")
-            return days
+            day = json.loads(cleaned)
+            if isinstance(day, dict) and "days" in day and isinstance(day["days"], list):
+                day = day["days"][0] if day["days"] else None
+            if isinstance(day, dict) and "day" in day:
+                day["label"] = day_label
+                logger.info(f"Day {day_num} ({day_label}) generated")
+                return day
+            logger.warning(f"Day {day_num} response not a valid day dict: {cleaned[:200]}")
+            return None
         except Exception as e:
-            logger.error(f"Failed to parse chunk {start_day}-{start_day+num_days-1}: {e} | raw={raw[:200]}")
-            return []
+            logger.error(f"Failed to parse day {day_num}: {e} | raw={raw[:200]}")
+            return None
     
-    try:
-        return await _try()
-    except ConnectionError as e:
-        logger.warning(f"Rate limit on chunk {start_day}-{start_day+num_days-1}, retrying after 10s...")
-        await asyncio.sleep(10)
-        return await _try()
+    for attempt in range(3):
+        try:
+            result = await _try()
+            if result is not None:
+                return result
+            logger.warning(f"Day {day_num} attempt {attempt + 1} failed, retrying...")
+        except ConnectionError:
+            if attempt < 2:
+                logger.warning(f"Rate limit on day {day_num}, retrying after 10s...")
+                await asyncio.sleep(10)
+            else:
+                raise
+    return None
 
 
 async def _generate_grocery(llm, all_days: list, budget: int, active_provider: dict = None) -> dict:
@@ -285,7 +238,15 @@ async def _generate_grocery(llm, all_days: list, budget: int, active_provider: d
         raw, _ = await llm.generate(prompt=prompt, system="Return ONLY valid JSON.", temperature=0.4, max_tokens=2048)
     
     try:
-        return json.loads(_clean_json(raw))
+        result = json.loads(_clean_json(raw))
+        if not isinstance(result.get("grocery_total_inr"), (int, float)) or result["grocery_total_inr"] == 0:
+            total = sum(
+                item.get("cost_inr", 0) or 0
+                for cat in result.get("grocery", [])
+                for item in cat.get("items", [])
+            )
+            result["grocery_total_inr"] = total
+        return result
     except Exception as e:
         logger.error(f"Failed to parse grocery: {e}")
         return {"grocery": [], "grocery_total_inr": 0}
@@ -350,29 +311,38 @@ async def stream_meal_plan(request: Request, meal_request: MealPlanRequest,
     async def event_generator():
         all_days = []
         total_days = meal_request.days
-        CHUNK_SIZE = 2  # 2 days per chunk (max_tokens=768 ~ 5 calls × 1168 tok = 5840 < 6000 TPM)
         
         try:
             yield f"data: {json.dumps({'token': f'Planning {total_days}-day meal plan...\n'})}\n\n"
             
-            # Generate days in chunks (2 days at a time)
-            for chunk_start in range(1, total_days + 1, CHUNK_SIZE):
-                chunk_end = min(chunk_start + CHUNK_SIZE - 1, total_days)
-                chunk_days = chunk_end - chunk_start + 1
+            # Generate 1 day at a time — guarantees all days are produced
+            for day_num in range(1, total_days + 1):
+                day_label = DAYS_LIST[(day_num - 1) % 7]
+                yield f"data: {json.dumps({'token': f'Day {day_num} ({day_label})...\n'})}\n\n"
                 
-                yield f"data: {json.dumps({'token': f'Generating days {chunk_start}-{chunk_end}...\n'})}\n\n"
-                
-                chunk = await _generate_chunk(
-                    llm, chunk_start, chunk_days, total_days,
+                day = await _generate_chunk(
+                    llm, day_num, total_days,
                     user_params, active_provider
                 )
                 
-                if chunk:
-                    all_days.extend(chunk)
+                if day:
+                    all_days.append(day)
                 else:
-                    logger.warning(f"Empty chunk for days {chunk_start}-{chunk_end}")
+                    logger.error(f"Failed to generate day {day_num} after retries")
                 
-                await asyncio.sleep(3)  # Rate-limit spacing between LLM calls
+                await asyncio.sleep(3)
+            
+            # Validate no days are missing — fill gaps with fallback days
+            if len(all_days) < total_days:
+                existing = {d.get("day") for d in all_days}
+                for day_num in range(1, total_days + 1):
+                    if day_num not in existing:
+                        yield f"data: {json.dumps({'token': f'Filling missing day {day_num}...\n'})}\n\n"
+                        day = await _generate_chunk(llm, day_num, total_days, user_params, active_provider)
+                        if day:
+                            all_days.append(day)
+            
+            all_days.sort(key=lambda d: d.get("day", 0))
             
             if not all_days:
                 raise Exception("Failed to generate any meal plan days")
@@ -381,7 +351,6 @@ async def stream_meal_plan(request: Request, meal_request: MealPlanRequest,
             yield f"data: {json.dumps({'token': 'Generating grocery list...\n'})}\n\n"
             grocery_data = await _generate_grocery(llm, all_days, p["budget"], active_provider)
             
-            # Build final plan
             plan = _enforce_day_slots({
                 "summary": f"Personalized {total_days}-day meal plan",
                 "days": all_days,

@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Target, Flame, TrendingUp, AlertTriangle,
   ChevronRight, Activity, Sparkles, Utensils, User, Brain, Plus, Loader2,
-  Wheat, Apple, Milk, Beef, LeafyGreen
+  Wheat, Apple, Milk, Beef, LeafyGreen, Coffee, Sun, Moon
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
@@ -15,6 +15,13 @@ import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
 
 const pct = (v: number, t: number) => t ? Math.min(100, Math.round((v / t) * 100)) : 0;
+
+const SLOTS = [
+  { key: "Breakfast", label: "Breakfast", icon: Coffee },
+  { key: "Lunch", label: "Lunch", icon: Sun },
+  { key: "Dinner", label: "Dinner", icon: Moon },
+  { key: "Snack", label: "Snack", icon: Apple },
+];
 
 const ProgressBar = React.memo(({ value, max, color = "var(--primary)", label }: { value: number; max: number; color?: string; label?: string }) => {
   const p = pct(value, max);
@@ -85,6 +92,15 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
   const targets = useMemo(() => profile?.rda_match || { energy: 2000, protein_g: 60, carbs_g: 300, fat_g: 65, iron_mg: 17, calcium_mg: 600, fibre_g: 30 }, [profile]);
   const d = useMemo(() => daily || { total_calories: 0, total_protein_g: 0, total_carbs_g: 0, total_fat_g: 0, total_iron_mg: 0, total_calcium_mg: 0, total_fibre_g: 0, meals_by_slot: {}, meal_count: 0 }, [daily]);
 
+  const nutritionScore = useMemo(() => {
+    const scores = [];
+    const energyScore = Math.min(100, (d.total_calories || 0) / targets.energy * 100);
+    const proteinScore = Math.min(100, (d.total_protein_g || 0) / targets.protein_g * 100);
+    const ironScore = Math.min(100, (d.total_iron_mg || 0) / targets.iron_mg * 100);
+    const calciumScore = Math.min(100, (d.total_calcium_mg || 0) / targets.calcium_mg * 100);
+    return [energyScore, proteinScore, ironScore, calciumScore];
+  }, [d, targets]);
+
   if (authLoading) return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background to-muted/20">
       <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -107,15 +123,6 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
       </div>
     );
   }
-
-  const nutritionScore = useMemo(() => {
-    const scores = [];
-    const energyScore = Math.min(100, (d.total_calories || 0) / targets.energy * 100);
-    const proteinScore = Math.min(100, (d.total_protein_g || 0) / targets.protein_g * 100);
-    const ironScore = Math.min(100, (d.total_iron_mg || 0) / targets.iron_mg * 100);
-    const calciumScore = Math.min(100, (d.total_calcium_mg || 0) / targets.calcium_mg * 100);
-    return [energyScore, proteinScore, ironScore, calciumScore];
-  }, [d, targets]);
 
   const avgScore = nutritionScore.reduce((a, b) => a + b, 0) / nutritionScore.length;
 
