@@ -6,7 +6,13 @@ import logging
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 
-import chromadb
+try:
+    import chromadb
+    CHROMA_AVAILABLE = True
+except ImportError:
+    CHROMA_AVAILABLE = False
+    logger = logging.getLogger(__name__)
+    logger.warning("chromadb not installed. RAG will use degraded mode.")
 
 from app.core.config import settings
 from app.services.rag.llm_router import LLMRouter
@@ -36,18 +42,21 @@ class RAGService:
         self._collection = None
         self._chroma_client = None
         self._hybrid_cache: dict[str, Any] = {}
-        try:
-            if settings.CHROMA_MODE == "http":
-                self._chroma_client = chromadb.HttpClient(
-                    host=settings.CHROMA_HOST,
-                    port=settings.CHROMA_PORT
-                )
-                logger.info(f"Connected to ChromaDB server at {settings.CHROMA_HOST}:{settings.CHROMA_PORT}")
-            else:
-                self._chroma_client = chromadb.PersistentClient(path=str(settings.CHROMA_DB_PATH))
-                logger.info(f"Using embedded ChromaDB at {settings.CHROMA_DB_PATH}")
-        except Exception as e:
-            logger.error(f"Failed to initialize ChromaDB client: {e}")
+        if CHROMA_AVAILABLE:
+            try:
+                if settings.CHROMA_MODE == "http":
+                    self._chroma_client = chromadb.HttpClient(
+                        host=settings.CHROMA_HOST,
+                        port=settings.CHROMA_PORT
+                    )
+                    logger.info(f"Connected to ChromaDB server at {settings.CHROMA_HOST}:{settings.CHROMA_PORT}")
+                else:
+                    self._chroma_client = chromadb.PersistentClient(path=str(settings.CHROMA_DB_PATH))
+                    logger.info(f"Using embedded ChromaDB at {settings.CHROMA_DB_PATH}")
+            except Exception as e:
+                logger.error(f"Failed to initialize ChromaDB client: {e}")
+        else:
+            logger.warning("chromadb not available: RAG vector search disabled")
 
     def _is_ollama_online(self) -> bool:
         from app.services.rag.utils import is_ollama_online

@@ -16,7 +16,7 @@ services:
           name: nutrisync-db
           property: connectionString
       - key: CORS_ORIGINS
-        value: '["https://frontend-bbudpim24-tharungowdaprs-projects.vercel.app"]'
+        value: '["https://frontend-azure-omega-45f4cqwbni.vercel.app", "https://frontend-5ikh3sr0t-tharungowdaprs-projects.vercel.app", "https://frontend-bbudpim24-tharungowdaprs-projects.vercel.app"]'
       - key: LOG_LEVEL
         value: INFO
       - key: LOG_FORMAT

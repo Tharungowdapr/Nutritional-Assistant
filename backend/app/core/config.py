@@ -30,7 +30,10 @@ class Settings(BaseSettings):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if not self.SECRET_KEY and not os.getenv("PYTEST_CURRENT_TEST"):
-            raise ValueError("SECRET_KEY must be set in the environment!")
+            if self.APP_ENV == "production":
+                raise ValueError("SECRET_KEY must be set in production!")
+            logger.warning("SECRET_KEY not set — using ephemeral key (sessions will reset on restart)")
+            self.SECRET_KEY = os.urandom(32).hex()
 
     # ── Security ───────────────────────────────────────────────
     SECRET_KEY: str
