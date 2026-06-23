@@ -15,7 +15,7 @@ from slowapi.util import get_remote_address
 
 from app.db.models import ChatRequest, ChatResponse  # ✅ fixed: was `database.models`
 from app.models.user import get_db, ChatHistoryDB, ChatSessionDB
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, require_user
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ def _get_session_history(db: Session, session_id: str) -> list:
 async def chat(
     request: Request,
     data: ChatRequest,
-    user=Depends(get_current_user),
+    user=Depends(require_user),
     db: Session = Depends(get_db),
 ):
     """RAG-powered chat with nutrition knowledge base."""
@@ -151,7 +151,7 @@ async def chat(
 async def chat_stream(
     request: Request,
     data: ChatRequest,
-    user=Depends(get_current_user),
+    user=Depends(require_user),
     db: Session = Depends(get_db),
 ):
     """Streaming RAG-powered chat (SSE)."""

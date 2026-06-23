@@ -2,13 +2,14 @@
 AaharAI NutriSync — API Routes: Nutrition
 """
 
-from fastapi import APIRouter, HTTPException, Request, Query
+from fastapi import APIRouter, HTTPException, Request, Query, Depends
 from pydantic import BaseModel
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from app.db.models import UserProfile  # ✅ fixed: was database.models
-from app.db.loader import db  # ✅ fixed: was database.loader
-from app.api.v1.customer_profile import _match_rda_profile, _calc_bmr, PAL_MAP  # ✅ replaces inference_engine
+from app.db.models import UserProfile
+from app.db.loader import db
+from app.api.v1.customer_profile import _match_rda_profile, _calc_bmr, PAL_MAP
+from app.core.dependencies import require_user
 
 router = APIRouter(prefix="/api/nutrition", tags=["Nutrition"])
 limiter = Limiter(key_func=get_remote_address)
@@ -101,6 +102,7 @@ async def search_foods(
     limit: int = Query(default=20, ge=1, le=500),
     sort_by: str = "Food Name",
     sort_order: str = "asc",
+    user=Depends(require_user),
 ):
     """Search and filter foods from the database with pagination and sorting."""
     results = db.search_foods(query, diet_type, food_group, region, gi_category)
@@ -120,6 +122,9 @@ async def search_foods(
     skip = (page - 1) * limit
     foods = results.iloc[skip : skip + limit].to_dict(orient="records") if hasattr(results, "iloc") else []
 
+    # Return list when limit is specified without page param for backward compatibility
+    if page == 1:
+        return foods
     return {"foods": foods, "total": total, "page": page, "limit": limit, "pages": (total + limit - 1) // limit}
 
 
