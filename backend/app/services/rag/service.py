@@ -92,7 +92,10 @@ class RAGService:
             embed_fn = get_embedding_function()
 
             try:
-                # First try with our preferred (Ollama/Local) embedding function
+                # If embed_fn is None, let ChromaDB use its built-in default (lazy-loaded)
+                if embed_fn is None:
+                    return self._chroma_client.get_collection(name)
+                # First try with our preferred (Ollama) embedding function
                 return self._chroma_client.get_collection(name, embedding_function=embed_fn)
             except Exception as e:
                 if "Embedding function conflict" in str(e):

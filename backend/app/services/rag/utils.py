@@ -7,7 +7,6 @@ logger = logging.getLogger(__name__)
 
 # Cache status (300s for offline to avoid repeated timeouts)
 _ollama_status_cache = {"online": None, "timestamp": 0}
-_embedding_function_cache = None
 
 
 def is_ollama_online() -> bool:
@@ -31,23 +30,22 @@ def is_ollama_online() -> bool:
 
 
 def get_embedding_function():
-    """Retrieve embedding function (singleton) with Ollama -> SentenceTransformer fallback."""
-    global _embedding_function_cache
-    if _embedding_function_cache is not None:
-        return _embedding_function_cache
-
+    """
+    Get embedding function — no global cache.
+    Returns None to let ChromaDB use its built-in default (all-MiniLM-L6-v2) which is lazy-loaded.
+    Only uses Ollama if explicitly available.
+    """
     import chromadb.utils.embedding_functions as ef
 
     if is_ollama_online():
         try:
-            _embedding_function_cache = ef.OllamaEmbeddingFunction(
+            return ef.OllamaEmbeddingFunction(
                 url=settings.OLLAMA_BASE_URL + "/api/embeddings",
                 model_name=settings.OLLAMA_EMBED_MODEL,
             )
-            return _embedding_function_cache
         except Exception as e:
             logger.warning(f"Ollama embedding model '{settings.OLLAMA_EMBED_MODEL}' failed: {e}")
 
-    logger.info("Using local SentenceTransformer embeddings (all-MiniLM-L6-v2)")
-    _embedding_function_cache = ef.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
-    return _embedding_function_cache
+    # Return None → ChromaDB uses its built-in default (all-MiniLM-L6-v2) which is lazy-loaded on first query
+    logger.info("Using ChromaDB default embedding (lazy-loaded on first query)")
+    return None
