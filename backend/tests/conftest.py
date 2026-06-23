@@ -3,6 +3,7 @@ Test configuration and fixtures.
 """
 
 import os
+import sys
 import pytest
 from fastapi.testclient import TestClient
 
@@ -11,6 +12,9 @@ os.environ["DATABASE_URL"] = ""
 os.environ["SQLITE_DB_PATH"] = ":memory:"
 os.environ["SECRET_KEY"] = "test-secret-key-for-pytest-only"
 os.environ["DEBUG"] = "true"
+
+# Ensure backend directory is in path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 @pytest.fixture(scope="session")
