@@ -2,6 +2,7 @@
 AaharAI NutriSync — Auth API Routes
 Signup, login, profile management, password reset, etc.
 """
+
 import json
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -13,8 +14,14 @@ from slowapi.util import get_remote_address
 from app.models.user import get_db, UserDB
 from app.core.security import hash_password, verify_password, create_access_token
 from app.schemas.auth import (
-    SignupRequest, LoginRequest, TokenResponse, UserResponse, ProfileUpdateRequest,
-    ForgotPasswordRequest, ResetPasswordRequest, ChangePasswordRequest
+    SignupRequest,
+    LoginRequest,
+    TokenResponse,
+    UserResponse,
+    ProfileUpdateRequest,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    ChangePasswordRequest,
 )
 from app.core.dependencies import require_user
 from app.utils.general import calculate_profile_completion
@@ -44,8 +51,11 @@ async def signup(request: Request, data: SignupRequest, db: Session = Depends(ge
     return TokenResponse(
         access_token=token,
         user=UserResponse(
-            id=user.id, email=user.email, name=user.name, profile=user.profile,
-            profile_completion=calculate_profile_completion(user.profile)
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            profile=user.profile,
+            profile_completion=calculate_profile_completion(user.profile),
         ),
     )
 
@@ -62,8 +72,11 @@ async def login(request: Request, data: LoginRequest, db: Session = Depends(get_
     return TokenResponse(
         access_token=token,
         user=UserResponse(
-            id=user.id, email=user.email, name=user.name, profile=user.profile,
-            profile_completion=calculate_profile_completion(user.profile)
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            profile=user.profile,
+            profile_completion=calculate_profile_completion(user.profile),
         ),
     )
 
@@ -76,8 +89,11 @@ async def refresh_token(user: UserDB = Depends(require_user), db: Session = Depe
     return TokenResponse(
         access_token=new_token,
         user=UserResponse(
-            id=user.id, email=user.email, name=user.name, profile=user.profile,
-            profile_completion=calculate_profile_completion(user.profile)
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            profile=user.profile,
+            profile_completion=calculate_profile_completion(user.profile),
         ),
     )
 
@@ -97,21 +113,26 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Ses
         # Send email only if RESEND_API_KEY is configured
         import resend
         from app.core.config import settings
+
         resend_key = getattr(settings, "RESEND_API_KEY", "") or ""
         if resend_key:  # ✅ fixed: was checking SECRET_KEY (always truthy)
             resend.api_key = resend_key
             try:
-                resend.Emails.send({
-                    "from": "AaharAI NutriSync <noreply@nutrisync.app>",
-                    "to": [user.email],
-                    "subject": "Password Reset — AaharAI NutriSync",
-                    "html": f"<p>Reset your password: <a href='http://localhost:3001/reset-password?token={token}'>Click here</a></p><p>This link expires in 1 hour.</p>"
-                })
+                resend.Emails.send(
+                    {
+                        "from": "AaharAI NutriSync <noreply@nutrisync.app>",
+                        "to": [user.email],
+                        "subject": "Password Reset — AaharAI NutriSync",
+                        "html": f"<p>Reset your password: <a href='http://localhost:3001/reset-password?token={token}'>Click here</a></p><p>This link expires in 1 hour.</p>",
+                    }
+                )
             except Exception as e:
                 import logging
+
                 logging.getLogger(__name__).warning(f"Failed to send reset email: {e}")
         else:
             import logging
+
             logging.getLogger(__name__).info(f"RESEND_API_KEY not set — email based password reset unavailable")
 
     return {"message": "If that email exists, password reset instructions have been sent."}
@@ -121,13 +142,14 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Ses
 @limiter.limit("10/minute")
 async def reset_password(request: Request, data: ResetPasswordRequest, db: Session = Depends(get_db)):
     """Reset password using token from email link."""
-    user = db.query(UserDB).filter(
-        UserDB.reset_token == data.token,
-        UserDB.reset_token_expires > datetime.now(timezone.utc)
-    ).first()
+    user = (
+        db.query(UserDB)
+        .filter(UserDB.reset_token == data.token, UserDB.reset_token_expires > datetime.now(timezone.utc))
+        .first()
+    )
     if not user:
         raise HTTPException(status_code=400, detail="Invalid or expired reset token")
-    
+
     user.hashed_password = hash_password(data.new_password)
     user.reset_token = None
     user.reset_token_expires = None
@@ -145,13 +167,16 @@ async def change_password(
     """Change password for authenticated user."""
     if not verify_password(data.current_password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
-    
+
     user.hashed_password = hash_password(data.new_password)
     db.commit()
     db.refresh(user)
     return UserResponse(
-        id=user.id, email=user.email, name=user.name, profile=user.profile,
-        profile_completion=calculate_profile_completion(user.profile)
+        id=user.id,
+        email=user.email,
+        name=user.name,
+        profile=user.profile,
+        profile_completion=calculate_profile_completion(user.profile),
     )
 
 
@@ -159,8 +184,11 @@ async def change_password(
 async def get_me(user: UserDB = Depends(require_user)):
     """Get current user profile."""
     return UserResponse(
-        id=user.id, email=user.email, name=user.name, profile=user.profile,
-        profile_completion=calculate_profile_completion(user.profile)
+        id=user.id,
+        email=user.email,
+        name=user.name,
+        profile=user.profile,
+        profile_completion=calculate_profile_completion(user.profile),
     )
 
 
@@ -176,11 +204,30 @@ async def update_profile(
 
     # Merge profile data — whitelist allowed fields
     ALLOWED_PROFILE_FIELDS = {
-        "age", "gender", "weight_kg", "height_cm", "activity_level",
-        "diet_type", "region", "state", "conditions", "health_conditions",
-        "medications", "goal", "goals", "budget", "cuisine", "allergies",
-        "dietary_preferences", "meal_preferences", "profession", "physical_activity",
-        "sex", "sleep_hours", "stress_level", "meal_timing",
+        "age",
+        "gender",
+        "weight_kg",
+        "height_cm",
+        "activity_level",
+        "diet_type",
+        "region",
+        "state",
+        "conditions",
+        "health_conditions",
+        "medications",
+        "goal",
+        "goals",
+        "budget",
+        "cuisine",
+        "allergies",
+        "dietary_preferences",
+        "meal_preferences",
+        "profession",
+        "physical_activity",
+        "sex",
+        "sleep_hours",
+        "stress_level",
+        "meal_timing",
     }
     current_profile = user.profile
     update_data = request.model_dump(exclude_none=True, exclude={"name"})
@@ -192,6 +239,9 @@ async def update_profile(
     db.commit()
     db.refresh(user)
     return UserResponse(
-        id=user.id, email=user.email, name=user.name, profile=user.profile,
-        profile_completion=calculate_profile_completion(user.profile)
+        id=user.id,
+        email=user.email,
+        name=user.name,
+        profile=user.profile,
+        profile_completion=calculate_profile_completion(user.profile),
     )

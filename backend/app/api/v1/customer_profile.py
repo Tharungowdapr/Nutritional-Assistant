@@ -3,6 +3,7 @@ AaharAI NutriSync — API Routes: Customer Profile Analysis
 Serves all 6 personalised analysis cards on the dashboard.
 Single endpoint, Redis-cached, only recomputes when user profile changes.
 """
+
 import logging
 from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends
@@ -10,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.models.user import get_db, UserDB, DailyLogDB
 from app.core.dependencies import require_user
-from app.db.loader import db as nutri_db               # ✅ fixed: was database.loader
+from app.db.loader import db as nutri_db  # ✅ fixed: was database.loader
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ def _calc_bmi(weight_kg: float, height_cm: float) -> dict:
     if not weight_kg or not height_cm:
         return {"bmi": None, "status": "Unknown", "healthy_weight_range": None}
     h = height_cm / 100
-    bmi = round(weight_kg / (h ** 2), 1)
+    bmi = round(weight_kg / (h**2), 1)
     if bmi < 18.5:
         status = "Underweight"
     elif bmi < 25:
@@ -46,8 +47,13 @@ def _calc_bmr(weight_kg, height_cm, age, gender) -> int:
 
 
 PAL_MAP = {
-    "sedentary": 1.4, "light": 1.55, "moderate": 1.6,
-    "active": 1.75, "heavy": 1.9, "very heavy": 2.2, "athlete": 2.2,
+    "sedentary": 1.4,
+    "light": 1.55,
+    "moderate": 1.6,
+    "active": 1.75,
+    "heavy": 1.9,
+    "very heavy": 2.2,
+    "athlete": 2.2,
 }
 
 
@@ -78,8 +84,8 @@ def _match_rda_profile(profile: dict) -> dict | None:
     activity_kw = next((k for k in PAL_MAP if k in activity), "moderate")
 
     matches = rda[
-        rda["Profile"].str.lower().str.contains(gender_kw, na=False) &
-        rda["Activity Level"].str.lower().str.contains(activity_kw, na=False)
+        rda["Profile"].str.lower().str.contains(gender_kw, na=False)
+        & rda["Activity Level"].str.lower().str.contains(activity_kw, na=False)
     ]
     # Refine by life stage if available
     if life_stage_kw and not matches.empty:
@@ -161,18 +167,20 @@ def _get_medicine_watch(medications: list) -> list:
             continue
         m_lower = str(m).lower()
         match = med[
-            med["Brand Name (India)"].str.lower().str.contains(m_lower, na=False) |
-            med["Generic Name"].str.lower().str.contains(m_lower, na=False)
+            med["Brand Name (India)"].str.lower().str.contains(m_lower, na=False)
+            | med["Generic Name"].str.lower().str.contains(m_lower, na=False)
         ]
         if not match.empty:
             row = match.iloc[0]
-            results.append({
-                "medication": str(row.get("Brand Name (India)", "")),
-                "note": str(row.get("User-Facing Note", "")),
-                "depletes": str(row.get("Nutrients Depleted", "")),
-                "timing": str(row.get("Food Timing Rule", "")),
-                "pair_with": str(row.get("Foods to Pair With", "")),
-            })
+            results.append(
+                {
+                    "medication": str(row.get("Brand Name (India)", "")),
+                    "note": str(row.get("User-Facing Note", "")),
+                    "depletes": str(row.get("Nutrients Depleted", "")),
+                    "timing": str(row.get("Food Timing Rule", "")),
+                    "pair_with": str(row.get("Foods to Pair With", "")),
+                }
+            )
     return results
 
 
@@ -185,56 +193,70 @@ def _get_deficiency_risks(profile: dict) -> list:
     conditions = profile.get("conditions", [])
     if conditions:
         if any("diabetes" in str(c).lower() for c in conditions):
-            risks.append({
-                "nutrient": "Chromium & Magnesium",
-                "reason": "Diabetes increases excretion of these minerals. Both are essential for glucose metabolism.",
-                "severity": "medium",
-                "fix": "Ragi, almonds, and green leafy vegetables are rich sources.",
-            })
+            risks.append(
+                {
+                    "nutrient": "Chromium & Magnesium",
+                    "reason": "Diabetes increases excretion of these minerals. Both are essential for glucose metabolism.",
+                    "severity": "medium",
+                    "fix": "Ragi, almonds, and green leafy vegetables are rich sources.",
+                }
+            )
 
     if "veg" in diet:
-        risks.append({
-            "nutrient": "Vitamin B12",
-            "reason": "No animal-source foods — curd and paneer are your only dietary sources. After 5+ years vegetarian, supplement may be needed.",
-            "severity": "high",
-            "fix": "Daily curd (150g), paneer 3x/week, or B12 supplement 2.4mcg/day",
-        })
-        risks.append({
-            "nutrient": "Iron (non-heme)",
-            "reason": "Plant iron absorbs at only 5–10% vs 25% for heme iron. High tea/coffee intake further blocks absorption.",
-            "severity": "high",
-            "fix": "Pair iron foods with Vit C (amla, guava, lemon). Bajra roti + palak sabzi is ideal. Avoid tea 1hr around meals.",
-        })
+        risks.append(
+            {
+                "nutrient": "Vitamin B12",
+                "reason": "No animal-source foods — curd and paneer are your only dietary sources. After 5+ years vegetarian, supplement may be needed.",
+                "severity": "high",
+                "fix": "Daily curd (150g), paneer 3x/week, or B12 supplement 2.4mcg/day",
+            }
+        )
+        risks.append(
+            {
+                "nutrient": "Iron (non-heme)",
+                "reason": "Plant iron absorbs at only 5–10% vs 25% for heme iron. High tea/coffee intake further blocks absorption.",
+                "severity": "high",
+                "fix": "Pair iron foods with Vit C (amla, guava, lemon). Bajra roti + palak sabzi is ideal. Avoid tea 1hr around meals.",
+            }
+        )
 
     if "female" in gender or gender == "f":
-        risks.append({
-            "nutrient": "Iron (menstrual losses)",
-            "reason": "Menstrual iron loss adds ~2mg/day requirement. Indian women have 57% anaemia prevalence (NFHS-5).",
-            "severity": "high",
-            "fix": "Target 21mg/day. Amaranth leaves, masoor dal, bajra, and moringa are top sources.",
-        })
+        risks.append(
+            {
+                "nutrient": "Iron (menstrual losses)",
+                "reason": "Menstrual iron loss adds ~2mg/day requirement. Indian women have 57% anaemia prevalence (NFHS-5).",
+                "severity": "high",
+                "fix": "Target 21mg/day. Amaranth leaves, masoor dal, bajra, and moringa are top sources.",
+            }
+        )
         if age < 40:
-            risks.append({
-                "nutrient": "Folate",
-                "reason": "Critical pre-conception and early pregnancy. Neural tube defect risk if deficient.",
-                "severity": "medium",
-                "fix": "Rajma 130mcg/100g, moong dal 84mcg/100g, coriander powder 274mcg/100g.",
-            })
+            risks.append(
+                {
+                    "nutrient": "Folate",
+                    "reason": "Critical pre-conception and early pregnancy. Neural tube defect risk if deficient.",
+                    "severity": "medium",
+                    "fix": "Rajma 130mcg/100g, moong dal 84mcg/100g, coriander powder 274mcg/100g.",
+                }
+            )
 
     if age > 50:
-        risks.append({
-            "nutrient": "Vitamin D",
-            "reason": "Bone density declines post-50. Indoor lifestyle common in urban India — sun exposure inadequate.",
-            "severity": "medium",
-            "fix": "15–20 min morning sun daily. Eggs (if non-veg). Supplement 600–800 IU/day recommended.",
-        })
+        risks.append(
+            {
+                "nutrient": "Vitamin D",
+                "reason": "Bone density declines post-50. Indoor lifestyle common in urban India — sun exposure inadequate.",
+                "severity": "medium",
+                "fix": "15–20 min morning sun daily. Eggs (if non-veg). Supplement 600–800 IU/day recommended.",
+            }
+        )
 
-    risks.append({
-        "nutrient": "Calcium",
-        "reason": "Spinach oxalates block absorption. Dairy calcium best, but most adults consume below 600mg/day target.",
-        "severity": "medium",
-        "fix": "Ragi (344mg/100g), sesame seeds (975mg/100g), and curd are best veg sources.",
-    })
+    risks.append(
+        {
+            "nutrient": "Calcium",
+            "reason": "Spinach oxalates block absorption. Dairy calcium best, but most adults consume below 600mg/day target.",
+            "severity": "medium",
+            "fix": "Ragi (344mg/100g), sesame seeds (975mg/100g), and curd are best veg sources.",
+        }
+    )
 
     return risks[:4]  # top 4
 
@@ -245,10 +267,15 @@ def _calc_streak(user_id: int, db_session: Session) -> int:
     today = datetime.now(ist).date()
     thirty_days_ago = (today - timedelta(days=29)).isoformat()
 
-    logs = db_session.query(DailyLogDB.log_date).filter(
-        DailyLogDB.user_id == user_id,
-        DailyLogDB.log_date >= thirty_days_ago,
-    ).distinct().all()
+    logs = (
+        db_session.query(DailyLogDB.log_date)
+        .filter(
+            DailyLogDB.user_id == user_id,
+            DailyLogDB.log_date >= thirty_days_ago,
+        )
+        .distinct()
+        .all()
+    )
     logged_dates = {row[0] for row in logs}
 
     streak = 0
@@ -292,14 +319,22 @@ async def get_customer_profile(
     pal = PAL_MAP.get((activity or "moderate").lower(), 1.6)
     tdee = round(bmr * pal)
 
-    rda_match = _match_rda_profile({
-        "age": age, "gender": gender, "activity_level": activity,
-    })
+    rda_match = _match_rda_profile(
+        {
+            "age": age,
+            "gender": gender,
+            "activity_level": activity,
+        }
+    )
 
-    deficiency_risks = _get_deficiency_risks({
-        "diet_type": diet_type, "gender": gender,
-        "age": age, "conditions": conditions,
-    })
+    deficiency_risks = _get_deficiency_risks(
+        {
+            "diet_type": diet_type,
+            "gender": gender,
+            "age": age,
+            "conditions": conditions,
+        }
+    )
 
     regional_concern = _get_regional_concern(region)
     disease_protocol = _get_disease_protocol(conditions)
@@ -328,8 +363,11 @@ async def get_customer_profile(
         "disease_protocol": disease_protocol,
         "medicine_watch": medicine_watch,
         "profile_summary": {
-            "age": age, "gender": gender, "diet_type": diet_type,
-            "activity_level": activity, "region": region,
+            "age": age,
+            "gender": gender,
+            "diet_type": diet_type,
+            "activity_level": activity,
+            "region": region,
             "conditions": conditions,
         },
     }

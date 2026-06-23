@@ -1,6 +1,7 @@
 """
 Health check tests — verify all critical API system endpoints.
 """
+
 import pytest
 
 

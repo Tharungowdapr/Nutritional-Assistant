@@ -2,6 +2,7 @@
 AaharAI NutriSync — Security Utilities
 Password hashing (bcrypt) and JWT token management.
 """
+
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 

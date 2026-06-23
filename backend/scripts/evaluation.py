@@ -10,6 +10,7 @@ Usage:
     cd backend && source venv/bin/activate
     python scripts/evaluation.py
 """
+
 import asyncio
 import json
 import time
@@ -27,66 +28,311 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 # ---------------------------------------------------------------------------
 TEST_QUERIES: List[Dict[str, Any]] = [
     # --- Category 1: IFCT Food Composition (10 queries) ---
-    {"id": "IFCT-01", "query": "What is the protein content of moong dal per 100g?", "category": "IFCT Food Composition", "expected_keywords": ["protein", "moong", "dal", "100g"]},
-    {"id": "IFCT-02", "query": "Compare the glycemic index of white rice and brown rice", "category": "IFCT Food Composition", "expected_keywords": ["glycemic", "index", "white rice", "brown rice"]},
-    {"id": "IFCT-03", "query": "How much iron is in spinach per 100 grams?", "category": "IFCT Food Composition", "expected_keywords": ["iron", "spinach", "100"]},
-    {"id": "IFCT-04", "query": "What are the macronutrients in 1 katori of cooked dal?", "category": "IFCT Food Composition", "expected_keywords": ["macronutrient", "dal", "protein", "carb", "fat"]},
-    {"id": "IFCT-05", "query": "Tell me the vitamin C content of amla (Indian gooseberry)", "category": "IFCT Food Composition", "expected_keywords": ["vitamin", "c", "amla"]},
-    {"id": "IFCT-06", "query": "What is the calorie count of 2 rotis made from whole wheat?", "category": "IFCT Food Composition", "expected_keywords": ["calorie", "roti", "wheat"]},
-    {"id": "IFCT-07", "query": "How much calcium does 100g of ragi contain?", "category": "IFCT Food Composition", "expected_keywords": ["calcium", "ragi", "100"]},
-    {"id": "IFCT-08", "query": "What is the fat content of ghee per tablespoon?", "category": "IFCT Food Composition", "expected_keywords": ["fat", "ghee", "tablespoon"]},
-    {"id": "IFCT-09", "query": "Compare protein content of paneer and chicken breast", "category": "IFCT Food Composition", "expected_keywords": ["protein", "paneer", "chicken"]},
-    {"id": "IFCT-10", "query": "What is the fibre content of oats per 100g?", "category": "IFCT Food Composition", "expected_keywords": ["fibre", "fiber", "oats", "100"]},
-
+    {
+        "id": "IFCT-01",
+        "query": "What is the protein content of moong dal per 100g?",
+        "category": "IFCT Food Composition",
+        "expected_keywords": ["protein", "moong", "dal", "100g"],
+    },
+    {
+        "id": "IFCT-02",
+        "query": "Compare the glycemic index of white rice and brown rice",
+        "category": "IFCT Food Composition",
+        "expected_keywords": ["glycemic", "index", "white rice", "brown rice"],
+    },
+    {
+        "id": "IFCT-03",
+        "query": "How much iron is in spinach per 100 grams?",
+        "category": "IFCT Food Composition",
+        "expected_keywords": ["iron", "spinach", "100"],
+    },
+    {
+        "id": "IFCT-04",
+        "query": "What are the macronutrients in 1 katori of cooked dal?",
+        "category": "IFCT Food Composition",
+        "expected_keywords": ["macronutrient", "dal", "protein", "carb", "fat"],
+    },
+    {
+        "id": "IFCT-05",
+        "query": "Tell me the vitamin C content of amla (Indian gooseberry)",
+        "category": "IFCT Food Composition",
+        "expected_keywords": ["vitamin", "c", "amla"],
+    },
+    {
+        "id": "IFCT-06",
+        "query": "What is the calorie count of 2 rotis made from whole wheat?",
+        "category": "IFCT Food Composition",
+        "expected_keywords": ["calorie", "roti", "wheat"],
+    },
+    {
+        "id": "IFCT-07",
+        "query": "How much calcium does 100g of ragi contain?",
+        "category": "IFCT Food Composition",
+        "expected_keywords": ["calcium", "ragi", "100"],
+    },
+    {
+        "id": "IFCT-08",
+        "query": "What is the fat content of ghee per tablespoon?",
+        "category": "IFCT Food Composition",
+        "expected_keywords": ["fat", "ghee", "tablespoon"],
+    },
+    {
+        "id": "IFCT-09",
+        "query": "Compare protein content of paneer and chicken breast",
+        "category": "IFCT Food Composition",
+        "expected_keywords": ["protein", "paneer", "chicken"],
+    },
+    {
+        "id": "IFCT-10",
+        "query": "What is the fibre content of oats per 100g?",
+        "category": "IFCT Food Composition",
+        "expected_keywords": ["fibre", "fiber", "oats", "100"],
+    },
     # --- Category 2: ICMR-NIN RDA Guidelines (8 queries) ---
-    {"id": "RDA-01", "query": "What is the daily protein requirement for a 30-year-old active male?", "category": "ICMR-NIN RDA", "expected_keywords": ["protein", "male", "active", "requirement"]},
-    {"id": "RDA-02", "query": "How much iron does a pregnant woman need per day according to ICMR?", "category": "ICMR-NIN RDA", "expected_keywords": ["iron", "pregnant", "ICMR"]},
-    {"id": "RDA-03", "query": "What is the recommended calcium intake for adolescents?", "category": "ICMR-NIN RDA", "expected_keywords": ["calcium", "adolescent", "intake"]},
-    {"id": "RDA-04", "query": "Daily B12 requirement for a vegetarian Indian adult", "category": "ICMR-NIN RDA", "expected_keywords": ["B12", "vegetarian", "requirement"]},
-    {"id": "RDA-05", "query": "How many calories should a sedentary woman consume daily?", "category": "ICMR-NIN RDA", "expected_keywords": ["calorie", "sedentary", "woman"]},
-    {"id": "RDA-06", "query": "What is the RDA for Vitamin D for Indian adults?", "category": "ICMR-NIN RDA", "expected_keywords": ["vitamin", "d", "RDA", "adult"]},
-    {"id": "RDA-07", "query": "How much folate is recommended during pregnancy?", "category": "ICMR-NIN RDA", "expected_keywords": ["folate", "pregnancy"]},
-    {"id": "RDA-08", "query": "What is the carbohydrate RDA for an active Indian male?", "category": "ICMR-NIN RDA", "expected_keywords": ["carbohydrate", "RDA", "active"]},
-
+    {
+        "id": "RDA-01",
+        "query": "What is the daily protein requirement for a 30-year-old active male?",
+        "category": "ICMR-NIN RDA",
+        "expected_keywords": ["protein", "male", "active", "requirement"],
+    },
+    {
+        "id": "RDA-02",
+        "query": "How much iron does a pregnant woman need per day according to ICMR?",
+        "category": "ICMR-NIN RDA",
+        "expected_keywords": ["iron", "pregnant", "ICMR"],
+    },
+    {
+        "id": "RDA-03",
+        "query": "What is the recommended calcium intake for adolescents?",
+        "category": "ICMR-NIN RDA",
+        "expected_keywords": ["calcium", "adolescent", "intake"],
+    },
+    {
+        "id": "RDA-04",
+        "query": "Daily B12 requirement for a vegetarian Indian adult",
+        "category": "ICMR-NIN RDA",
+        "expected_keywords": ["B12", "vegetarian", "requirement"],
+    },
+    {
+        "id": "RDA-05",
+        "query": "How many calories should a sedentary woman consume daily?",
+        "category": "ICMR-NIN RDA",
+        "expected_keywords": ["calorie", "sedentary", "woman"],
+    },
+    {
+        "id": "RDA-06",
+        "query": "What is the RDA for Vitamin D for Indian adults?",
+        "category": "ICMR-NIN RDA",
+        "expected_keywords": ["vitamin", "d", "RDA", "adult"],
+    },
+    {
+        "id": "RDA-07",
+        "query": "How much folate is recommended during pregnancy?",
+        "category": "ICMR-NIN RDA",
+        "expected_keywords": ["folate", "pregnancy"],
+    },
+    {
+        "id": "RDA-08",
+        "query": "What is the carbohydrate RDA for an active Indian male?",
+        "category": "ICMR-NIN RDA",
+        "expected_keywords": ["carbohydrate", "RDA", "active"],
+    },
     # --- Category 3: Clinical / Disease Nutrition (10 queries) ---
-    {"id": "CLN-01", "query": "What foods should a diabetic patient avoid?", "category": "Clinical Nutrition", "expected_keywords": ["diabetic", "avoid", "sugar", "food"]},
-    {"id": "CLN-02", "query": "What is the recommended diet for someone with PCOS?", "category": "Clinical Nutrition", "expected_keywords": ["PCOS", "diet", "insulin"]},
-    {"id": "CLN-03", "query": "How should a patient on GLP-1 medication adjust their diet?", "category": "Clinical Nutrition", "expected_keywords": ["GLP-1", "diet", "protein", "nausea"]},
-    {"id": "CLN-04", "query": "What foods help manage high blood pressure?", "category": "Clinical Nutrition", "expected_keywords": ["blood pressure", "sodium", "potassium"]},
-    {"id": "CLN-05", "query": "Diet recommendations for iron deficiency anaemia", "category": "Clinical Nutrition", "expected_keywords": ["iron", "anaemia", "diet", "food"]},
-    {"id": "CLN-06", "query": "What should a kidney disease patient eat?", "category": "Clinical Nutrition", "expected_keywords": ["kidney", "protein", "sodium", "potassium"]},
-    {"id": "CLN-07", "query": "Foods to avoid with high cholesterol", "category": "Clinical Nutrition", "expected_keywords": ["cholesterol", "avoid", "saturated", "fat"]},
-    {"id": "CLN-08", "query": "How to manage diabetes through Indian diet?", "category": "Clinical Nutrition", "expected_keywords": ["diabetes", "indian", "diet", "glycemic"]},
-    {"id": "CLN-09", "query": "What is the GLP-1 protein floor recommendation?", "category": "Clinical Nutrition", "expected_keywords": ["GLP-1", "protein", "floor"]},
-    {"id": "CLN-10", "query": "Anti-inflammatory foods for arthritis patients", "category": "Clinical Nutrition", "expected_keywords": ["anti-inflammatory", "arthritis", "omega"]},
-
+    {
+        "id": "CLN-01",
+        "query": "What foods should a diabetic patient avoid?",
+        "category": "Clinical Nutrition",
+        "expected_keywords": ["diabetic", "avoid", "sugar", "food"],
+    },
+    {
+        "id": "CLN-02",
+        "query": "What is the recommended diet for someone with PCOS?",
+        "category": "Clinical Nutrition",
+        "expected_keywords": ["PCOS", "diet", "insulin"],
+    },
+    {
+        "id": "CLN-03",
+        "query": "How should a patient on GLP-1 medication adjust their diet?",
+        "category": "Clinical Nutrition",
+        "expected_keywords": ["GLP-1", "diet", "protein", "nausea"],
+    },
+    {
+        "id": "CLN-04",
+        "query": "What foods help manage high blood pressure?",
+        "category": "Clinical Nutrition",
+        "expected_keywords": ["blood pressure", "sodium", "potassium"],
+    },
+    {
+        "id": "CLN-05",
+        "query": "Diet recommendations for iron deficiency anaemia",
+        "category": "Clinical Nutrition",
+        "expected_keywords": ["iron", "anaemia", "diet", "food"],
+    },
+    {
+        "id": "CLN-06",
+        "query": "What should a kidney disease patient eat?",
+        "category": "Clinical Nutrition",
+        "expected_keywords": ["kidney", "protein", "sodium", "potassium"],
+    },
+    {
+        "id": "CLN-07",
+        "query": "Foods to avoid with high cholesterol",
+        "category": "Clinical Nutrition",
+        "expected_keywords": ["cholesterol", "avoid", "saturated", "fat"],
+    },
+    {
+        "id": "CLN-08",
+        "query": "How to manage diabetes through Indian diet?",
+        "category": "Clinical Nutrition",
+        "expected_keywords": ["diabetes", "indian", "diet", "glycemic"],
+    },
+    {
+        "id": "CLN-09",
+        "query": "What is the GLP-1 protein floor recommendation?",
+        "category": "Clinical Nutrition",
+        "expected_keywords": ["GLP-1", "protein", "floor"],
+    },
+    {
+        "id": "CLN-10",
+        "query": "Anti-inflammatory foods for arthritis patients",
+        "category": "Clinical Nutrition",
+        "expected_keywords": ["anti-inflammatory", "arthritis", "omega"],
+    },
     # --- Category 4: Regional / Cultural (8 queries) ---
-    {"id": "REG-01", "query": "What are traditional South Indian foods good for weight loss?", "category": "Regional Nutrition", "expected_keywords": ["south", "indian", "weight", "loss"]},
-    {"id": "REG-02", "query": "Suggest high-protein North Indian vegetarian meals", "category": "Regional Nutrition", "expected_keywords": ["north", "indian", "protein", "vegetarian"]},
-    {"id": "REG-03", "query": "What are healthy East Indian breakfast options?", "category": "Regional Nutrition", "expected_keywords": ["east", "indian", "breakfast"]},
-    {"id": "REG-04", "query": "Low GI foods common in West India", "category": "Regional Nutrition", "expected_keywords": ["low", "GI", "west", "india"]},
-    {"id": "REG-05", "query": "What are good millet-based dishes from Karnataka?", "category": "Regional Nutrition", "expected_keywords": ["millet", "karnataka"]},
-    {"id": "REG-06", "query": "Traditional Bengali foods for iron deficiency", "category": "Regional Nutrition", "expected_keywords": ["bengali", "iron"]},
-    {"id": "REG-07", "query": "Kerala cuisine options for a diabetic patient", "category": "Regional Nutrition", "expected_keywords": ["kerala", "diabetic", "food"]},
-    {"id": "REG-08", "query": "Rajasthani foods suitable for a low-sodium diet", "category": "Regional Nutrition", "expected_keywords": ["rajasthani", "sodium", "low"]},
-
+    {
+        "id": "REG-01",
+        "query": "What are traditional South Indian foods good for weight loss?",
+        "category": "Regional Nutrition",
+        "expected_keywords": ["south", "indian", "weight", "loss"],
+    },
+    {
+        "id": "REG-02",
+        "query": "Suggest high-protein North Indian vegetarian meals",
+        "category": "Regional Nutrition",
+        "expected_keywords": ["north", "indian", "protein", "vegetarian"],
+    },
+    {
+        "id": "REG-03",
+        "query": "What are healthy East Indian breakfast options?",
+        "category": "Regional Nutrition",
+        "expected_keywords": ["east", "indian", "breakfast"],
+    },
+    {
+        "id": "REG-04",
+        "query": "Low GI foods common in West India",
+        "category": "Regional Nutrition",
+        "expected_keywords": ["low", "GI", "west", "india"],
+    },
+    {
+        "id": "REG-05",
+        "query": "What are good millet-based dishes from Karnataka?",
+        "category": "Regional Nutrition",
+        "expected_keywords": ["millet", "karnataka"],
+    },
+    {
+        "id": "REG-06",
+        "query": "Traditional Bengali foods for iron deficiency",
+        "category": "Regional Nutrition",
+        "expected_keywords": ["bengali", "iron"],
+    },
+    {
+        "id": "REG-07",
+        "query": "Kerala cuisine options for a diabetic patient",
+        "category": "Regional Nutrition",
+        "expected_keywords": ["kerala", "diabetic", "food"],
+    },
+    {
+        "id": "REG-08",
+        "query": "Rajasthani foods suitable for a low-sodium diet",
+        "category": "Regional Nutrition",
+        "expected_keywords": ["rajasthani", "sodium", "low"],
+    },
     # --- Category 5: Food Substitution / Swaps (7 queries) ---
-    {"id": "SUB-01", "query": "What can I substitute white rice with for a low-GI diet?", "category": "Food Substitution", "expected_keywords": ["substitute", "rice", "low", "GI", "millet"]},
-    {"id": "SUB-02", "query": "Healthy alternatives to maida (refined flour)", "category": "Food Substitution", "expected_keywords": ["alternatives", "maida", "whole wheat"]},
-    {"id": "SUB-03", "query": "What can replace sugar for a diabetic person?", "category": "Food Substitution", "expected_keywords": ["replace", "sugar", "diabetic"]},
-    {"id": "SUB-04", "query": "High-protein vegetarian alternatives to chicken", "category": "Food Substitution", "expected_keywords": ["protein", "vegetarian", "alternative"]},
-    {"id": "SUB-05", "query": "Good substitutes for potato in a low-carb diet", "category": "Food Substitution", "expected_keywords": ["substitute", "potato", "low", "carb"]},
-    {"id": "SUB-06", "query": "What can I eat instead of bread for breakfast?", "category": "Food Substitution", "expected_keywords": ["instead", "bread", "breakfast"]},
-    {"id": "SUB-07", "query": "Dairy-free calcium sources in Indian diet", "category": "Food Substitution", "expected_keywords": ["dairy", "free", "calcium", "sesame"]},
-
+    {
+        "id": "SUB-01",
+        "query": "What can I substitute white rice with for a low-GI diet?",
+        "category": "Food Substitution",
+        "expected_keywords": ["substitute", "rice", "low", "GI", "millet"],
+    },
+    {
+        "id": "SUB-02",
+        "query": "Healthy alternatives to maida (refined flour)",
+        "category": "Food Substitution",
+        "expected_keywords": ["alternatives", "maida", "whole wheat"],
+    },
+    {
+        "id": "SUB-03",
+        "query": "What can replace sugar for a diabetic person?",
+        "category": "Food Substitution",
+        "expected_keywords": ["replace", "sugar", "diabetic"],
+    },
+    {
+        "id": "SUB-04",
+        "query": "High-protein vegetarian alternatives to chicken",
+        "category": "Food Substitution",
+        "expected_keywords": ["protein", "vegetarian", "alternative"],
+    },
+    {
+        "id": "SUB-05",
+        "query": "Good substitutes for potato in a low-carb diet",
+        "category": "Food Substitution",
+        "expected_keywords": ["substitute", "potato", "low", "carb"],
+    },
+    {
+        "id": "SUB-06",
+        "query": "What can I eat instead of bread for breakfast?",
+        "category": "Food Substitution",
+        "expected_keywords": ["instead", "bread", "breakfast"],
+    },
+    {
+        "id": "SUB-07",
+        "query": "Dairy-free calcium sources in Indian diet",
+        "category": "Food Substitution",
+        "expected_keywords": ["dairy", "free", "calcium", "sesame"],
+    },
     # --- Category 6: Gap Analysis / Personalized (7 queries) ---
-    {"id": "GAP-01", "query": "I am a vegetarian female, am I getting enough B12?", "category": "Gap Analysis", "expected_keywords": ["B12", "vegetarian", "deficiency", "supplement"]},
-    {"id": "GAP-02", "query": "My diet has mostly rice and dal, what nutrients am I missing?", "category": "Gap Analysis", "expected_keywords": ["missing", "nutrient", "vitamin", "mineral"]},
-    {"id": "GAP-03", "query": "I exercise daily, is my protein intake sufficient?", "category": "Gap Analysis", "expected_keywords": ["protein", "exercise", "sufficient", "intake"]},
-    {"id": "GAP-04", "query": "Analyse my iron intake from a typical North Indian vegetarian diet", "category": "Gap Analysis", "expected_keywords": ["iron", "intake", "vegetarian"]},
-    {"id": "GAP-05", "query": "I eat mostly processed food, what should I change?", "category": "Gap Analysis", "expected_keywords": ["processed", "change", "whole", "nutrient"]},
-    {"id": "GAP-06", "query": "How much water should I drink based on my activity level?", "category": "Gap Analysis", "expected_keywords": ["water", "intake", "activity"]},
-    {"id": "GAP-07", "query": "I am pregnant, am I getting enough folate from Indian food?", "category": "Gap Analysis", "expected_keywords": ["pregnant", "folate", "folic", "indian"]},
+    {
+        "id": "GAP-01",
+        "query": "I am a vegetarian female, am I getting enough B12?",
+        "category": "Gap Analysis",
+        "expected_keywords": ["B12", "vegetarian", "deficiency", "supplement"],
+    },
+    {
+        "id": "GAP-02",
+        "query": "My diet has mostly rice and dal, what nutrients am I missing?",
+        "category": "Gap Analysis",
+        "expected_keywords": ["missing", "nutrient", "vitamin", "mineral"],
+    },
+    {
+        "id": "GAP-03",
+        "query": "I exercise daily, is my protein intake sufficient?",
+        "category": "Gap Analysis",
+        "expected_keywords": ["protein", "exercise", "sufficient", "intake"],
+    },
+    {
+        "id": "GAP-04",
+        "query": "Analyse my iron intake from a typical North Indian vegetarian diet",
+        "category": "Gap Analysis",
+        "expected_keywords": ["iron", "intake", "vegetarian"],
+    },
+    {
+        "id": "GAP-05",
+        "query": "I eat mostly processed food, what should I change?",
+        "category": "Gap Analysis",
+        "expected_keywords": ["processed", "change", "whole", "nutrient"],
+    },
+    {
+        "id": "GAP-06",
+        "query": "How much water should I drink based on my activity level?",
+        "category": "Gap Analysis",
+        "expected_keywords": ["water", "intake", "activity"],
+    },
+    {
+        "id": "GAP-07",
+        "query": "I am pregnant, am I getting enough folate from Indian food?",
+        "category": "Gap Analysis",
+        "expected_keywords": ["pregnant", "folate", "folic", "indian"],
+    },
 ]
 
 
@@ -141,6 +387,7 @@ async def evaluate_single_query(
         chunks = rag_service.retrieve(query, top_k=5)
     elif retrieval_mode == "bm25_only":
         from app.services.rag.hybrid import create_hybrid_retriever
+
         hybrid = create_hybrid_retriever("nutrisync", rag_service._chroma_client)
         rag_service._ensure_hybrid_loaded(hybrid, "nutrisync")
         bm25_results = hybrid.bm25_search(query, top_k=5)
@@ -152,10 +399,12 @@ async def evaluate_single_query(
             chunks = []
             if qr and qr.get("documents") and qr["documents"][0]:
                 for i in range(len(qr["documents"][0])):
-                    chunks.append({
-                        "text": qr["documents"][0][i],
-                        "metadata": qr["metadatas"][0][i] if qr.get("metadatas") else {},
-                    })
+                    chunks.append(
+                        {
+                            "text": qr["documents"][0][i],
+                            "metadata": qr["metadatas"][0][i] if qr.get("metadatas") else {},
+                        }
+                    )
         else:
             chunks = []
     else:  # no_rag
@@ -211,11 +460,14 @@ Provide a detailed, evidence-based answer citing IFCT 2017 and ICMR-NIN 2024 whe
     result.keyword_recall = round(hits / max(len(expected_keywords), 1), 3)
 
     # --- Source detection ---
-    result.has_ifct_source = any(w in answer_lower for w in ["ifct", "food composition table", "indian food composition"])
+    result.has_ifct_source = any(
+        w in answer_lower for w in ["ifct", "food composition table", "indian food composition"]
+    )
     result.has_icmr_source = any(w in answer_lower for w in ["icmr", "nin", "rda", "recommended dietary"])
 
     # --- Citation Verification ---
     from app.services.agents.tools.citation_verifier import CitationVerifier
+
     verifier = CitationVerifier()
     context_texts = [c["text"] for c in chunks]
     verification = verifier.verify(answer_text, context_texts)
@@ -250,10 +502,12 @@ async def run_full_evaluation(rag_service, llm_router) -> List[QueryResult]:
     for i, q in enumerate(TEST_QUERIES):
         print(f"\n  [{i+1}/{len(TEST_QUERIES)}] {q['id']}: {q['query'][:70]}...")
         r = await evaluate_single_query(q, rag_service, llm_router, retrieval_mode="hybrid", use_llm=True)
-        print(f"    Chunks: {r.chunks_retrieved} | Latency: {r.latency_ms}ms | "
-              f"Keyword Recall: {r.keyword_recall:.2f} ({r.keyword_hits}/{r.keyword_total}) | "
-              f"Citation: {r.citation_status} ({r.citation_score:.2f}) | "
-              f"IFCT: {'Y' if r.has_ifct_source else 'N'} | ICMR: {'Y' if r.has_icmr_source else 'N'}")
+        print(
+            f"    Chunks: {r.chunks_retrieved} | Latency: {r.latency_ms}ms | "
+            f"Keyword Recall: {r.keyword_recall:.2f} ({r.keyword_hits}/{r.keyword_total}) | "
+            f"Citation: {r.citation_status} ({r.citation_score:.2f}) | "
+            f"IFCT: {'Y' if r.has_ifct_source else 'N'} | ICMR: {'Y' if r.has_icmr_source else 'N'}"
+        )
         results.append(r)
     return results
 
@@ -395,7 +649,9 @@ def generate_markdown_report(
     a("| Source | Type | Contents |")
     a("|--------|------|----------|")
     a("| IFCT 2017 | PDF (847 pages) | Indian Food Composition Tables — nutrient profiles for 847+ foods |")
-    a("| NutriSync Enhanced | Excel (12 sheets) | ICMR-NIN 2024 RDA targets, disease protocols, regional food culture, GLP-1 protocols, medicine-nutrition interactions, micronutrient matrices, Indian portion conversions |")
+    a(
+        "| NutriSync Enhanced | Excel (12 sheets) | ICMR-NIN 2024 RDA targets, disease protocols, regional food culture, GLP-1 protocols, medicine-nutrition interactions, micronutrient matrices, Indian portion conversions |"
+    )
     a("")
     a("**12 Excel Sheets:**")
     a("1. Food Composition (IFCT 2017)")
@@ -418,7 +674,9 @@ def generate_markdown_report(
     a("| Category | Queries | Avg Recall | Avg Latency (ms) | Avg Citation Score |")
     a("|----------|---------|------------|-------------------|-------------------|")
     for cat, data in full_metrics.get("per_category", {}).items():
-        a(f"| {cat} | {data['queries']} | {data['avg_recall']:.1%} | {data['avg_latency_ms']:.0f} | {data['avg_citation_score']:.2f} |")
+        a(
+            f"| {cat} | {data['queries']} | {data['avg_recall']:.1%} | {data['avg_latency_ms']:.0f} | {data['avg_citation_score']:.2f} |"
+        )
     a("")
 
     # ---- Section 5: Ablation Study ----
@@ -429,8 +687,14 @@ def generate_markdown_report(
     a("| Retrieval Strategy | Avg Recall | Median Recall | Avg Chunks | Avg Latency (ms) |")
     a("|---------------------|------------|---------------|------------|-------------------|")
     for mode, data in ablation.items():
-        label = {"hybrid": "Hybrid (BM25+Vector+RRF)", "bm25_only": "BM25 Only (Keyword)", "vector_only": "Vector Only (Semantic)"}.get(mode, mode)
-        a(f"| {label} | **{data['avg_recall']:.1%}** | {data['median_recall']:.1%} | {data['avg_chunks']} | {data['avg_latency_ms']:.0f} |")
+        label = {
+            "hybrid": "Hybrid (BM25+Vector+RRF)",
+            "bm25_only": "BM25 Only (Keyword)",
+            "vector_only": "Vector Only (Semantic)",
+        }.get(mode, mode)
+        a(
+            f"| {label} | **{data['avg_recall']:.1%}** | {data['median_recall']:.1%} | {data['avg_chunks']} | {data['avg_latency_ms']:.0f} |"
+        )
     a("")
 
     # Compute improvement
@@ -440,7 +704,9 @@ def generate_markdown_report(
         bm25_recall = ablation.get("bm25_only", {}).get("avg_recall", 0)
         if vector_recall > 0:
             improvement_over_vector = ((hybrid_recall - vector_recall) / max(vector_recall, 0.001)) * 100
-            a(f"**Key Finding:** Hybrid retrieval achieves **{improvement_over_vector:+.1f}%** keyword recall improvement over vector-only search.")
+            a(
+                f"**Key Finding:** Hybrid retrieval achieves **{improvement_over_vector:+.1f}%** keyword recall improvement over vector-only search."
+            )
         if bm25_recall > 0:
             improvement_over_bm25 = ((hybrid_recall - bm25_recall) / max(bm25_recall, 0.001)) * 100
             a(f"Hybrid retrieval achieves **{improvement_over_bm25:+.1f}%** improvement over BM25-only search.")
@@ -478,7 +744,9 @@ def generate_markdown_report(
     a("|-----|----------|-------|--------|---------|--------|----------|------|------|")
     for r in full_results:
         q_short = r.query[:50] + ("..." if len(r.query) > 50 else "")
-        a(f"| {r.id} | {r.category[:20]} | {q_short} | {r.chunks_retrieved} | {r.latency_ms:.0f}ms | {r.keyword_recall:.0%} | {r.citation_status[:8]} | {'Y' if r.has_ifct_source else 'N'} | {'Y' if r.has_icmr_source else 'N'} |")
+        a(
+            f"| {r.id} | {r.category[:20]} | {q_short} | {r.chunks_retrieved} | {r.latency_ms:.0f}ms | {r.keyword_recall:.0%} | {r.citation_status[:8]} | {'Y' if r.has_ifct_source else 'N'} | {'Y' if r.has_icmr_source else 'N'} |"
+        )
     a("")
 
     a("### 7.2 Ablation Study Results (No LLM)")
@@ -504,14 +772,22 @@ def generate_markdown_report(
     a("## 8. Novelty Claims for Research Paper")
     a("")
     a("### Claim 1: First Indian-Specific Hybrid RAG for Nutrition")
-    a("- **Evidence:** IFCT 2017 (847-page food composition database) + ICMR-NIN 2024 RDA guidelines ground every retrieval")
+    a(
+        "- **Evidence:** IFCT 2017 (847-page food composition database) + ICMR-NIN 2024 RDA guidelines ground every retrieval"
+    )
     a("- **Novelty:** No existing paper combines IFCT 2017 and ICMR-NIN 2024 in a RAG pipeline for clinical nutrition")
-    a("- **Validation:** IFCT source citation rate = **{:.1%}**, ICMR citation rate = **{:.1%}**".format(full_metrics['ifct_source_rate'], full_metrics['icmr_source_rate']))
+    a(
+        "- **Validation:** IFCT source citation rate = **{:.1%}**, ICMR citation rate = **{:.1%}**".format(
+            full_metrics["ifct_source_rate"], full_metrics["icmr_source_rate"]
+        )
+    )
     a("")
 
     a("### Claim 2: Three-Stage Hybrid Retrieval (BM25 + Vector + Cross-Encoder)")
     a("- **Evidence:** Ablation study shows hybrid outperforms single-strategy approaches")
-    a("- **Novelty:** Most RAG papers use either BM25 OR vector search — not both with RRF fusion + cross-encoder reranking")
+    a(
+        "- **Novelty:** Most RAG papers use either BM25 OR vector search — not both with RRF fusion + cross-encoder reranking"
+    )
     a("- **Validation:** See Section 5 ablation comparison table")
     a("")
 
@@ -534,9 +810,15 @@ def generate_markdown_report(
     # ---- Section 9: Comparison with Baselines ----
     a("## 9. Comparison with Baselines")
     a("")
-    a("| System | Indian Food Data | Clinical Protocols | Hybrid RAG | Citation Verification | Multi-Agent | Open Source |")
-    a("|--------|------------------|-------------------|------------|----------------------|-------------|-------------|")
-    a("| **AaharAI NutriSync** | **IFCT 2017 + 12 sheets** | **Yes (Diabetes, PCOS, GLP-1)** | **BM25+Vector+RRF+Reranker** | **Yes (grounding score)** | **Yes (4 agents)** | **Yes** |")
+    a(
+        "| System | Indian Food Data | Clinical Protocols | Hybrid RAG | Citation Verification | Multi-Agent | Open Source |"
+    )
+    a(
+        "|--------|------------------|-------------------|------------|----------------------|-------------|-------------|"
+    )
+    a(
+        "| **AaharAI NutriSync** | **IFCT 2017 + 12 sheets** | **Yes (Diabetes, PCOS, GLP-1)** | **BM25+Vector+RRF+Reranker** | **Yes (grounding score)** | **Yes (4 agents)** | **Yes** |"
+    )
     a("| Generic ChatGPT/GPT-4 | No (training data only) | No | No | No | No | No |")
     a("| HealthifyMe | Proprietary | Partial | No | No | No | No |")
     a("| MyFitnessPal | Western food DB | No | No | No | No | No |")
@@ -580,9 +862,13 @@ def generate_markdown_report(
     a("## 12. Ethics Statement")
     a("")
     a("- **Data Privacy**: User profiles stored in local SQLite; no external analytics or tracking")
-    a("- **Clinical Disclaimer**: NutriSync provides dietary guidance, NOT medical advice. Users should consult healthcare professionals for clinical decisions")
+    a(
+        "- **Clinical Disclaimer**: NutriSync provides dietary guidance, NOT medical advice. Users should consult healthcare professionals for clinical decisions"
+    )
     a("- **IFCT Data Usage**: Indian Food Composition Tables (IFCT 2017) used for research and educational purposes")
-    a("- **LLM Limitations**: Responses may contain inaccuracies. Citation verification provides grounding scores but does not guarantee correctness")
+    a(
+        "- **LLM Limitations**: Responses may contain inaccuracies. Citation verification provides grounding scores but does not guarantee correctness"
+    )
     a("- **Bias**: Training data may underrepresent certain Indian communities or dietary practices")
     a("")
 

@@ -2,6 +2,7 @@
 AaharAI NutriSync — Auth Pydantic Schemas
 Request/response models for authentication endpoints.
 """
+
 from pydantic import BaseModel, Field
 from typing import Optional
 

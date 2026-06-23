@@ -2,6 +2,7 @@
 AaharAI NutriSync — Planner Agent
 Analyzes user query and determines intent + routing.
 """
+
 import logging
 from typing import Dict, Any
 
@@ -18,17 +19,17 @@ INTENT_CLINICAL = "clinical"
 
 class PlannerAgent:
     """Routes queries to appropriate handlers."""
-    
+
     def __init__(self, llm_router=None):
         self.llm_router = llm_router
-    
+
     def _has_llm(self) -> bool:
         return self.llm_router is not None
 
     async def classify_intent(self, query: str) -> str:
         """Classify query intent using keyword matching + LLM fallback."""
         query_lower = query.lower()
-        
+
         # Keyword-based classification
         if any(w in query_lower for w in ["plan", "meal plan", "diet plan", "create", "generate"]):
             return INTENT_PLAN
@@ -40,16 +41,16 @@ class PlannerAgent:
             return INTENT_SEARCH
         if any(w in query_lower for w in ["diabetes", "health", "condition", "medical"]):
             return INTENT_CLINICAL
-        
+
         # LLM fallback for ambiguous queries
         if self._has_llm():
             try:
                 return await self._llm_classify(query)
             except Exception as e:
                 logger.warning(f"LLM classification failed: {e}")
-        
+
         return INTENT_GENERAL
-    
+
     async def _llm_classify(self, query: str) -> str:
         """Use LLM for intent classification."""
         prompt = f"""Classify this nutrition query into ONE word:
@@ -62,10 +63,10 @@ class PlannerAgent:
 
 Query: {query}
 Reply with only one word."""
-        
+
         result, _ = await self.llm_router.generate(prompt, "You are an intent classifier.", temperature=0)
         result = result.strip().lower()
-        
+
         # Map to valid intents
         if "plan" in result:
             return INTENT_PLAN
@@ -77,18 +78,18 @@ Reply with only one word."""
             return INTENT_SEARCH
         if "clinical" in result or "health" in result:
             return INTENT_CLINICAL
-        
+
         return INTENT_GENERAL
-    
+
     async def analyze_intent(self, query: str) -> Dict[str, Any]:
         """Structured intent analysis with routing hints."""
         intent = await self.classify_intent(query)
-        
+
         # Determine required agents
         needs_rag = intent not in [INTENT_GENERAL]
         needs_meal_data = intent in [INTENT_ANALYZE, INTENT_PLAN]
         needs_profile = intent in [INTENT_RECOMMEND, INTENT_PLAN]
-        
+
         # Determine collection (for RAG)
         # Only "nutrisync" collection exists; metadata filtering handles domain-specific queries
         collection_map = {
@@ -99,7 +100,7 @@ Reply with only one word."""
             INTENT_RECOMMEND: "nutrisync",
             INTENT_GENERAL: "nutrisync",
         }
-        
+
         return {
             "intent": intent,
             "collection": collection_map.get(intent, "nutrisync"),

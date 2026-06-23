@@ -2,6 +2,7 @@
 AaharAI NutriSync — API Routes: Admin
 Admin-only endpoints for user management, statistics, and system monitoring.
 """
+
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
@@ -14,7 +15,7 @@ router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 def require_admin(current_user: UserDB = Depends(require_user)) -> UserDB:
     """Dependency to require admin role."""
-    if not getattr(current_user, 'is_admin', False):
+    if not getattr(current_user, "is_admin", False):
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
@@ -27,19 +28,23 @@ async def get_stats(
     """Get system statistics."""
     # User stats
     total_users = db.query(func.count(UserDB.id)).scalar()
-    active_users_24h = db.query(func.count(UserDB.id)).filter(
-        UserDB.last_login_at >= datetime.now(timezone.utc) - timedelta(hours=24)
-    ).scalar()
-    
+    active_users_24h = (
+        db.query(func.count(UserDB.id))
+        .filter(UserDB.last_login_at >= datetime.now(timezone.utc) - timedelta(hours=24))
+        .scalar()
+    )
+
     # Chat stats
     total_chats = db.query(func.count(ChatHistoryDB.id)).scalar()
-    chats_24h = db.query(func.count(ChatHistoryDB.id)).filter(
-        ChatHistoryDB.created_at >= datetime.now(timezone.utc) - timedelta(hours=24)
-    ).scalar()
-    
+    chats_24h = (
+        db.query(func.count(ChatHistoryDB.id))
+        .filter(ChatHistoryDB.created_at >= datetime.now(timezone.utc) - timedelta(hours=24))
+        .scalar()
+    )
+
     # Unique users with chats
     users_with_chats = db.query(func.count(func.distinct(ChatHistoryDB.user_id))).scalar()
-    
+
     return {
         "total_users": total_users or 0,
         "active_users_24h": active_users_24h or 0,
@@ -61,21 +66,23 @@ async def list_users(
     limit = min(limit, 100)
     total = db.query(func.count(UserDB.id)).scalar()
     skip = (page - 1) * limit
-    
+
     users = db.query(UserDB).offset(skip).limit(limit).all()
-    
+
     user_list = []
     for user in users:
-        user_list.append({
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "is_admin": user.is_admin or False,
-            "email_verified": user.email_verified or False,
-            "created_at": user.created_at,
-            "last_login_at": user.last_login_at,
-        })
-    
+        user_list.append(
+            {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "is_admin": user.is_admin or False,
+                "email_verified": user.email_verified or False,
+                "created_at": user.created_at,
+                "last_login_at": user.last_login_at,
+            }
+        )
+
     return {
         "users": user_list,
         "total": total,
@@ -95,17 +102,19 @@ async def get_user_activity(
     user = db.query(UserDB).filter(UserDB.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     # Get chat count
-    chat_count = db.query(func.count(ChatHistoryDB.id)).filter(
-        ChatHistoryDB.user_id == user_id
-    ).scalar()
-    
+    chat_count = db.query(func.count(ChatHistoryDB.id)).filter(ChatHistoryDB.user_id == user_id).scalar()
+
     # Get recent chats
-    recent_chats = db.query(ChatHistoryDB).filter(
-        ChatHistoryDB.user_id == user_id
-    ).order_by(ChatHistoryDB.created_at.desc()).limit(5).all()
-    
+    recent_chats = (
+        db.query(ChatHistoryDB)
+        .filter(ChatHistoryDB.user_id == user_id)
+        .order_by(ChatHistoryDB.created_at.desc())
+        .limit(5)
+        .all()
+    )
+
     return {
         "user_id": user_id,
         "name": user.name,
@@ -121,7 +130,7 @@ async def get_user_activity(
                 "created_at": chat.created_at,
             }
             for chat in recent_chats
-        ]
+        ],
     }
 
 
@@ -133,24 +142,21 @@ async def get_usage_stats(
     """Get LLM usage and system metrics."""
     # Chats by food group (approximation from messages)
     total_chats = db.query(func.count(ChatHistoryDB.id)).scalar()
-    
+
     # Top active users
-    top_users = db.query(
-        UserDB.name,
-        func.count(ChatHistoryDB.id).label("chat_count")
-    ).join(
-        ChatHistoryDB, UserDB.id == ChatHistoryDB.user_id
-    ).group_by(UserDB.id).order_by(
-        func.count(ChatHistoryDB.id).desc()
-    ).limit(5).all()
-    
+    top_users = (
+        db.query(UserDB.name, func.count(ChatHistoryDB.id).label("chat_count"))
+        .join(ChatHistoryDB, UserDB.id == ChatHistoryDB.user_id)
+        .group_by(UserDB.id)
+        .order_by(func.count(ChatHistoryDB.id).desc())
+        .limit(5)
+        .all()
+    )
+
     return {
         "total_chats": total_chats or 0,
         "avg_chats_per_user": round((total_chats or 0) / max(db.query(func.count(UserDB.id)).scalar() or 1, 1), 2),
-        "top_active_users": [
-            {"name": user[0], "chats": user[1]}
-            for user in top_users
-        ],
+        "top_active_users": [{"name": user[0], "chats": user[1]} for user in top_users],
     }
 
 
@@ -164,7 +170,7 @@ async def toggle_admin(
     user = db.query(UserDB).filter(UserDB.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     is_currently_admin = user.is_admin or False
 
     if user.id == current_user.id and is_currently_admin:
@@ -174,7 +180,7 @@ async def toggle_admin(
 
     user.is_admin = not is_currently_admin
     db.commit()
-    
+
     return {
         "id": user.id,
         "name": user.name,

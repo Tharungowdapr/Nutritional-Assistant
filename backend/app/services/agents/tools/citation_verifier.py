@@ -4,6 +4,7 @@ Cross-references LLM claims against retrieved clinical context using
 multi-signal grounding: keyword overlap, n-gram matching, medical term
 anchoring, negation detection, and sentence-level coherence scoring.
 """
+
 import logging
 import re
 from typing import List, Dict
@@ -13,17 +14,63 @@ logger = logging.getLogger(__name__)
 
 # Medical/nutrition terms that should be grounded in the knowledge base
 MEDICAL_ANCHORS = {
-    "diabetes", "insulin", "glucose", "glycemic", "hba1c", "hypoglycemia",
-    "pcos", "polycystic", "anaemia", "anemia", "iron", "ferritin", "haemoglobin",
-    "b12", "cobalamin", "folate", "folic acid", "vitamin d", "calcium",
-    "protein", "calorie", "calories", "bmi", "bmr", "tdee", "rda",
-    "glp-1", "semaglutide", "liraglutide", "obesity",
-    "cholesterol", "triglyceride", "hdl", "ldl", "hypertension",
-    "pregnancy", "pregnant", "lactation", "trimester",
-    "ifct", "icmr", "nin",
-    "millet", "ragi", "jowar", "bajra", "quinoa",
-    "dal", "lentil", "chickpea", "paneer", "ghee",
-    "katori", "roti", "chapati", "idli", "dosa",
+    "diabetes",
+    "insulin",
+    "glucose",
+    "glycemic",
+    "hba1c",
+    "hypoglycemia",
+    "pcos",
+    "polycystic",
+    "anaemia",
+    "anemia",
+    "iron",
+    "ferritin",
+    "haemoglobin",
+    "b12",
+    "cobalamin",
+    "folate",
+    "folic acid",
+    "vitamin d",
+    "calcium",
+    "protein",
+    "calorie",
+    "calories",
+    "bmi",
+    "bmr",
+    "tdee",
+    "rda",
+    "glp-1",
+    "semaglutide",
+    "liraglutide",
+    "obesity",
+    "cholesterol",
+    "triglyceride",
+    "hdl",
+    "ldl",
+    "hypertension",
+    "pregnancy",
+    "pregnant",
+    "lactation",
+    "trimester",
+    "ifct",
+    "icmr",
+    "nin",
+    "millet",
+    "ragi",
+    "jowar",
+    "bajra",
+    "quinoa",
+    "dal",
+    "lentil",
+    "chickpea",
+    "paneer",
+    "ghee",
+    "katori",
+    "roti",
+    "chapati",
+    "idli",
+    "dosa",
 }
 
 # Negation patterns
@@ -84,7 +131,7 @@ class CitationVerifier:
             signals.append(("medical", 1.0, 0.30))  # No medical claims = no risk
 
         # Signal 4: Sentence-level overlap (15% weight)
-        answer_sentences = [s.strip() for s in re.split(r'[.!?]', answer) if len(s.strip()) > 15]
+        answer_sentences = [s.strip() for s in re.split(r"[.!?]", answer) if len(s.strip()) > 15]
         if answer_sentences:
             sent_hits = 0
             for sent in answer_sentences:
@@ -116,7 +163,9 @@ class CitationVerifier:
         # Check for specific high-risk patterns
         if answer_medical and not context_medical:
             status = "HALUCINATION_RISK"
-            alerts.append(f"Medical terms ({', '.join(list(answer_medical)[:3])}) mentioned but not found in retrieved context.")
+            alerts.append(
+                f"Medical terms ({', '.join(list(answer_medical)[:3])}) mentioned but not found in retrieved context."
+            )
         elif answer_medical - context_medical:
             ungrounded = answer_medical - context_medical
             if len(ungrounded) >= 2:
@@ -135,7 +184,7 @@ class CitationVerifier:
         words = text.split()
         ngrams = set()
         for i in range(len(words) - n + 1):
-            ngram = " ".join(words[i:i + n])
+            ngram = " ".join(words[i : i + n])
             ngrams.add(ngram)
         return ngrams
 

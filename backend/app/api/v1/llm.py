@@ -30,6 +30,7 @@ async def _optional_user(request: Request, db: Session = Depends(get_db)) -> Opt
     except Exception:
         return None
 
+
 class LLMSettingsUpdate(BaseModel):
     provider: str
     model: Optional[str] = None
@@ -37,12 +38,14 @@ class LLMSettingsUpdate(BaseModel):
     baseUrl: Optional[str] = None
     isActive: bool = True
 
+
 class ChatRequest(BaseModel):
     message: str
     systemPrompt: Optional[str] = "You are a helpful nutrition assistant."
     provider: Optional[str] = None
     model: Optional[str] = None
     apiKey: Optional[str] = None
+
 
 @router.post("/chat")
 async def chat_proxy(
@@ -65,19 +68,21 @@ async def chat_proxy(
 
     # 2. Fall back to DB-saved config for authenticated users
     elif user and provider:
-        config = db.query(LLMConfigDB).filter(
-            LLMConfigDB.user_id == user.id,
-            LLMConfigDB.provider == provider,
-            LLMConfigDB.is_active == True
-        ).first()
+        config = (
+            db.query(LLMConfigDB)
+            .filter(LLMConfigDB.user_id == user.id, LLMConfigDB.provider == provider, LLMConfigDB.is_active == True)
+            .first()
+        )
         if config:
-            if not model: model = config.model
+            if not model:
+                model = config.model
             api_key = decrypt_api_key(config.api_key_encrypted)
             base_url = config.base_url
 
     # 3. Fallback to env-configured defaults
     if not api_key:
         from app.core.config import settings
+
         if provider == "groq":
             api_key = settings.GROQ_API_KEY
         elif provider == "ollama":
@@ -87,6 +92,7 @@ async def chat_proxy(
     if not api_key and provider in ("ollama", None, ""):
         try:
             from main import get_llm_router
+
             llm = get_llm_router()
             if llm and llm.active_provider and llm.active_provider != "none":
                 response_text, used_provider = await llm.generate(
@@ -108,38 +114,34 @@ async def chat_proxy(
             prompt=data.message,
             system_prompt=data.systemPrompt or "",
             api_key=api_key,
-            base_url=base_url
+            base_url=base_url,
         )
         return {"answer": response, "provider": provider}
     except Exception as e:
         logger.error(f"Proxy Chat Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/test")
-async def test_connection(
-    data: LLMSettingsUpdate,
-    user: UserDB = Depends(require_user),
-    db: Session = Depends(get_db)
-):
+async def test_connection(data: LLMSettingsUpdate, user: UserDB = Depends(require_user), db: Session = Depends(get_db)):
     """Test connection with provided (and potentially unsaved) credentials."""
     api_key = data.apiKey
     if api_key == "********":
         # Fetch from DB if user is using existing key
-        config = db.query(LLMConfigDB).filter(
-            LLMConfigDB.user_id == user.id,
-            LLMConfigDB.provider == data.provider
-        ).first()
+        config = (
+            db.query(LLMConfigDB).filter(LLMConfigDB.user_id == user.id, LLMConfigDB.provider == data.provider).first()
+        )
         if config:
             api_key = decrypt_api_key(config.api_key_encrypted)
-    
+
     try:
-        start_time = 0 # In a real scenario, you'd measure this
+        start_time = 0  # In a real scenario, you'd measure this
         response = await LLMProxy.complete(
             provider=data.provider,
-            model=data.model or "gpt-4o-mini", # default for test
+            model=data.model or "gpt-4o-mini",  # default for test
             prompt="Say 'OK'",
             api_key=api_key,
-            base_url=data.baseUrl
+            base_url=data.baseUrl,
         )
         return {"success": True, "response": response}
     except Exception as e:

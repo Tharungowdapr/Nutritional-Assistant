@@ -2,19 +2,19 @@
 AaharAI NutriSync — Agent Tool: Food Search
 Searches the IFCT database for foods matching a query.
 """
+
 from app.db.loader import db
 
 
-def search_foods_tool(query: str, diet_type: str = None, food_group: str = None,
-                      limit: int = 20) -> list[dict]:
+def search_foods_tool(query: str, diet_type: str = None, food_group: str = None, limit: int = 20) -> list[dict]:
     """Search IFCT database for foods.
-    
+
     Args:
         query: Text search (food name)
         diet_type: Filter by VEG/NON-VEG/VEGAN
         food_group: Filter by food group
         limit: Max results
-    
+
     Returns:
         List of food dicts with nutrient data
     """
@@ -96,6 +96,7 @@ def _safe_float(val) -> float:
     """Safely convert a value to float, returning 0.0 on failure."""
     try:
         import math
+
         f = float(val)
         return 0.0 if math.isnan(f) else round(f, 2)
     except (ValueError, TypeError):

@@ -1,6 +1,7 @@
 """
 Nutrition API tests — food search, food detail, comparison.
 """
+
 import pytest
 
 
@@ -31,9 +32,7 @@ class TestFoodSearch:
 
     def test_food_search_pagination(self, client, auth_headers):
         """offset param should be accepted without error."""
-        r = client.get(
-            "/api/nutrition/foods?query=dal&limit=5&offset=0", headers=auth_headers
-        )
+        r = client.get("/api/nutrition/foods?query=dal&limit=5&offset=0", headers=auth_headers)
         assert r.status_code in [200, 503]
 
 

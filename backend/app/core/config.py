@@ -3,6 +3,7 @@ AaharAI NutriSync — Configuration
 Loads all settings from environment variables with sensible defaults.
 All values can be overridden via backend/.env or environment variables.
 """
+
 import logging
 import os
 from pathlib import Path

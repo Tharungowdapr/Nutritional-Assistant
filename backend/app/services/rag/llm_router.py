@@ -3,6 +3,7 @@ AaharAI NutriSync — LLM Router
 Implements Ollama ↔ Groq fallback with circuit-breaker pattern.
 Integrated with LLMProxy for unified provider handling.
 """
+
 import time
 import logging
 import httpx
@@ -11,12 +12,13 @@ from app.services.llm.proxy import LLMProxy
 
 logger = logging.getLogger(__name__)
 
+
 class LLMRouter:
     """Routes LLM requests to Ollama (primary) or Groq (fallback), using LLMProxy."""
 
-    def __init__(self, ollama_base_url: str, ollama_model: str,
-                 groq_api_key: str, groq_model: str,
-                 retry_interval: int = 60):
+    def __init__(
+        self, ollama_base_url: str, ollama_model: str, groq_api_key: str, groq_model: str, retry_interval: int = 60
+    ):
         self.ollama_url = ollama_base_url
         self.ollama_model = ollama_model
         self.groq_api_key = groq_api_key
@@ -71,43 +73,55 @@ class LLMRouter:
         return self._groq_available
 
     async def _maybe_retry_ollama(self):
-        if self._active_provider != "ollama" and \
-           time.time() - self._last_ollama_check > self.retry_interval:
+        if self._active_provider != "ollama" and time.time() - self._last_ollama_check > self.retry_interval:
             if await self._check_ollama():
                 self._active_provider = "ollama"
                 logger.info("LLM Router: Ollama is back! Switching to local.")
 
-    async def generate(self, prompt: str, system: str = "",
-                       temperature: float = 0.7, max_tokens: int = 4096,
-                       provider_override: dict = None) -> tuple[str, str]:
+    async def generate(
+        self,
+        prompt: str,
+        system: str = "",
+        temperature: float = 0.7,
+        max_tokens: int = 4096,
+        provider_override: dict = None,
+    ) -> tuple[str, str]:
         """Generate with optional dynamic provider override.
-        
+
         When provider_override is provided (e.g. from user's saved LLM config),
         it takes precedence over the built-in Ollama/Groq fallback chain.
         Format: {"provider": str, "api_key": str, "model": str, "base_url": str?}
         """
         if provider_override:
             from app.services.rag.override import generate_override
+
             try:
                 content = await generate_override(prompt, system, provider_override)
                 if content == "INVALID_API_KEY":
                     return "**Invalid API Key** — Update your LLM provider settings.", provider_override["provider"]
                 if content == "RATE_LIMITED":
-                    return "**Rate Limit Exceeded** — Check your LLM provider billing tier.", provider_override["provider"]
+                    return (
+                        "**Rate Limit Exceeded** — Check your LLM provider billing tier.",
+                        provider_override["provider"],
+                    )
                 if content.startswith("Error from") or content.startswith("Connection error"):
                     return f"**LLM Error** — {content[:100]}", provider_override["provider"]
                 return content, provider_override["provider"]
             except Exception as e:
                 logger.error(f"Provider override failed ({provider_override.get('provider')}): {e}. Falling back.")
-        
+
         await self._maybe_retry_ollama()
 
         if self._active_provider == "ollama":
             try:
                 content = await LLMProxy.complete(
-                    provider="ollama", model=self.ollama_model, prompt=prompt,
-                    system_prompt=system, base_url=self.ollama_url, 
-                    temperature=temperature, max_tokens=max_tokens
+                    provider="ollama",
+                    model=self.ollama_model,
+                    prompt=prompt,
+                    system_prompt=system,
+                    base_url=self.ollama_url,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
                 )
                 return content, "ollama"
             except Exception as e:
@@ -118,9 +132,13 @@ class LLMRouter:
         if self._active_provider == "groq":
             try:
                 content = await LLMProxy.complete(
-                    provider="groq", model=self.groq_model, prompt=prompt,
-                    system_prompt=system, api_key=self.groq_api_key, 
-                    temperature=temperature, max_tokens=max_tokens
+                    provider="groq",
+                    model=self.groq_model,
+                    prompt=prompt,
+                    system_prompt=system,
+                    api_key=self.groq_api_key,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
                 )
                 return content, "groq"
             except Exception as e:
@@ -128,12 +146,18 @@ class LLMRouter:
 
         return "I'm sorry, no LLM provider is available.", "none"
 
-    async def stream_generate(self, prompt: str, system: str = "",
-                              temperature: float = 0.7, max_tokens: int = 4096,
-                              provider_override: dict = None):
+    async def stream_generate(
+        self,
+        prompt: str,
+        system: str = "",
+        temperature: float = 0.7,
+        max_tokens: int = 4096,
+        provider_override: dict = None,
+    ):
         """Streaming version of generate with optional provider override."""
         if provider_override:
             from app.services.rag.override import stream_generate_override
+
             try:
                 async for chunk in stream_generate_override(prompt, system, provider_override):
                     if chunk == "INVALID_API_KEY":
@@ -148,16 +172,22 @@ class LLMRouter:
                     yield chunk
                 return
             except Exception as e:
-                logger.error(f"Provider override stream failed ({provider_override.get('provider')}): {e}. Falling back.")
-        
+                logger.error(
+                    f"Provider override stream failed ({provider_override.get('provider')}): {e}. Falling back."
+                )
+
         await self._maybe_retry_ollama()
 
         if self._active_provider == "ollama":
             try:
                 async for chunk in LLMProxy.stream(
-                    provider="ollama", model=self.ollama_model, prompt=prompt,
-                    system_prompt=system, base_url=self.ollama_url, 
-                    temperature=temperature, max_tokens=max_tokens
+                    provider="ollama",
+                    model=self.ollama_model,
+                    prompt=prompt,
+                    system_prompt=system,
+                    base_url=self.ollama_url,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
                 ):
                     yield chunk
                 return
@@ -169,9 +199,13 @@ class LLMRouter:
         if self._active_provider == "groq":
             try:
                 async for chunk in LLMProxy.stream(
-                    provider="groq", model=self.groq_model, prompt=prompt,
-                    system_prompt=system, api_key=self.groq_api_key, 
-                    temperature=temperature, max_tokens=max_tokens
+                    provider="groq",
+                    model=self.groq_model,
+                    prompt=prompt,
+                    system_prompt=system,
+                    api_key=self.groq_api_key,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
                 ):
                     yield chunk
                 return

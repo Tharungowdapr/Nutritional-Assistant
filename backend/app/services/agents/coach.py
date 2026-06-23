@@ -2,6 +2,7 @@
 AaharAI NutriSync — Coach Agent
 Generates human-friendly, personalized responses.
 """
+
 import logging
 from typing import Dict, Any, Optional, List
 
@@ -25,17 +26,17 @@ Remember:
 
 class CoachAgent:
     """Generates final responses with personalization."""
-    
+
     def __init__(self, llm_router=None):
         self.llm_router = llm_router
-    
+
     def format_profile_context(self, profile: Optional[Dict[str, Any]]) -> str:
         """Format user profile for prompt."""
         if not profile:
             return "No profile information available."
-        
+
         parts = []
-        
+
         # Key info
         if profile.get("name"):
             parts.append(f"User: {profile['name']}")
@@ -43,24 +44,24 @@ class CoachAgent:
             parts.append(f"Diet: {profile['diet_type']}")
         if profile.get("age"):
             parts.append(f"Age: {profile['age']}")
-        
+
         # Goals
         if profile.get("goal") or profile.get("goals"):
             parts.append(f"Goal: {profile.get('goal') or profile.get('goals')}")
-        
+
         # Health conditions
         if profile.get("conditions") and profile["conditions"]:
             parts.append(f"Conditions: {', '.join(profile['conditions'])}")
-        
+
         return "\n".join(parts) if parts else "No profile info."
-    
+
     def format_analysis_context(self, analysis_text: str, knowledge: List[Dict]) -> str:
         """Format analysis + sources for prompt."""
         parts = []
-        
+
         if analysis_text:
             parts.append(analysis_text)
-        
+
         # Add sources if available
         if knowledge:
             sources = []
@@ -69,12 +70,12 @@ class CoachAgent:
                 source = meta.get("source", "unknown")
                 if source not in sources:
                     sources.append(source)
-            
+
             if sources:
                 parts.append(f"\nSources: {', '.join(sources)}")
-        
+
         return "\n".join(parts) if parts else "No additional data."
-    
+
     async def generate_response(
         self,
         query: str,
@@ -84,16 +85,16 @@ class CoachAgent:
         provider_override: Optional[Dict] = None,
     ) -> str:
         """Generate final response with optional provider override.
-        
+
         For complex queries, decomposes into sub-questions, answers each,
         then synthesizes a cohesive response.
         """
         if not self.llm_router and not provider_override:
             return "AI service unavailable. Please try again."
-        
+
         profile_ctx = self.format_profile_context(user_profile)
         full_context = f"{profile_ctx}\n\n{analysis_context}"
-        
+
         history_ctx = ""
         if conversation_history:
             history_parts = ["Recent conversation:"]
@@ -105,7 +106,7 @@ class CoachAgent:
                 else:
                     history_parts.append(f"You: {content}")
             history_ctx = "\n".join(history_parts) + "\n\n"
-        
+
         # Only decompose for long/multi-part queries
         if len(query) > 80 and any(c in query for c in [",", ".", "and", "also", "plus"]):
             sub_answers = await self._decompose_and_answer(query, full_context, provider_override)
@@ -127,7 +128,7 @@ User Question:
 {query}
 
 Provide a personalized response using the above context."""
-        
+
         try:
             response, provider = await self.llm_router.generate(
                 prompt=synthesis_prompt,
@@ -139,7 +140,7 @@ Provide a personalized response using the above context."""
         except Exception as e:
             logger.error(f"Coach generation failed: {e}")
             return "I apologize, but I couldn't generate a response. Please try again."
-    
+
     async def _decompose_and_answer(
         self,
         query: str,
@@ -152,7 +153,7 @@ Provide a personalized response using the above context."""
 Query: {query}
 
 Return ONLY a numbered list of specific sub-questions, one per line."""
-        
+
         try:
             raw, _ = await self.llm_router.generate(
                 prompt=decompose_prompt,
@@ -163,12 +164,12 @@ Return ONLY a numbered list of specific sub-questions, one per line."""
             )
         except Exception:
             return ""
-        
+
         sub_questions = [q.strip() for q in raw.strip().split("\n") if q.strip() and q[0].isdigit()]
-        
+
         if len(sub_questions) <= 1:
             return raw.strip()
-        
+
         answers = []
         for sq in sub_questions[:4]:
             sq_prompt = f"""Context:
@@ -188,9 +189,9 @@ Answer concisely with specific data from the context."""
                 answers.append(f"{sq}\n{ans.strip()}")
             except Exception as e:
                 logger.warning(f"Sub-question failed: {sq} - {e}")
-        
+
         return "\n\n".join(answers) if answers else raw.strip()
-    
+
     async def generate_suggestion(
         self,
         query: str,
@@ -200,13 +201,15 @@ Answer concisely with specific data from the context."""
     ) -> str:
         """Generate suggestion-style response."""
         if not recommendations:
-            return await self.generate_response(query, "No specific recommendations available.", user_profile, provider_override=provider_override)
-        
+            return await self.generate_response(
+                query, "No specific recommendations available.", user_profile, provider_override=provider_override
+            )
+
         # Format recommendations
         rec_text = "Recommended options:\n" + "\n".join(f"- {r}" for r in recommendations)
-        
+
         return await self.generate_response(query, rec_text, user_profile, provider_override=provider_override)
-    
+
     async def generate_meal_plan(
         self,
         days: int,
@@ -224,31 +227,33 @@ Answer concisely with specific data from the context."""
             "",
             "Preferences considered:",
         ]
-        
+
         if preferences.get("diet_type"):
             plan_parts.append(f"- Diet: {preferences['diet_type']}")
         if preferences.get("cuisine"):
             plan_parts.append(f"- Cuisine: {preferences['cuisine']}")
         if preferences.get("budget"):
             plan_parts.append(f"- Budget: ₹{preferences['budget']}/day")
-        
+
         plan_text = "\n".join(plan_parts)
-        
+
         if self.llm_router or provider_override:
             prompt = f"""{plan_text}
 
 Generate a detailed meal plan with breakfast, lunch, dinner, and snacks for each day.
 Include specific foods and portions (e.g., "1 katori cooked rice")."""
-            
+
             try:
                 response, _ = await self.llm_router.generate(
-                    prompt, SYSTEM_COACH, temperature=0.7,
+                    prompt,
+                    SYSTEM_COACH,
+                    temperature=0.7,
                     provider_override=provider_override,
                 )
                 return response.strip()
             except Exception as e:
                 logger.error(f"Meal plan generation failed: {e}")
-        
+
         return plan_text + "\n\n(Detailed meal plan generation in progress...)"
 
 

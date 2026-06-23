@@ -2,6 +2,7 @@
 AaharAI NutriSync — Chat Session API Routes
 Multi-chat interface for RAG bot with session history.
 """
+
 import uuid
 import json
 from typing import Optional
@@ -68,10 +69,10 @@ async def list_chat_sessions(
     db: Session = Depends(get_db),
 ):
     """List all chat sessions for the user."""
-    sessions = db.query(ChatSessionDB).filter(
-        ChatSessionDB.user_id == user.id
-    ).order_by(ChatSessionDB.updated_at.desc()).all()
-    
+    sessions = (
+        db.query(ChatSessionDB).filter(ChatSessionDB.user_id == user.id).order_by(ChatSessionDB.updated_at.desc()).all()
+    )
+
     return [
         ChatSessionResponse(
             id=s.id,
@@ -90,14 +91,11 @@ async def get_chat_session(
     db: Session = Depends(get_db),
 ):
     """Get a specific chat session."""
-    session = db.query(ChatSessionDB).filter(
-        ChatSessionDB.id == session_id,
-        ChatSessionDB.user_id == user.id
-    ).first()
-    
+    session = db.query(ChatSessionDB).filter(ChatSessionDB.id == session_id, ChatSessionDB.user_id == user.id).first()
+
     if not session:
         raise HTTPException(status_code=404, detail="Chat session not found")
-    
+
     return ChatSessionResponse(
         id=session.id,
         title=session.title,
@@ -115,19 +113,18 @@ async def send_chat_message(
 ):
     """Send a message in a chat session."""
     from main import get_rag_service
+
     rag_service = get_rag_service()
-    
+
     # Verify session exists and belongs to user
-    session = db.query(ChatSessionDB).filter(
-        ChatSessionDB.id == session_id,
-        ChatSessionDB.user_id == user.id
-    ).first()
-    
+    session = db.query(ChatSessionDB).filter(ChatSessionDB.id == session_id, ChatSessionDB.user_id == user.id).first()
+
     if not session:
         raise HTTPException(status_code=404, detail="Chat session not found")
-    
+
     # Get session history for context
     from app.api.v1.chat import _get_session_history
+
     history = _get_session_history(db, session_id)
 
     # Get RAG response
@@ -136,18 +133,14 @@ async def send_chat_message(
             raise HTTPException(status_code=503, detail="Knowledge base not ready")
 
         rag_response = await rag_service.chat(
-            message_data.message, 
-            user_profile=user.profile, 
-            history=history,
-            user_id=user.id,
-            db=db
+            message_data.message, user_profile=user.profile, history=history, user_id=user.id, db=db
         )
         assistant_message = rag_response.get("answer", "")
         sources = rag_response.get("sources", [])
         llm_provider = rag_response.get("llm_provider", "")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"RAG service error: {str(e)}")
-    
+
     # Store in chat history
     chat_entry = ChatHistoryDB(
         user_id=user.id,
@@ -158,12 +151,12 @@ async def send_chat_message(
         llm_provider=llm_provider,
     )
     db.add(chat_entry)
-    
+
     # Update session timestamp
     session.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(chat_entry)
-    
+
     return ChatMessageResponse(
         message_id=chat_entry.id,
         assistant_message=assistant_message,
@@ -180,19 +173,16 @@ async def get_session_history(
 ):
     """Get chat history for a specific session."""
     # Verify session belongs to user
-    session = db.query(ChatSessionDB).filter(
-        ChatSessionDB.id == session_id,
-        ChatSessionDB.user_id == user.id
-    ).first()
-    
+    session = db.query(ChatSessionDB).filter(ChatSessionDB.id == session_id, ChatSessionDB.user_id == user.id).first()
+
     if not session:
         raise HTTPException(status_code=404, detail="Chat session not found")
-    
+
     # Get all messages in session
-    messages = db.query(ChatHistoryDB).filter(
-        ChatHistoryDB.session_id == session_id
-    ).order_by(ChatHistoryDB.created_at).all()
-    
+    messages = (
+        db.query(ChatHistoryDB).filter(ChatHistoryDB.session_id == session_id).order_by(ChatHistoryDB.created_at).all()
+    )
+
     return [
         {
             "id": m.id,
@@ -213,23 +203,18 @@ async def delete_chat_session(
     db: Session = Depends(get_db),
 ):
     """Delete a chat session and its history."""
-    session = db.query(ChatSessionDB).filter(
-        ChatSessionDB.id == session_id,
-        ChatSessionDB.user_id == user.id
-    ).first()
-    
+    session = db.query(ChatSessionDB).filter(ChatSessionDB.id == session_id, ChatSessionDB.user_id == user.id).first()
+
     if not session:
         raise HTTPException(status_code=404, detail="Chat session not found")
-    
+
     # Delete associated messages
-    db.query(ChatHistoryDB).filter(
-        ChatHistoryDB.session_id == session_id
-    ).delete()
-    
+    db.query(ChatHistoryDB).filter(ChatHistoryDB.session_id == session_id).delete()
+
     # Delete session
     db.delete(session)
     db.commit()
-    
+
     return {"message": "Chat session deleted"}
 
 
@@ -241,18 +226,15 @@ async def update_session_title(
     db: Session = Depends(get_db),
 ):
     """Update chat session title."""
-    session = db.query(ChatSessionDB).filter(
-        ChatSessionDB.id == session_id,
-        ChatSessionDB.user_id == user.id
-    ).first()
-    
+    session = db.query(ChatSessionDB).filter(ChatSessionDB.id == session_id, ChatSessionDB.user_id == user.id).first()
+
     if not session:
         raise HTTPException(status_code=404, detail="Chat session not found")
-    
+
     if "title" in title_data:
         session.title = title_data["title"]
         db.commit()
-    
+
     return ChatSessionResponse(
         id=session.id,
         title=session.title,

@@ -2,6 +2,7 @@
 AaharAI NutriSync — Recipe API Routes
 Save, retrieve, and manage user recipes with history tracking.
 """
+
 import json
 import logging
 from datetime import datetime, timezone, timedelta
@@ -103,7 +104,7 @@ async def save_recipe(
         fat_g=recipe.fat_g,  # type: ignore
         carbs_g=recipe.carbs_g,  # type: ignore
         fibre_g=recipe.fibre_g,  # type: ignore
-        created_at=recipe.created_at.isoformat() if hasattr(recipe.created_at, 'isoformat') else "",  # type: ignore
+        created_at=recipe.created_at.isoformat() if hasattr(recipe.created_at, "isoformat") else "",  # type: ignore
     )
 
 
@@ -117,26 +118,35 @@ async def list_recipes(
     """List all recipes for the user with pagination."""
     limit = min(limit, 100)
     skip = (page - 1) * limit
-    recipes = db.query(RecipeDB).filter(RecipeDB.user_id == user.id).order_by(RecipeDB.created_at.desc()).offset(skip).limit(limit).all()
-    
+    recipes = (
+        db.query(RecipeDB)
+        .filter(RecipeDB.user_id == user.id)
+        .order_by(RecipeDB.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
     result = []
     for recipe in recipes:
-        result.append(RecipeResponse(
-            id=recipe.id,
-            title=recipe.title,
-            ingredients=[RecipeIngredient(**ing) for ing in json.loads(recipe.ingredients or "[]")],
-            instructions=json.loads(recipe.instructions or "[]"),
-            cook_time_minutes=recipe.cook_time_minutes,
-            difficulty=recipe.difficulty,
-            servings=recipe.servings,
-            calories=recipe.calories,
-            protein_g=recipe.protein_g,
-            fat_g=recipe.fat_g,
-            carbs_g=recipe.carbs_g,
-            fibre_g=recipe.fibre_g,
-            created_at=recipe.created_at.isoformat() if recipe.created_at else "",
-        ))
-    
+        result.append(
+            RecipeResponse(
+                id=recipe.id,
+                title=recipe.title,
+                ingredients=[RecipeIngredient(**ing) for ing in json.loads(recipe.ingredients or "[]")],
+                instructions=json.loads(recipe.instructions or "[]"),
+                cook_time_minutes=recipe.cook_time_minutes,
+                difficulty=recipe.difficulty,
+                servings=recipe.servings,
+                calories=recipe.calories,
+                protein_g=recipe.protein_g,
+                fat_g=recipe.fat_g,
+                carbs_g=recipe.carbs_g,
+                fibre_g=recipe.fibre_g,
+                created_at=recipe.created_at.isoformat() if recipe.created_at else "",
+            )
+        )
+
     return result
 
 
@@ -147,20 +157,21 @@ async def get_recipe(
     db: Session = Depends(get_db),
 ):
     """Get a specific recipe and track history."""
-    recipe = db.query(RecipeDB).filter(
-        RecipeDB.id == recipe_id,
-        RecipeDB.user_id == user.id
-    ).first()
-    
+    recipe = db.query(RecipeDB).filter(RecipeDB.id == recipe_id, RecipeDB.user_id == user.id).first()
+
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
-    
+
     # Track recipe history — only if no entry in the last hour
-    recent = db.query(RecipeHistoryDB).filter(
-        RecipeHistoryDB.user_id == user.id,
-        RecipeHistoryDB.recipe_id == recipe.id,
-        RecipeHistoryDB.viewed_at >= datetime.now(timezone.utc) - timedelta(hours=1),
-    ).first()
+    recent = (
+        db.query(RecipeHistoryDB)
+        .filter(
+            RecipeHistoryDB.user_id == user.id,
+            RecipeHistoryDB.recipe_id == recipe.id,
+            RecipeHistoryDB.viewed_at >= datetime.now(timezone.utc) - timedelta(hours=1),
+        )
+        .first()
+    )
     if not recent:
         history = RecipeHistoryDB(
             user_id=user.id,
@@ -169,7 +180,7 @@ async def get_recipe(
         )
         db.add(history)
         db.commit()
-    
+
     return RecipeResponse(
         id=recipe.id,
         title=recipe.title,
@@ -197,10 +208,15 @@ async def get_recipe_history(
     """Get user's recipe viewing history with pagination."""
     limit = min(limit, 100)
     skip = (page - 1) * limit
-    history = db.query(RecipeHistoryDB).filter(
-        RecipeHistoryDB.user_id == user.id
-    ).order_by(RecipeHistoryDB.viewed_at.desc()).offset(skip).limit(limit).all()
-    
+    history = (
+        db.query(RecipeHistoryDB)
+        .filter(RecipeHistoryDB.user_id == user.id)
+        .order_by(RecipeHistoryDB.viewed_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
     return [
         RecipeHistoryResponse(
             id=h.id,
@@ -218,14 +234,11 @@ async def delete_recipe(
     db: Session = Depends(get_db),
 ):
     """Delete a recipe."""
-    recipe = db.query(RecipeDB).filter(
-        RecipeDB.id == recipe_id,
-        RecipeDB.user_id == user.id
-    ).first()
-    
+    recipe = db.query(RecipeDB).filter(RecipeDB.id == recipe_id, RecipeDB.user_id == user.id).first()
+
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
-    
+
     db.delete(recipe)
     db.commit()
     return {"message": "Recipe deleted"}
@@ -246,12 +259,14 @@ async def generate_recipe_ai(
 ):
     """Generate a recipe using LLM with optional override."""
     from main import get_llm_router
+
     llm = get_llm_router()
     if not llm:
         raise HTTPException(status_code=503, detail="LLM service unavailable")
 
     # Use backend-stored LLM config for authenticated users
     from app.api.v1.settings import get_user_active_provider
+
     active_provider = get_user_active_provider(user, db) if user else None
 
     system_prompt = "You are a master Indian chef and nutritionist. Return ONLY valid JSON."
@@ -286,16 +301,18 @@ Make ingredients specific and steps professional."""
     try:
         if active_provider:
             from app.services.rag.override import generate_override
+
             raw = await generate_override(prompt, system_prompt, active_provider)
         else:
             raw, _ = await llm.generate(prompt, system_prompt, temperature=0.7)
-        
+
         # Clean JSON if needed
         import re
-        json_match = re.search(r'\{.*\}', raw, re.DOTALL)
+
+        json_match = re.search(r"\{.*\}", raw, re.DOTALL)
         if json_match:
             raw = json_match.group(0)
-            
+
         return json.loads(raw)
     except Exception as e:
         logger.error(f"Recipe generation failed: {e}")

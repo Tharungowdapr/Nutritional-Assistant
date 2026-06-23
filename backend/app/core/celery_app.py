@@ -2,6 +2,7 @@
 AaharAI NutriSync — Background Task Framework (Celery)
 Handles long-running agentic tasks offline.
 """
+
 from celery import Celery
 from app.core.config import settings
 
@@ -19,7 +20,7 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     task_track_started=True,
-    task_time_limit=3600, # 1 hour max
+    task_time_limit=3600,  # 1 hour max
 )
 
 if __name__ == "__main__":

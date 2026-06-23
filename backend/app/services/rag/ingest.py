@@ -3,6 +3,7 @@ AaharAI NutriSync — RAG Ingestion Pipeline
 Parses IFCT PDF + Excel data → chunks → embeds → stores in ChromaDB.
 Run this once: python -m rag.ingest
 """
+
 import logging
 import sys
 from pathlib import Path
@@ -31,14 +32,16 @@ def extract_pdf_text(pdf_path: Path) -> list[dict]:
             page = pdf[page_num]
             text = page.get_text("text").strip()
             if len(text) > 50:
-                docs.append({
-                    "text": text,
-                    "metadata": {
-                        "source": "IFCT_2017_PDF",
-                        "page_number": str(page_num + 1),
-                        "type": "pdf_page",
-                    },
-                })
+                docs.append(
+                    {
+                        "text": text,
+                        "metadata": {
+                            "source": "IFCT_2017_PDF",
+                            "page_number": str(page_num + 1),
+                            "type": "pdf_page",
+                        },
+                    }
+                )
             if (page_num + 1) % 50 == 0:
                 logger.info(f"   Extracted {page_num + 1}/{total} pages...")
     logger.info(f"Extracted {len(docs)} pages from IFCT PDF")
@@ -98,8 +101,7 @@ def excel_to_documents(excel_path: Path) -> list[dict]:
     return docs
 
 
-def chunk_documents(docs: list[dict], chunk_size: int = 512,
-                    chunk_overlap: int = 50) -> list[dict]:
+def chunk_documents(docs: list[dict], chunk_size: int = 512, chunk_overlap: int = 50) -> list[dict]:
     """Split documents into smaller chunks."""
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
@@ -112,10 +114,12 @@ def chunk_documents(docs: list[dict], chunk_size: int = 512,
     for doc in docs:
         splits = splitter.split_text(doc["text"])
         for i, split in enumerate(splits):
-            chunks.append({
-                "text": split,
-                "metadata": {**doc["metadata"], "chunk_index": str(i)},
-            })
+            chunks.append(
+                {
+                    "text": split,
+                    "metadata": {**doc["metadata"], "chunk_index": str(i)},
+                }
+            )
 
     logger.info(f"Created {len(chunks)} chunks from {len(docs)} documents")
     return chunks
@@ -124,7 +128,7 @@ def chunk_documents(docs: list[dict], chunk_size: int = 512,
 def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
     """Embed chunks and store in ChromaDB."""
     import chromadb.utils.embedding_functions as ef
-    
+
     chroma_path = settings.CHROMA_DB_PATH
     chroma_path.mkdir(parents=True, exist_ok=True)
     client = chromadb.PersistentClient(path=str(chroma_path))
@@ -140,6 +144,7 @@ def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
     embed_fn = None
     try:
         import requests
+
         # Test if Ollama is available
         health_url = f"{settings.OLLAMA_BASE_URL}/api/tags"
         resp = requests.get(health_url, timeout=2)
@@ -154,7 +159,9 @@ def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
                 )
                 logger.info(f"Using Ollama embeddings: {settings.OLLAMA_EMBED_MODEL}")
             else:
-                logger.warning(f"Ollama model '{settings.OLLAMA_EMBED_MODEL}' not found. Run 'ollama pull {settings.OLLAMA_EMBED_MODEL}' for best results.")
+                logger.warning(
+                    f"Ollama model '{settings.OLLAMA_EMBED_MODEL}' not found. Run 'ollama pull {settings.OLLAMA_EMBED_MODEL}' for best results."
+                )
                 logger.info("Falling back to default ChromaDB embeddings (all-MiniLM-L6-v2)")
         else:
             logger.warning(f"Ollama not responding ({resp.status_code}), using default embeddings")
@@ -179,7 +186,7 @@ def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
     batch_size = 100
     total_batches = (len(chunks) // batch_size) + 1
     for i in range(0, len(chunks), batch_size):
-        batch = chunks[i: i + batch_size]
+        batch = chunks[i : i + batch_size]
 
         # Ensure all metadata values are strings (ChromaDB requirement)
         clean_metadatas = []

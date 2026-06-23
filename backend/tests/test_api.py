@@ -2,6 +2,7 @@
 AaharAI NutriSync — Test Suite
 Basic smoke tests for API endpoints.
 """
+
 import pytest
 
 
@@ -25,11 +26,7 @@ def test_root_endpoint(client):
 def test_signup_and_login(client):
     """Full auth flow: signup → login → get profile."""
     # Signup
-    signup_data = {
-        "name": "Test User",
-        "email": "test@nutrisync.dev",
-        "password": "TestPass123!"
-    }
+    signup_data = {"name": "Test User", "email": "test@nutrisync.dev", "password": "TestPass123!"}
     r = client.post("/api/auth/signup", json=signup_data)
     assert r.status_code == 200
     token = r.json()["access_token"]

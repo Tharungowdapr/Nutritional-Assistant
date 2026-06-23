@@ -3,6 +3,7 @@ AaharAI NutriSync — Analysis API
 Expose dataset-level analysis endpoints + Excel sheet dump.
 All data comes from the NutriSync_Analysis_Report.xlsx in data/ and IFCT food sheet.
 """
+
 import logging
 import math
 from fastapi import APIRouter, Query, Depends
@@ -44,11 +45,13 @@ async def analysis_report():
         sheets = []
         for sheet_name in xls.sheet_names:
             df = pd.read_excel(path, sheet_name=sheet_name)
-            sheets.append({
-                "name": sheet_name,
-                "columns": list(df.columns),
-                "rows": df.to_dict(orient="records"),
-            })
+            sheets.append(
+                {
+                    "name": sheet_name,
+                    "columns": list(df.columns),
+                    "rows": df.to_dict(orient="records"),
+                }
+            )
         summary = {
             "sheet_count": len(sheets),
             "rows_total": sum(len(s.get("rows", [])) for s in sheets),
@@ -62,20 +65,22 @@ async def analysis_report():
 @router.get("/food-group-stats")
 async def food_group_stats():
     """Food count and average energy per food group."""
-    if getattr(nutri_db, 'food', None) is None:
+    if getattr(nutri_db, "food", None) is None:
         return {"groups": [], "total_foods": 0}
 
     food = nutri_db.food
     groups = []
     for group_name, grp in food.groupby("Food Group"):
-        groups.append({
-            "group": str(group_name),
-            "count": int(len(grp)),
-            "avg_energy_kcal": _safe(grp["Energy (kcal)"].mean()),
-            "avg_protein_g": _safe(grp["Protein (g)"].mean()),
-            "avg_fat_g": _safe(grp["Fat (g)"].mean()),
-            "avg_carbs_g": _safe(grp["Carbs (g)"].mean()),
-        })
+        groups.append(
+            {
+                "group": str(group_name),
+                "count": int(len(grp)),
+                "avg_energy_kcal": _safe(grp["Energy (kcal)"].mean()),
+                "avg_protein_g": _safe(grp["Protein (g)"].mean()),
+                "avg_fat_g": _safe(grp["Fat (g)"].mean()),
+                "avg_carbs_g": _safe(grp["Carbs (g)"].mean()),
+            }
+        )
 
     groups.sort(key=lambda x: x["count"], reverse=True)
     return {"groups": groups, "total_foods": int(len(food))}
@@ -85,21 +90,23 @@ async def food_group_stats():
 @router.get("/veg-nonveg")
 async def veg_nonveg_stats():
     """VEG vs NON-VEG food distribution with macro averages."""
-    if getattr(nutri_db, 'food', None) is None:
+    if getattr(nutri_db, "food", None) is None:
         return {"distribution": []}
 
     food = nutri_db.food
     dist = []
     if "Diet Type" in food.columns:
         for dtype, grp in food.groupby("Diet Type"):
-            dist.append({
-                "diet_type": str(dtype),
-                "count": int(len(grp)),
-                "percentage": round(len(grp) / len(food) * 100, 1),
-                "avg_energy_kcal": _safe(grp["Energy (kcal)"].mean()),
-                "avg_protein_g": _safe(grp["Protein (g)"].mean()),
-                "avg_iron_mg": _safe(grp["Iron (mg)"].mean()) if "Iron (mg)" in grp.columns else 0,
-            })
+            dist.append(
+                {
+                    "diet_type": str(dtype),
+                    "count": int(len(grp)),
+                    "percentage": round(len(grp) / len(food) * 100, 1),
+                    "avg_energy_kcal": _safe(grp["Energy (kcal)"].mean()),
+                    "avg_protein_g": _safe(grp["Protein (g)"].mean()),
+                    "avg_iron_mg": _safe(grp["Iron (mg)"].mean()) if "Iron (mg)" in grp.columns else 0,
+                }
+            )
 
     return {"distribution": dist, "total": int(len(food))}
 
@@ -108,21 +115,23 @@ async def veg_nonveg_stats():
 @router.get("/top-protein-foods")
 async def top_protein_foods(limit: int = Query(default=10, ge=1, le=50)):
     """Top N foods by protein content per 100g."""
-    if getattr(nutri_db, 'food', None) is None:
+    if getattr(nutri_db, "food", None) is None:
         return {"foods": []}
 
     food = nutri_db.food
     top = food.nlargest(limit, "Protein (g)")
     foods = []
     for _, row in top.iterrows():
-        foods.append({
-            "name": str(row.get("Food Name", "")),
-            "food_group": str(row.get("Food Group", "")),
-            "diet_type": str(row.get("Diet Type", "")),
-            "protein_g": _safe(row.get("Protein (g)")),
-            "energy_kcal": _safe(row.get("Energy (kcal)")),
-            "iron_mg": _safe(row.get("Iron (mg)")),
-        })
+        foods.append(
+            {
+                "name": str(row.get("Food Name", "")),
+                "food_group": str(row.get("Food Group", "")),
+                "diet_type": str(row.get("Diet Type", "")),
+                "protein_g": _safe(row.get("Protein (g)")),
+                "energy_kcal": _safe(row.get("Energy (kcal)")),
+                "iron_mg": _safe(row.get("Iron (mg)")),
+            }
+        )
 
     return {"foods": foods}
 
@@ -131,7 +140,7 @@ async def top_protein_foods(limit: int = Query(default=10, ge=1, le=50)):
 @router.get("/iron-analysis")
 async def iron_analysis():
     """Iron content analysis: top sources, VEG vs NON-VEG comparison."""
-    if getattr(nutri_db, 'food', None) is None:
+    if getattr(nutri_db, "food", None) is None:
         return {"top_sources": [], "by_diet": []}
 
     food = nutri_db.food
@@ -143,23 +152,27 @@ async def iron_analysis():
     top = food.nlargest(15, col)
     top_sources = []
     for _, row in top.iterrows():
-        top_sources.append({
-            "name": str(row.get("Food Name", "")),
-            "iron_mg": _safe(row.get(col)),
-            "food_group": str(row.get("Food Group", "")),
-            "diet_type": str(row.get("Diet Type", "")),
-        })
+        top_sources.append(
+            {
+                "name": str(row.get("Food Name", "")),
+                "iron_mg": _safe(row.get(col)),
+                "food_group": str(row.get("Food Group", "")),
+                "diet_type": str(row.get("Diet Type", "")),
+            }
+        )
 
     # Average iron by diet type
     by_diet = []
     if "Diet Type" in food.columns:
         for dtype, grp in food.groupby("Diet Type"):
-            by_diet.append({
-                "diet_type": str(dtype),
-                "avg_iron_mg": _safe(grp[col].mean()),
-                "max_iron_mg": _safe(grp[col].max()),
-                "count_high_iron": int((grp[col] > 5).sum()),
-            })
+            by_diet.append(
+                {
+                    "diet_type": str(dtype),
+                    "avg_iron_mg": _safe(grp[col].mean()),
+                    "max_iron_mg": _safe(grp[col].max()),
+                    "count_high_iron": int((grp[col] > 5).sum()),
+                }
+            )
 
     return {"top_sources": top_sources, "by_diet": by_diet}
 
@@ -168,7 +181,7 @@ async def iron_analysis():
 @router.get("/b12-analysis")
 async def b12_analysis():
     """Vitamin B12 analysis for identifying vegetarian deficiency risks."""
-    if getattr(nutri_db, 'food', None) is None:
+    if getattr(nutri_db, "food", None) is None:
         return {"top_sources": [], "insight": ""}
 
     food = nutri_db.food
@@ -180,12 +193,14 @@ async def b12_analysis():
     top = valid.nlargest(15, col)
     top_sources = []
     for _, row in top.iterrows():
-        top_sources.append({
-            "name": str(row.get("Food Name", "")),
-            "b12_mcg": _safe(row.get(col)),
-            "food_group": str(row.get("Food Group", "")),
-            "diet_type": str(row.get("Diet Type", "")),
-        })
+        top_sources.append(
+            {
+                "name": str(row.get("Food Name", "")),
+                "b12_mcg": _safe(row.get(col)),
+                "food_group": str(row.get("Food Group", "")),
+                "diet_type": str(row.get("Diet Type", "")),
+            }
+        )
 
     # How many VEG foods have B12 > 0?
     veg_with_b12 = 0
@@ -206,7 +221,7 @@ async def b12_analysis():
 @router.get("/gi-distribution")
 async def gi_distribution():
     """Glycaemic Index distribution across foods."""
-    if getattr(nutri_db, 'food', None) is None:
+    if getattr(nutri_db, "food", None) is None:
         return {"distribution": [], "summary": {}}
 
     food = nutri_db.food
@@ -239,7 +254,7 @@ async def gi_distribution():
 @router.get("/calorie-distribution")
 async def calorie_distribution():
     """Energy (kcal) distribution by food group, bucketed."""
-    if getattr(nutri_db, 'food', None) is None:
+    if getattr(nutri_db, "food", None) is None:
         return {"buckets": [], "by_group": []}
 
     food = nutri_db.food
@@ -258,13 +273,15 @@ async def calorie_distribution():
     # Average cal per group
     by_group = []
     for group_name, grp in valid.groupby("Food Group"):
-        by_group.append({
-            "group": str(group_name),
-            "avg_kcal": _safe(grp[col].mean()),
-            "min_kcal": _safe(grp[col].min()),
-            "max_kcal": _safe(grp[col].max()),
-            "count": int(len(grp)),
-        })
+        by_group.append(
+            {
+                "group": str(group_name),
+                "avg_kcal": _safe(grp[col].mean()),
+                "min_kcal": _safe(grp[col].min()),
+                "max_kcal": _safe(grp[col].max()),
+                "count": int(len(grp)),
+            }
+        )
     by_group.sort(key=lambda x: x["avg_kcal"], reverse=True)
 
     return {"buckets": buckets, "by_group": by_group}
@@ -274,7 +291,7 @@ async def calorie_distribution():
 @router.get("/nutrient-summary")
 async def nutrient_summary():
     """Database-wide nutrient averages and ranges."""
-    if getattr(nutri_db, 'food', None) is None:
+    if getattr(nutri_db, "food", None) is None:
         return {"nutrients": []}
 
     food = nutri_db.food
@@ -297,15 +314,17 @@ async def nutrient_summary():
         if col not in food.columns:
             continue
         valid = food[food[col].notna()]
-        nutrients.append({
-            "nutrient": col,
-            "unit": unit,
-            "mean": _safe(valid[col].mean()),
-            "median": _safe(valid[col].median()),
-            "min": _safe(valid[col].min()),
-            "max": _safe(valid[col].max()),
-            "foods_with_data": int(len(valid)),
-        })
+        nutrients.append(
+            {
+                "nutrient": col,
+                "unit": unit,
+                "mean": _safe(valid[col].mean()),
+                "median": _safe(valid[col].median()),
+                "min": _safe(valid[col].min()),
+                "max": _safe(valid[col].max()),
+                "foods_with_data": int(len(valid)),
+            }
+        )
 
     return {"nutrients": nutrients, "total_foods": int(len(food))}
 
@@ -318,18 +337,22 @@ async def personal_analysis(user=Depends(get_current_user)):
         return {"error": "Login required for personal analysis"}
     # Just proxy to the existing customer-profile endpoint logic
     from app.api.v1.customer_profile import get_customer_profile
+
     # We can't easily call it, so return instructions
-    return {"redirect": "/api/analysis/customer-profile", "note": "Use /api/analysis/customer-profile for full personal data."}
+    return {
+        "redirect": "/api/analysis/customer-profile",
+        "note": "Use /api/analysis/customer-profile for full personal data.",
+    }
 
 
 # ── 11. Intelligence (lightweight LLM wrap) ───────────────────────
 @router.get("/intelligence")
 async def intelligence_analysis(user=Depends(get_current_user)):
     """Returns dataset insights without LLM (static pre-computed)."""
-    stats = nutri_db.stats() if getattr(nutri_db, '_loaded', False) else {}
+    stats = nutri_db.stats() if getattr(nutri_db, "_loaded", False) else {}
 
     insights = []
-    if getattr(nutri_db, 'food', None) is not None:
+    if getattr(nutri_db, "food", None) is not None:
         food = nutri_db.food
         # Insight 1: Protein leaders
         if "Protein (g)" in food.columns:

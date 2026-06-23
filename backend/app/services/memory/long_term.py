@@ -3,6 +3,7 @@ AaharAI NutriSync — Long-term Memory Service
 Handles "remember this" requests using LLM-based fact extraction
 with regex fallback for reliability.
 """
+
 import logging
 import re
 from typing import Optional, List
@@ -43,16 +44,15 @@ class LongTermMemory:
             return None
 
         # Clean up the fact
-        fact = re.sub(r'[.!?;]+$', '', fact).strip()
+        fact = re.sub(r"[.!?;]+$", "", fact).strip()
         if len(fact) < 5 or len(fact) > 500:
             return None
 
         try:
             # Check for duplicates (fuzzy match)
-            existing = db.query(UserMemoryDB).filter(
-                UserMemoryDB.user_id == user_id,
-                UserMemoryDB.is_active == True
-            ).all()
+            existing = (
+                db.query(UserMemoryDB).filter(UserMemoryDB.user_id == user_id, UserMemoryDB.is_active == True).all()
+            )
 
             for mem in existing:
                 if LongTermMemory._facts_overlap(fact, mem.fact):
@@ -102,10 +102,9 @@ class LongTermMemory:
             return []
 
         try:
-            memories = db.query(UserMemoryDB).filter(
-                UserMemoryDB.user_id == user_id,
-                UserMemoryDB.is_active == True
-            ).all()
+            memories = (
+                db.query(UserMemoryDB).filter(UserMemoryDB.user_id == user_id, UserMemoryDB.is_active == True).all()
+            )
             return [m.fact for m in memories]
         except Exception as e:
             logger.error(f"Failed to fetch memories: {e}")

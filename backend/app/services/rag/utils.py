@@ -9,10 +9,11 @@ logger = logging.getLogger(__name__)
 _ollama_status_cache = {"online": None, "timestamp": 0}
 _embedding_function_cache = None
 
+
 def is_ollama_online() -> bool:
     """Fast check if Ollama is responsive with a 1s timeout and 300s cache."""
     now = time.time()
-    
+
     if _ollama_status_cache["online"] is not None and (now - _ollama_status_cache["timestamp"] < 300):
         return _ollama_status_cache["online"]
 
@@ -27,6 +28,7 @@ def is_ollama_online() -> bool:
         _ollama_status_cache["online"] = False
         _ollama_status_cache["timestamp"] = now
         return False
+
 
 def get_embedding_function():
     """Retrieve embedding function (singleton) with Ollama -> SentenceTransformer fallback."""

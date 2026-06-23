@@ -3,6 +3,7 @@ AaharAI NutriSync — Agent Tool: Regional Filter
 Filters foods and provides recommendations based on the Regional Food Culture sheet.
 Supports zone-specific dietary patterns for 5 Indian regions.
 """
+
 import logging
 from typing import List, Dict, Optional
 
@@ -56,18 +57,49 @@ ZONE_STAPLES = {
 
 # Mapping of common region keywords to zone names
 ZONE_KEYWORDS = {
-    "south": "South", "tamil": "South", "kerala": "South", "karnataka": "South",
-    "andhra": "South", "telangana": "South", "chennai": "South", "bangalore": "South",
-    "hyderabad": "South", "mysore": "South", "coimbatore": "South",
-    "north": "North", "delhi": "North", "punjab": "North", "haryana": "North",
-    "up": "North", "uttar pradesh": "North", "rajasthan": "North", "jammu": "North",
-    "kashmir": "North", "himachal": "North", "chandigarh": "North", "lucknow": "North",
-    "east": "East", "bengal": "East", "bihar": "East", "odisha": "East",
-    "assam": "East", "northeast": "East", "kolkata": "East", "patna": "East",
-    "gujarat": "West", "maharashtra": "West", "mumbai": "West", "pune": "West",
-    "goa": "West", "west": "West", "rajasthan": "West",
-    "central": "Central", "madhya pradesh": "Central", "chhattisgarh": "Central",
-    "jabalpur": "Central", "bhopal": "Central",
+    "south": "South",
+    "tamil": "South",
+    "kerala": "South",
+    "karnataka": "South",
+    "andhra": "South",
+    "telangana": "South",
+    "chennai": "South",
+    "bangalore": "South",
+    "hyderabad": "South",
+    "mysore": "South",
+    "coimbatore": "South",
+    "north": "North",
+    "delhi": "North",
+    "punjab": "North",
+    "haryana": "North",
+    "up": "North",
+    "uttar pradesh": "North",
+    "rajasthan": "North",
+    "jammu": "North",
+    "kashmir": "North",
+    "himachal": "North",
+    "chandigarh": "North",
+    "lucknow": "North",
+    "east": "East",
+    "bengal": "East",
+    "bihar": "East",
+    "odisha": "East",
+    "assam": "East",
+    "northeast": "East",
+    "kolkata": "East",
+    "patna": "East",
+    "gujarat": "West",
+    "maharashtra": "West",
+    "mumbai": "West",
+    "pune": "West",
+    "goa": "West",
+    "west": "West",
+    "rajasthan": "West",
+    "central": "Central",
+    "madhya pradesh": "Central",
+    "chhattisgarh": "Central",
+    "jabalpur": "Central",
+    "bhopal": "Central",
 }
 
 
@@ -99,7 +131,7 @@ def get_regional_foods(zone: str) -> dict:
                 break
 
     # Try Excel data first
-    if getattr(db, 'region', None) is not None:
+    if getattr(db, "region", None) is not None:
         try:
             match = db.region[db.region["Zone"].str.contains(zone_normalized, case=False, na=False)]
             if not match.empty:

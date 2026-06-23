@@ -1,6 +1,7 @@
 """
 Test configuration and fixtures.
 """
+
 import os
 import pytest
 from fastapi.testclient import TestClient
@@ -16,6 +17,7 @@ os.environ["DEBUG"] = "true"
 def app():
     """Create test FastAPI application."""
     from main import app as fastapi_app
+
     return fastapi_app
 
 
@@ -29,18 +31,14 @@ def client(app):
 @pytest.fixture(scope="session")
 def auth_token(client):
     """Create a test user and return auth token."""
-    r = client.post("/api/auth/signup", json={
-        "name": "Fixture User",
-        "email": "fixture@nutrisync.dev",
-        "password": "FixturePass123!"
-    })
+    r = client.post(
+        "/api/auth/signup",
+        json={"name": "Fixture User", "email": "fixture@nutrisync.dev", "password": "FixturePass123!"},
+    )
     if r.status_code == 200:
         return r.json()["access_token"]
     # Try login if already exists
-    r = client.post("/api/auth/login", json={
-        "email": "fixture@nutrisync.dev",
-        "password": "FixturePass123!"
-    })
+    r = client.post("/api/auth/login", json={"email": "fixture@nutrisync.dev", "password": "FixturePass123!"})
     return r.json()["access_token"]
 
 

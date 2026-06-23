@@ -2,12 +2,14 @@
 AaharAI NutriSync — Pydantic Models
 Request/response schemas for all API endpoints.
 """
+
 from pydantic import BaseModel, Field
 from typing import Optional
 
 
 class UserProfile(BaseModel):
     """User profile submitted during onboarding."""
+
     age: int = Field(..., ge=1, le=120)
     gender: str = Field(..., pattern="^(Male|Female|Other)$")
     sex: Optional[str] = None  # kept for backward compat

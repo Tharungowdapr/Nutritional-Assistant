@@ -1,19 +1,19 @@
 """
 AaharAI NutriSync — API Routes: Nutrition
 """
+
 from fastapi import APIRouter, HTTPException, Request, Query
 from pydantic import BaseModel
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from app.db.models import UserProfile                    # ✅ fixed: was database.models
-from app.db.loader import db                             # ✅ fixed: was database.loader
+from app.db.models import UserProfile  # ✅ fixed: was database.models
+from app.db.loader import db  # ✅ fixed: was database.loader
 from app.api.v1.customer_profile import _match_rda_profile, _calc_bmr, PAL_MAP  # ✅ replaces inference_engine
 
 router = APIRouter(prefix="/api/nutrition", tags=["Nutrition"])
 limiter = Limiter(key_func=get_remote_address)
 
-ALLOWED_SORT_COLS = {"Food Name", "Energy (kcal)", "Protein (g)",
-                     "Fat (g)", "Carbs (g)", "Iron (mg)"}
+ALLOWED_SORT_COLS = {"Food Name", "Energy (kcal)", "Protein (g)", "Fat (g)", "Carbs (g)", "Iron (mg)"}
 
 
 class CompareRequest(BaseModel):
@@ -100,32 +100,27 @@ async def search_foods(
     page: int = Query(default=1, ge=1, le=1000),
     limit: int = Query(default=20, ge=1, le=500),
     sort_by: str = "Food Name",
-    sort_order: str = "asc"
+    sort_order: str = "asc",
 ):
     """Search and filter foods from the database with pagination and sorting."""
     results = db.search_foods(query, diet_type, food_group, region, gi_category)
 
-    if hasattr(results, 'sort_values'):
+    if hasattr(results, "sort_values"):
         ascending = sort_order.lower() == "asc"
         if sort_by not in ALLOWED_SORT_COLS:
-            raise HTTPException(status_code=400, detail=f'Invalid sort_by. Allowed: {ALLOWED_SORT_COLS}')
+            raise HTTPException(status_code=400, detail=f"Invalid sort_by. Allowed: {ALLOWED_SORT_COLS}")
         try:
             results = results.sort_values(by=sort_by, ascending=ascending)
         except Exception as e:
             import logging
+
             logging.error(f"Failed to sort foods by '{sort_by}': {e}")
 
-    total = len(results) if hasattr(results, '__len__') else 0
+    total = len(results) if hasattr(results, "__len__") else 0
     skip = (page - 1) * limit
-    foods = results.iloc[skip:skip + limit].to_dict(orient="records") if hasattr(results, 'iloc') else []
+    foods = results.iloc[skip : skip + limit].to_dict(orient="records") if hasattr(results, "iloc") else []
 
-    return {
-        "foods": foods,
-        "total": total,
-        "page": page,
-        "limit": limit,
-        "pages": (total + limit - 1) // limit
-    }
+    return {"foods": foods, "total": total, "page": page, "limit": limit, "pages": (total + limit - 1) // limit}
 
 
 @router.post("/foods/compare")
@@ -178,7 +173,7 @@ async def get_rda(profile_name: str):
 @router.get("/diseases")
 async def list_diseases():
     """List all disease protocols."""
-    if getattr(db, 'disease', None) is None:
+    if getattr(db, "disease", None) is None:
         return {"diseases": []}
     diseases = db.disease[["Condition"]].drop_duplicates().to_dict(orient="records")
     return {"diseases": diseases}
@@ -187,7 +182,7 @@ async def list_diseases():
 @router.get("/regions")
 async def list_regions():
     """List regional food culture data."""
-    if getattr(db, 'region', None) is None:
+    if getattr(db, "region", None) is None:
         return {"regions": []}
     regions = db.region[["Zone", "State/UT", "Dietary Character"]].to_dict(orient="records")
     return {"regions": regions}

@@ -3,6 +3,7 @@ AaharAI NutriSync — Structured Logging
 Supports human-readable (development) and JSON (production) formats.
 Toggle via LOG_FORMAT env var: text (default) or json.
 """
+
 import json
 import logging
 import os

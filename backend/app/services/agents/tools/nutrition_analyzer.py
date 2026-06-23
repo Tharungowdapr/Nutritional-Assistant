@@ -2,22 +2,31 @@
 AaharAI NutriSync — Agent Tool: Nutrition Analyzer
 Computes nutrient totals for a meal (list of foods with portions).
 """
+
 from app.services.agents.tools.food_search import get_food_detail
 
 
 def analyze_meal(foods_with_portions: list[dict]) -> dict:
     """Compute total nutrients for a meal.
-    
+
     Args:
         foods_with_portions: List of {"name": "Ragi", "quantity_g": 150}
-    
+
     Returns:
         Dict with total nutrients and per-food breakdown
     """
     totals = {
-        "energy_kcal": 0, "protein_g": 0, "fat_g": 0, "carbs_g": 0,
-        "fibre_g": 0, "iron_mg": 0, "calcium_mg": 0, "zinc_mg": 0,
-        "folate_mcg": 0, "vit_b12_mcg": 0, "vit_c_mg": 0,
+        "energy_kcal": 0,
+        "protein_g": 0,
+        "fat_g": 0,
+        "carbs_g": 0,
+        "fibre_g": 0,
+        "iron_mg": 0,
+        "calcium_mg": 0,
+        "zinc_mg": 0,
+        "folate_mcg": 0,
+        "vit_b12_mcg": 0,
+        "vit_c_mg": 0,
     }
 
     breakdown = []
@@ -38,12 +47,14 @@ def analyze_meal(foods_with_portions: list[dict]) -> dict:
             totals[key] += val
             item_nutrients[key] = round(val, 2)
 
-        breakdown.append({
-            "name": name,
-            "quantity_g": quantity_g,
-            "found": True,
-            "nutrients": item_nutrients,
-        })
+        breakdown.append(
+            {
+                "name": name,
+                "quantity_g": quantity_g,
+                "found": True,
+                "nutrients": item_nutrients,
+            }
+        )
 
     # Round totals
     for key in totals:

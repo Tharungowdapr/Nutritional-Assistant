@@ -2,6 +2,7 @@
 AaharAI NutriSync — API Routes: Chat (RAG)
 Supports both authenticated and anonymous chat with optional history persistence.
 """
+
 import json
 import uuid
 import logging
@@ -12,7 +13,7 @@ from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from app.db.models import ChatRequest, ChatResponse          # ✅ fixed: was `database.models`
+from app.db.models import ChatRequest, ChatResponse  # ✅ fixed: was `database.models`
 from app.models.user import get_db, ChatHistoryDB, ChatSessionDB
 from app.core.dependencies import get_current_user
 
@@ -43,17 +44,21 @@ def _get_active_provider(user, user_profile: dict | None, db: Session, request_a
     # 2. DB-saved config for authenticated users
     if user:
         from app.api.v1.settings import get_user_active_provider
+
         active = get_user_active_provider(user, db)
         if active:
             return active
         if profile_provider:
             from app.models.user import LLMConfigDB
-            config = db.query(LLMConfigDB).filter(
-                LLMConfigDB.user_id == user.id,
-                LLMConfigDB.provider == profile_provider
-            ).first()
+
+            config = (
+                db.query(LLMConfigDB)
+                .filter(LLMConfigDB.user_id == user.id, LLMConfigDB.provider == profile_provider)
+                .first()
+            )
             if config:
                 from app.core.crypt import decrypt_api_key
+
                 return {
                     "provider": config.provider,
                     "model": profile_model or config.model,
@@ -76,8 +81,7 @@ def _get_session_history(db: Session, session_id: str) -> list:
             .all()
         )
         return [
-            {"user_message": m.user_message, "assistant_message": m.assistant_message}
-            for m in reversed(prev_messages)
+            {"user_message": m.user_message, "assistant_message": m.assistant_message} for m in reversed(prev_messages)
         ]
     except Exception as e:
         logger.warning(f"Failed to fetch session history: {e}")
@@ -94,13 +98,11 @@ async def chat(
 ):
     """RAG-powered chat with nutrition knowledge base."""
     from main import get_rag_service
+
     rag_service = get_rag_service()
 
     if rag_service is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Knowledge base not ready. Run: make ingest"
-        )
+        raise HTTPException(status_code=503, detail="Knowledge base not ready. Run: make ingest")
 
     # Resolve user profile
     user_profile = data.user_profile
@@ -122,14 +124,16 @@ async def chat(
 
     if user is not None:
         try:
-            db.add(ChatHistoryDB(
-                user_id=user.id,
-                session_id=session_id,
-                user_message=data.message,
-                assistant_message=result["answer"],
-                sources_json=json.dumps(result.get("sources", [])),
-                llm_provider=result.get("llm_provider", ""),
-            ))
+            db.add(
+                ChatHistoryDB(
+                    user_id=user.id,
+                    session_id=session_id,
+                    user_message=data.message,
+                    assistant_message=result["answer"],
+                    sources_json=json.dumps(result.get("sources", [])),
+                    llm_provider=result.get("llm_provider", ""),
+                )
+            )
             db.commit()
         except Exception as e:
             logger.warning(f"Failed to save chat history: {e}")
@@ -152,6 +156,7 @@ async def chat_stream(
 ):
     """Streaming RAG-powered chat (SSE)."""
     from main import get_rag_service
+
     rag_service = get_rag_service()
 
     if rag_service is None:
@@ -185,23 +190,27 @@ async def chat_stream(
                     user_provider_override=active_provider,
                 )
                 full_response = res["answer"]
-                sources = res.get("sources", [])           # ✅ fixed: was always []
+                sources = res.get("sources", [])  # ✅ fixed: was always []
                 yield f"data: {json.dumps({'token': full_response, 'final': True})}\n\n"
 
             # Persist to history
             if user is not None and session_id and full_response:
                 try:
-                    provider = (active_provider.get("provider", "ollama")
-                                if active_provider else
-                                getattr(rag_service.llm_router, "active_provider", "ollama"))
-                    db.add(ChatHistoryDB(
-                        user_id=user.id,
-                        session_id=session_id,
-                        user_message=data.message,
-                        assistant_message=full_response,
-                        sources_json=json.dumps(sources),   # ✅ fixed: now captures sources
-                        llm_provider=provider,
-                    ))
+                    provider = (
+                        active_provider.get("provider", "ollama")
+                        if active_provider
+                        else getattr(rag_service.llm_router, "active_provider", "ollama")
+                    )
+                    db.add(
+                        ChatHistoryDB(
+                            user_id=user.id,
+                            session_id=session_id,
+                            user_message=data.message,
+                            assistant_message=full_response,
+                            sources_json=json.dumps(sources),  # ✅ fixed: now captures sources
+                            llm_provider=provider,
+                        )
+                    )
                     session = db.query(ChatSessionDB).filter(ChatSessionDB.id == session_id).first()
                     if session:
                         session.updated_at = datetime.now(timezone.utc)

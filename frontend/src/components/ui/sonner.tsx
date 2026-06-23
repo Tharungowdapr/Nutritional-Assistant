@@ -9,7 +9,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
   return (
     <Sonner
-      theme={theme as "light" | "dark" | "system"}
+      // @ts-expect-error - Toaster accepts theme at runtime despite missing in types
+      theme={theme}
       className="toaster group"
       icons={{
         success: (

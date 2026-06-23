@@ -2,6 +2,7 @@
 AaharAI NutriSync — Chat Memory Module
 Short-term memory for recent chat messages.
 """
+
 import logging
 from collections import defaultdict
 from typing import List, Dict, Any
@@ -17,17 +18,13 @@ MAX_CHAT_HISTORY = 10
 
 def save_chat_message(user_id: int, role: str, content: str, session_id: str = None):
     """Save a chat message to memory."""
-    message = {
-        "role": role,
-        "content": content,
-        "session_id": session_id
-    }
+    message = {"role": role, "content": content, "session_id": session_id}
     _chat_store[user_id].append(message)
-    
+
     # Keep only last MAX_CHAT_HISTORY messages
     if len(_chat_store[user_id]) > MAX_CHAT_HISTORY:
         _chat_store[user_id] = _chat_store[user_id][-MAX_CHAT_HISTORY:]
-    
+
     logger.debug(f"Saved {role} message for user {user_id}")
 
 
@@ -42,11 +39,8 @@ def format_chat_history(user_id: int, limit: int = 5) -> str:
     messages = get_recent_messages(user_id, limit)
     if not messages:
         return ""
-    
-    return "\n".join([
-        f"{msg['role'].capitalize()}: {msg['content']}"
-        for msg in messages
-    ])
+
+    return "\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in messages])
 
 
 def clear_chat_history(user_id: int):
@@ -58,24 +52,24 @@ def clear_chat_history(user_id: int):
 def load_chat_from_db(user_id: int, session_id: str = None, limit: int = 10):
     """Load chat history from database."""
     from app.models.user import SessionLocal, ChatHistoryDB
-    
+
     db = SessionLocal()
     try:
         query = db.query(ChatHistoryDB).filter(ChatHistoryDB.user_id == user_id)
-        
+
         if session_id:
             query = query.filter(ChatHistoryDB.session_id == session_id)
-        
+
         messages = query.order_by(ChatHistoryDB.created_at.desc()).limit(limit).all()
         messages = list(reversed(messages))
-        
+
         result = []
         for msg in messages:
             if msg.user_message:
                 result.append({"role": "user", "content": msg.user_message})
             if msg.assistant_message:
                 result.append({"role": "assistant", "content": msg.assistant_message})
-        
+
         return result
     except Exception as e:
         logger.warning(f"Failed to load chat from DB: {e}")
@@ -84,19 +78,22 @@ def load_chat_from_db(user_id: int, session_id: str = None, limit: int = 10):
         db.close()
 
 
-def save_chat_to_db(user_id: int, user_message: str, assistant_message: str, session_id: str = None, sources: list = None):
+def save_chat_to_db(
+    user_id: int, user_message: str, assistant_message: str, session_id: str = None, sources: list = None
+):
     """Save chat message to database."""
     from app.models.user import SessionLocal, ChatHistoryDB
-    
+
     db = SessionLocal()
     try:
         import json
+
         chat = ChatHistoryDB(
             user_id=user_id,
             session_id=session_id,
             user_message=user_message,
             assistant_message=assistant_message,
-            sources_json=json.dumps(sources or [])
+            sources_json=json.dumps(sources or []),
         )
         db.add(chat)
         db.commit()

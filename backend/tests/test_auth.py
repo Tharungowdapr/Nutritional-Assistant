@@ -1,8 +1,8 @@
 """
 Authentication flow tests — signup, login, profile, token validation.
 """
-import pytest
 
+import pytest
 
 VALID_USER = {
     "name": "Auth Test User",
@@ -84,7 +84,5 @@ class TestProfile:
 
     def test_get_profile_invalid_token(self, client):
         """Invalid Bearer token should be rejected."""
-        r = client.get(
-            "/api/auth/me", headers={"Authorization": "Bearer invalidtoken123"}
-        )
+        r = client.get("/api/auth/me", headers={"Authorization": "Bearer invalidtoken123"})
         assert r.status_code == 401

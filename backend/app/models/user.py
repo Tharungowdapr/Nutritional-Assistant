@@ -2,6 +2,7 @@
 AaharAI NutriSync — SQLAlchemy Database Models & Engine
 SQLite (development) or PostgreSQL (production) persistence for users, profiles, and meal plan history.
 """
+
 import json
 import logging
 from datetime import datetime, timezone
@@ -20,6 +21,7 @@ def utc_now() -> datetime:
 def utc_now_default():
     """Callable for SQLAlchemy default - returns current UTC time."""
     return datetime.now(timezone.utc)
+
 
 # Determine database URL: PostgreSQL if configured, otherwise SQLite
 if settings.DATABASE_URL:
@@ -44,6 +46,7 @@ Base = declarative_base()
 
 class UserDB(Base):
     """User account stored in SQLite."""
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -52,11 +55,11 @@ class UserDB(Base):
     name = Column(String(255), default="")
     created_at = Column(DateTime, default=utc_now_default)
     is_active = Column(Boolean, default=True)
-    
+
     # Password reset
     reset_token = Column(String(255), nullable=True, unique=True, index=True)
     reset_token_expires = Column(DateTime, nullable=True)
-    
+
     # Profile metadata
     email_verified = Column(Boolean, default=False)
     last_login_at = Column(DateTime, nullable=True)
@@ -80,6 +83,7 @@ class UserDB(Base):
 
 class MealPlanDB(Base):
     """Saved meal plans."""
+
     __tablename__ = "meal_plans"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -93,6 +97,7 @@ class MealPlanDB(Base):
 
 class ChatHistoryDB(Base):
     """Chat message history with session support."""
+
     __tablename__ = "chat_history"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -107,6 +112,7 @@ class ChatHistoryDB(Base):
 
 class DailyLogDB(Base):
     """Daily food intake log with macro tracking."""
+
     __tablename__ = "daily_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -115,7 +121,7 @@ class DailyLogDB(Base):
     meal_slot = Column(String(20), nullable=False)  # "Breakfast", "Lunch", "Dinner", "Snack"
     food_name = Column(String(255), nullable=False)
     quantity_g = Column(Float, default=100.0)
-    
+
     # Macros (per serving/quantity)
     calories = Column(Float, nullable=True)
     protein_g = Column(Float, nullable=True)
@@ -124,13 +130,14 @@ class DailyLogDB(Base):
     fibre_g = Column(Float, nullable=True)
     iron_mg = Column(Float, nullable=True)
     calcium_mg = Column(Float, nullable=True)
-    
+
     created_at = Column(DateTime, default=utc_now_default)
     updated_at = Column(DateTime, default=utc_now_default, onupdate=utc_now_default)
 
 
 class RecipeDB(Base):
     """Saved user recipes."""
+
     __tablename__ = "recipes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -141,7 +148,7 @@ class RecipeDB(Base):
     cook_time_minutes = Column(Integer, nullable=True)
     difficulty = Column(String(20), default="Medium")  # "Easy", "Medium", "Hard"
     servings = Column(Integer, default=1)
-    
+
     # Nutrition facts per serving
     calories = Column(Float, nullable=True)
     protein_g = Column(Float, nullable=True)
@@ -150,13 +157,14 @@ class RecipeDB(Base):
     fibre_g = Column(Float, nullable=True)
     iron_mg = Column(Float, nullable=True)
     calcium_mg = Column(Float, nullable=True)
-    
+
     created_at = Column(DateTime, default=utc_now_default)
     updated_at = Column(DateTime, default=utc_now_default, onupdate=utc_now_default)
 
 
 class RecipeHistoryDB(Base):
     """Track recipe usage/history."""
+
     __tablename__ = "recipe_history"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -168,6 +176,7 @@ class RecipeHistoryDB(Base):
 
 class ChatSessionDB(Base):
     """Chat sessions for multi-chat support in RAG."""
+
     __tablename__ = "chat_sessions"
 
     id = Column(String(36), primary_key=True)  # UUID
@@ -179,6 +188,7 @@ class ChatSessionDB(Base):
 
 class MealPlanHistoryDB(Base):
     """Track meal plan generation history."""
+
     __tablename__ = "meal_plan_history"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -192,6 +202,7 @@ class MealPlanHistoryDB(Base):
 
 class LLMConfigDB(Base):
     """Encrypted LLM configurations for individual users."""
+
     __tablename__ = "llm_configs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -207,6 +218,7 @@ class LLMConfigDB(Base):
 
 class UserMemoryDB(Base):
     """Long-term memory facts for individual users."""
+
     __tablename__ = "user_memories"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

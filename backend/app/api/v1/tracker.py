@@ -2,14 +2,15 @@
 AaharAI NutriSync — API Routes: Nutrition Tracker
 Daily food logging with macro tracking.
 """
+
 from zoneinfo import ZoneInfo
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timedelta
 
 from app.models.user import get_db, DailyLogDB, UserDB
 from app.core.dependencies import require_user
-from app.db.models import LogFoodRequest               # ✅ fixed: was database.models
-from app.db.loader import db                           # ✅ fixed: was database.loader
+from app.db.models import LogFoodRequest  # ✅ fixed: was database.models
+from app.db.loader import db  # ✅ fixed: was database.loader
 
 router = APIRouter(prefix="/api/tracker", tags=["Tracker"])
 
@@ -18,14 +19,18 @@ router = APIRouter(prefix="/api/tracker", tags=["Tracker"])
 async def log_food(
     request: LogFoodRequest,
     current_user: UserDB = Depends(require_user),
-    db_session = Depends(get_db),
+    db_session=Depends(get_db),
 ):
     """Log a food item for a specific date (defaults to today in IST)."""
     # Fix: accept explicit IST date from frontend to avoid UTC midnight drift
     # At 00:00-05:30 IST, UTC gives yesterday's date — always pass date from client
     ist = ZoneInfo("Asia/Kolkata")
-    today = request.log_date if hasattr(request, 'log_date') and request.log_date else datetime.now(ist).strftime("%Y-%m-%d")
-    
+    today = (
+        request.log_date
+        if hasattr(request, "log_date") and request.log_date
+        else datetime.now(ist).strftime("%Y-%m-%d")
+    )
+
     # Determine macros: manual overrides or database lookup
     if request.manual_calories is not None:
         calories = request.manual_calories
@@ -35,13 +40,13 @@ async def log_food(
         fibre_g = request.manual_fibre_g or 0
         iron_mg = request.manual_iron_mg or 0
         calcium_mg = request.manual_calcium_mg or 0
-        q_g = request.quantity_g # If it's a recipe, quantity_g is used as servings count
+        q_g = request.quantity_g  # If it's a recipe, quantity_g is used as servings count
     else:
         # Get food nutritional data from static database
         food_data = db.get_food_by_name(request.food_name)
         if not food_data:
             raise HTTPException(status_code=404, detail=f"Food '{request.food_name}' not found in database")
-        
+
         # Calculate macros for the given quantity
         quantity_multiplier = request.quantity_g / 100.0
         calories = (food_data.get("Energy (kcal)", 0) or 0) * quantity_multiplier
@@ -67,10 +72,10 @@ async def log_food(
         iron_mg=iron_mg,
         calcium_mg=calcium_mg,
     )
-    
+
     db_session.add(log)
     db_session.commit()
-    
+
     return {
         "id": log.id,
         "logged_at": today,
@@ -91,14 +96,18 @@ async def log_food(
 async def get_daily_summary(
     log_date: str,  # YYYY-MM-DD
     current_user: UserDB = Depends(require_user),
-    db_session = Depends(get_db),
+    db_session=Depends(get_db),
 ):
     """Get daily summary with all meals logged."""
-    logs = db_session.query(DailyLogDB).filter(
-        DailyLogDB.user_id == current_user.id,
-        DailyLogDB.log_date == log_date,
-    ).all()
-    
+    logs = (
+        db_session.query(DailyLogDB)
+        .filter(
+            DailyLogDB.user_id == current_user.id,
+            DailyLogDB.log_date == log_date,
+        )
+        .all()
+    )
+
     # Group by meal slot
     meals_by_slot = {}
     total_calories = 0
@@ -114,18 +123,20 @@ async def get_daily_summary(
         if slot not in meals_by_slot:
             meals_by_slot[slot] = []
 
-        meals_by_slot[slot].append({
-            "id": log.id,
-            "food_name": log.food_name,
-            "quantity_g": log.quantity_g,
-            "calories": log.calories or 0,
-            "protein_g": log.protein_g or 0,
-            "carbs_g": log.carbs_g or 0,
-            "fat_g": log.fat_g or 0,
-            "iron_mg": log.iron_mg or 0,
-            "calcium_mg": log.calcium_mg or 0,
-            "fibre_g": log.fibre_g or 0,
-        })
+        meals_by_slot[slot].append(
+            {
+                "id": log.id,
+                "food_name": log.food_name,
+                "quantity_g": log.quantity_g,
+                "calories": log.calories or 0,
+                "protein_g": log.protein_g or 0,
+                "carbs_g": log.carbs_g or 0,
+                "fat_g": log.fat_g or 0,
+                "iron_mg": log.iron_mg or 0,
+                "calcium_mg": log.calcium_mg or 0,
+                "fibre_g": log.fibre_g or 0,
+            }
+        )
 
         total_calories += log.calories or 0
         total_protein += log.protein_g or 0
@@ -153,19 +164,24 @@ async def get_daily_summary(
 async def get_summary(
     days: int = 7,
     current_user: UserDB = Depends(require_user),
-    db_session = Depends(get_db),
+    db_session=Depends(get_db),
 ):
     """Get summary for the last X days."""
     if days > 90:
         raise HTTPException(status_code=400, detail="Maximum history range is 90 days")
-        
+
     ist = ZoneInfo("Asia/Kolkata")
     start_date = (datetime.now(ist) - timedelta(days=days)).strftime("%Y-%m-%d")
-    logs = db_session.query(DailyLogDB).filter(
-        DailyLogDB.user_id == current_user.id,
-        DailyLogDB.log_date >= start_date,
-    ).order_by(DailyLogDB.log_date.desc()).all()
-    
+    logs = (
+        db_session.query(DailyLogDB)
+        .filter(
+            DailyLogDB.user_id == current_user.id,
+            DailyLogDB.log_date >= start_date,
+        )
+        .order_by(DailyLogDB.log_date.desc())
+        .all()
+    )
+
     daily_summary = {}
     for log in logs:
         if log.log_date not in daily_summary:
@@ -179,7 +195,7 @@ async def get_summary(
                 "fibre": 0,
                 "meal_count": 0,
             }
-        
+
         daily_summary[log.log_date]["calories"] += log.calories or 0
         daily_summary[log.log_date]["protein"] += log.protein_g or 0
         daily_summary[log.log_date]["carbs"] += log.carbs_g or 0
@@ -188,14 +204,17 @@ async def get_summary(
         daily_summary[log.log_date]["calcium"] += log.calcium_mg or 0
         daily_summary[log.log_date]["fibre"] += log.fibre_g or 0
         daily_summary[log.log_date]["meal_count"] += 1
-    
+
     # Generate list for frontend charts
     chart_data = []
     ist = ZoneInfo("Asia/Kolkata")
     current = datetime.now(ist)
     for i in range(days):
         d_str = (current - timedelta(days=i)).strftime("%Y-%m-%d")
-        stats = daily_summary.get(d_str, {"calories": 0, "protein": 0, "carbs": 0, "fat": 0, "iron": 0, "calcium": 0, "fibre": 0, "meal_count": 0})
+        stats = daily_summary.get(
+            d_str,
+            {"calories": 0, "protein": 0, "carbs": 0, "fat": 0, "iron": 0, "calcium": 0, "fibre": 0, "meal_count": 0},
+        )
         chart_data.append({"date": d_str, **stats})
 
     # Link Person Analysis: Contextual Insights
@@ -214,15 +233,27 @@ async def get_summary(
     return {
         "range_days": days,
         "daily_data": chart_data[::-1],  # Chronological order
-        "avg_daily_calories": round(sum(d["calories"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0,
-        "avg_daily_protein_g": round(sum(d["protein"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0,
-        "avg_daily_carbs_g": round(sum(d["carbs"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0,
+        "avg_daily_calories": (
+            round(sum(d["calories"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0
+        ),
+        "avg_daily_protein_g": (
+            round(sum(d["protein"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0
+        ),
+        "avg_daily_carbs_g": (
+            round(sum(d["carbs"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0
+        ),
         "avg_daily_fat_g": round(sum(d["fat"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0,
-        "avg_daily_iron_mg": round(sum(d["iron"] for d in daily_summary.values()) / day_count, 2) if daily_summary else 0,
-        "avg_daily_calcium_mg": round(sum(d["calcium"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0,
-        "avg_daily_fibre_g": round(sum(d["fibre"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0,
+        "avg_daily_iron_mg": (
+            round(sum(d["iron"] for d in daily_summary.values()) / day_count, 2) if daily_summary else 0
+        ),
+        "avg_daily_calcium_mg": (
+            round(sum(d["calcium"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0
+        ),
+        "avg_daily_fibre_g": (
+            round(sum(d["fibre"] for d in daily_summary.values()) / day_count, 1) if daily_summary else 0
+        ),
         "days_logged": len(daily_summary),
-        "insight": insight
+        "insight": insight,
     }
 
 
@@ -230,18 +261,22 @@ async def get_summary(
 async def delete_log(
     log_id: int,
     current_user: UserDB = Depends(require_user),
-    db_session = Depends(get_db),
+    db_session=Depends(get_db),
 ):
     """Delete a food log entry."""
-    log = db_session.query(DailyLogDB).filter(
-        DailyLogDB.id == log_id,
-        DailyLogDB.user_id == current_user.id,
-    ).first()
-    
+    log = (
+        db_session.query(DailyLogDB)
+        .filter(
+            DailyLogDB.id == log_id,
+            DailyLogDB.user_id == current_user.id,
+        )
+        .first()
+    )
+
     if not log:
         raise HTTPException(status_code=404, detail="Log not found")
-    
+
     db_session.delete(log)
     db_session.commit()
-    
+
     return {"deleted": True}

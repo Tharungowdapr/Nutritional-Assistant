@@ -2,6 +2,7 @@
 AaharAI NutriSync — Production Entrance
 Entry point for the FastAPI application.
 """
+
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -26,9 +27,18 @@ _rag_service = None
 _meal_agent = None
 _startup_done = False
 
-def get_rag_service(): return _rag_service
-def get_meal_agent(): return _meal_agent
-def get_llm_router(): return _llm_router
+
+def get_rag_service():
+    return _rag_service
+
+
+def get_meal_agent():
+    return _meal_agent
+
+
+def get_llm_router():
+    return _llm_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,6 +49,7 @@ async def lifespan(app: FastAPI):
 
     # Import routing after logging is set up
     from app.api.v1.router import api_router
+
     app.include_router(api_router)
     app.add_middleware(
         CORSMiddleware,
@@ -53,12 +64,14 @@ async def lifespan(app: FastAPI):
 
     # Deferred background initialization (app starts serving immediately)
     import asyncio
+
     asyncio.create_task(_init_background())
 
     logger.info("API ready! (services initializing in background)")
     _startup_done = True
     yield
     logger.info("Shutting down...")
+
 
 async def _init_background():
     """Initialize data loading, LLM router, and RAG services in background."""
@@ -74,6 +87,7 @@ async def _init_background():
     # Initialize LLM Router (makes remote HTTP calls)
     try:
         from app.services.rag.llm_router import LLMRouter
+
         _llm_router = LLMRouter(
             ollama_base_url=settings.OLLAMA_BASE_URL,
             ollama_model=settings.OLLAMA_MODEL,
@@ -89,12 +103,15 @@ async def _init_background():
     # Initialize RAG Services (imports chromadb — heavy)
     try:
         from app.services.rag.service import RAGService
+
         _rag_service = RAGService(llm_router=_llm_router)
         from app.services.agents.orchestrator import OrchestratorAgent
+
         _meal_agent = OrchestratorAgent(llm_router=_llm_router)
         logger.info("RAG services ready")
     except Exception as e:
         logger.warning(f"RAG service init deferred: {e}")
+
 
 # Rate Limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -109,13 +126,14 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     logger.error(f"Global Error: {exc}", exc_info=True)
     return JSONResponse(
-        status_code=500,
-        content={"success": False, "error": str(exc) if settings.DEBUG else "Internal server error"}
+        status_code=500, content={"success": False, "error": str(exc) if settings.DEBUG else "Internal server error"}
     )
+
 
 @app.get("/api/health")
 async def health_check():
@@ -127,8 +145,9 @@ async def health_check():
         "services_ready": _rag_service is not None,
         "llm_provider": router_status.get("active_provider", "pending"),
         "ollama_available": router_status.get("ollama_available", False),
-        "groq_available": router_status.get("groq_available", False)
+        "groq_available": router_status.get("groq_available", False),
     }
+
 
 @app.get("/")
 async def root():
