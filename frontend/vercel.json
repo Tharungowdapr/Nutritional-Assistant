@@ -1,9 +1,9 @@
 {
   "framework": "nextjs",
-  "buildCommand": "next build --webpack",
+  "buildCommand": "next build",
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://nutrisync-backend.onrender.com"
+    "NEXT_PUBLIC_API_URL": "https://nutritional-assistant-jg6k.onrender.com"
   }
 }
