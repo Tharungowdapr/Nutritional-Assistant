@@ -3,6 +3,8 @@
  * Supports: OpenAI, Anthropic (Claude), Groq, Google Gemini, Cohere, Ollama, OpenRouter, Mistral, Together
  */
 
+import { apiFetch } from "@/lib/api";
+
 export type LLMProvider = 
   | "openai" 
   | "anthropic" 

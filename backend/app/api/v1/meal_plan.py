@@ -311,14 +311,15 @@ async def stream_meal_plan(request: Request, meal_request: MealPlanRequest,
     async def event_generator():
         all_days = []
         total_days = meal_request.days
+        nl = "\n"
         
         try:
-            yield f"data: {json.dumps({'token': f'Planning {total_days}-day meal plan...\n'})}\n\n"
+            yield f"data: {json.dumps({'token': f'Planning {total_days}-day meal plan...{nl}'})}\n\n"
             
             # Generate 1 day at a time — guarantees all days are produced
             for day_num in range(1, total_days + 1):
                 day_label = DAYS_LIST[(day_num - 1) % 7]
-                yield f"data: {json.dumps({'token': f'Day {day_num} ({day_label})...\n'})}\n\n"
+                yield f"data: {json.dumps({'token': f'Day {day_num} ({day_label})...{nl}'})}\n\n"
                 
                 day = await _generate_chunk(
                     llm, day_num, total_days,

@@ -216,13 +216,12 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
                 <Target className="w-5 h-5 text-primary" />
                 <h2 className="text-lg font-semibold">Nutrition Profile</h2>
               </div>
-              <MacroRing
-                calories={d.total_calories || 0}
-                protein={d.total_protein_g || 0}
-                carbs={d.total_carbs_g || 0}
-                fat={d.total_fat_g || 0}
-                size={240}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <MacroRing label="Calories" current={d.total_calories || 0} target={targets.energy} unit="kcal" size={120} />
+                <MacroRing label="Protein" current={d.total_protein_g || 0} target={targets.protein_g} unit="g" size={120} />
+                <MacroRing label="Carbs" current={d.total_carbs_g || 0} target={targets.carbs_g} unit="g" size={120} />
+                <MacroRing label="Fat" current={d.total_fat_g || 0} target={targets.fat_g} unit="g" size={120} />
+              </div>
               <div className="mt-6 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Calories</span>
@@ -467,4 +466,4 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
   );
 }
 
-import Settings from "lucide-react/dist/esm/icons/settings.js";
+import { Settings } from "lucide-react";

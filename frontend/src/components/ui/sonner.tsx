@@ -9,7 +9,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={theme as "light" | "dark" | "system"}
       className="toaster group"
       icons={{
         success: (
@@ -37,9 +37,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         } as React.CSSProperties
       }
       toastOptions={{
-        classNames: {
-          toast: "cn-toast",
-        },
+        className: "cn-toast",
       }}
       {...props}
     />
