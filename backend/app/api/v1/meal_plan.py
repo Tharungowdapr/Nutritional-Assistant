@@ -366,7 +366,8 @@ async def stream_meal_plan(
                 existing = {d.get("day") for d in all_days}
                 for day_num in range(1, total_days + 1):
                     if day_num not in existing:
-                        yield f"data: {json.dumps({'token': f'Filling missing day {day_num}...\n'})}\n\n"
+                        missing_msg = f"Filling missing day {day_num}..."
+                        yield f"data: {json.dumps({'token': missing_msg})}\n\n"
                         day = await _generate_chunk(llm, day_num, total_days, user_params, active_provider)
                         if day:
                             all_days.append(day)
