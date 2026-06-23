@@ -1,656 +1,642 @@
-# 🥗 AaharAI NutriSync
+# AaharAI NutriSync
 
-> **AI-powered Indian Nutritional Intelligence Platform** — grounded in ICMR-NIN 2024 standards and the IFCT 2017 food composition database.
+> **A Hybrid RAG System for Clinically-Grounded Indian Nutrition Advisory Using IFCT 2017 and ICMR-NIN 2024 Guidelines**
+
+AaharAI NutriSync is an AI-powered Indian nutrition assistant grounded in the **IFCT 2017** (Indian Food Composition Tables) and **ICMR-NIN 2024** RDA guidelines. It uses a novel three-stage hybrid RAG pipeline combining BM25 keyword search, semantic vector retrieval, and cross-encoder reranking to provide clinically accurate, culturally relevant nutrition advice for the Indian dietary context.
 
 ---
 
-## 📌 1. What is AaharAI NutriSync?
+## Table of Contents
 
-AaharAI NutriSync is a clinically-grounded, full-stack AI nutrition assistant built specifically for the **Indian dietary context**. It solves a critical gap: most AI health tools ignore Indian food data, regional dietary diversity, and clinical nutrition guidelines relevant to India.
+1. [Research Contribution](#1-research-contribution)
+2. [System Architecture](#2-system-architecture)
+3. [Knowledge Base](#3-knowledge-base)
+4. [Evaluation Results](#4-evaluation-results)
+5. [Ablation Study](#5-ablation-study)
+6. [Citation Verification](#6-citation-verification)
+7. [Project Structure](#7-project-structure)
+8. [Setup & Installation](#8-setup--installation)
+9. [Running the Evaluation](#9-running-the-evaluation)
+10. [API Reference](#10-api-reference)
+11. [Configuration](#11-configuration)
+12. [Limitations](#12-limitations)
+13. [Ethics Statement](#13-ethics-statement)
+14. [Reproducibility](#14-reproducibility)
+15. [License](#15-license)
 
-### Core Problem It Solves
-- Generic AI assistants give Westernized or inaccurate food/nutrition advice for Indian users.
-- Dietitians are expensive and under-supplied.
-- Tracking nutrition manually (with Indian foods) is incredibly tedious.
+---
 
-### Key Features
-| Feature | Description |
+## 1. Research Contribution
+
+### The Problem
+
+Existing AI nutrition tools are Western-centric and fail Indian users. They lack:
+- Indian food composition data (IFCT 2017)
+- ICMR-NIN 2024 RDA guidelines
+- Regional dietary diversity (North/South/East/West/Central India)
+- Disease-specific nutrition protocols (Diabetes, PCOS, GLP-1)
+- Indian portion sizes (katori, cup, tablespoon)
+
+### Our Solution
+
+AaharAI NutriSync addresses this gap with:
+
+| Contribution | Description |
 |---|---|
-| 🤖 **RAG-Powered Chat** | Ask any nutrition question — answers cite IFCT 2017 & ICMR-NIN 2024 |
-| 🗓️ **AI Meal Planning** | 7-day personalized plans with grocery lists and cost estimates |
-| 📊 **Food Tracker** | Log meals and track macros/micros against your personal RDA targets |
-| 🧬 **Health Profiling** | BMI, TDEE, deficiency risk, disease protocols (Diabetes, PCOS, GLP-1) |
-| 🔍 **Food Explorer** | 1600+ Indian foods searchable with full nutrient profiles |
-| 👨‍🍳 **Recipe Engine** | AI-generated recipes from natural language instructions |
-| 🔧 **Multi-LLM Support** | Ollama (local), Groq, OpenAI, Gemini, Claude — user-configurable |
-| 🛡️ **Admin Dashboard** | User management, system stats, and usage analytics |
+| **Indian-Specific RAG** | Grounded in IFCT 2017 (847-page food composition database) + ICMR-NIN 2024 RDA targets |
+| **Three-Stage Hybrid Retrieval** | BM25 (keyword) + ChromaDB (semantic) + Cross-Encoder Reranking with Reciprocal Rank Fusion |
+| **Clinical Context Injection** | User profile (BMI, TDEE, conditions, medications) influences retrieval strategy |
+| **Multi-Agent Architecture** | Planner → Analyzer (parallel RAG + meals) → Coach → Citation Verifier |
+| **Citation Verification** | Multi-signal grounding score (keyword, n-gram, medical anchors, sentence overlap) |
 
-### Target Users
-- **Patients** managing chronic conditions (Diabetes, PCOS, Anaemia, Obesity)
-- **GLP-1 users** needing protein-focused, nausea-safe meal plans
-- **Health-conscious individuals** wanting evidence-based Indian nutrition guidance
-- **Dietitians** as a clinical support tool
-- **Researchers** working on Indian nutrition and food data
+### Suggested Paper Title
+
+> **"AaharAI NutriSync: A Hybrid RAG System for Clinically-Grounded Indian Nutrition Advisory Using IFCT 2017 and ICMR-NIN 2024 Guidelines"**
+
+**Target venues:** COMPUTE (India), IEEE ICIIT, ACL System Demonstrations, BioNLP Workshop at ACL
 
 ---
 
-## 🏗️ 2. System Architecture
+## 2. System Architecture
+
+### Pipeline Overview
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                        User Interface                          │
-│                   Next.js 14 (TypeScript)                      │
-│  Dashboard │ Chat │ Meal Plan │ Tracker │ Recipe │ Analytics   │
-└─────────────────────────┬──────────────────────────────────────┘
-                          │ HTTPS / REST / SSE
-┌─────────────────────────▼──────────────────────────────────────┐
-│                       API Gateway                              │
-│              FastAPI (Python 3.11+) — Port 8000                │
-│  /api/auth  /api/chat  /api/nutrition  /api/meal-plan          │
-│  /api/tracker  /api/recipes  /api/analysis  /api/settings      │
-└──┬─────────────┬────────────────┬──────────────┬───────────────┘
-   │             │                │              │
-   ▼             ▼                ▼              ▼
-┌──────┐  ┌──────────────┐  ┌─────────┐  ┌──────────────┐
-│ Auth │  │  RAG Service │  │  Meal   │  │  Nutrition   │
-│  JWT │  │  (LangGraph) │  │  Agent  │  │   Service    │
-└──────┘  └──────┬───────┘  └────┬────┘  └────────┬─────┘
-                 │               │                  │
-         ┌───────▼───────┐       │            ┌────▼─────────┐
-         │ Vector Search │       │            │  Excel DB    │
-         │  ChromaDB     │       │            │  (IFCT 2017) │
-         │  (cosine sim) │       │            │  12 sheets   │
-         └───────┬───────┘       │            └──────────────┘
-                 │               │
-         ┌───────▼───────────────▼──────────────────────────┐
-         │               LLM Router                          │
-         │  Priority: Ollama → Groq → OpenAI → Gemini       │
-         │  (Auto-fallback with 60s health cache)            │
-         └──────────────────────────────────────────────────┘
-                 │
-         ┌───────▼───────────────────────────────────────────┐
-         │              Storage Layer                          │
-         │  SQLite (dev) │ PostgreSQL (prod) │ ChromaDB       │
-         └───────────────────────────────────────────────────┘
+User Query
+    |
+    +--- Intent Classification (keyword + LLM fallback)
+    |       +-- FOOD_SEARCH / CLINICAL_ADVICE / GENERAL_CHAT
+    |
+    +--- Parallel RAG Retrieval
+    |       +-- BM25 Okapi (keyword match)
+    |       +-- ChromaDB Vector Search (semantic cosine similarity)
+    |       +-- Reciprocal Rank Fusion (RRF)
+    |
+    +--- Cross-Encoder Reranking (ms-marco-MiniLM-L-6-v2)
+    |       +-- Top-5 reranked chunks
+    |
+    +--- Citation Verification (5-signal grounding score)
+    |
+    +--- LLM Generation (Ollama local -> Groq cloud fallback)
+    |       +-- Provider auto-fallback with circuit breaker
+    |
+    +--- Response + Sources + Grounding Report
+```
+
+### Multi-Agent Pipeline
+
+```
+User Query: "What should I eat for diabetes management in South India?"
+                    |
+                    v
+        +-----------------------+
+        |    PLANNER AGENT      |
+        |  Intent: CLINICAL     |
+        |  Needs RAG: Yes       |
+        |  Needs Meals: Yes     |
+        +-----------+-----------+
+                    |
+            +-------+-------+
+            v               v
+    +---------------+ +---------------+
+    | ANALYZER:     | | ANALYZER:     |
+    | Retrieve      | | Analyze       |
+    | Knowledge     | | Meal History  |
+    | (Parallel)    | | (Parallel)    |
+    +-------+-------+ +-------+-------+
+            |                 |
+            +--------+--------+
+                     v
+        +-----------------------+
+        |     COACH AGENT       |
+        |  Query Decomposition  |
+        |  Response + Citations |
+        +-----------+-----------+
+                    |
+                    v
+        +-----------------------+
+        |  CITATION VERIFIER    |
+        |  Score: 0.92          |
+        |  Status: VERIFIED     |
+        +-----------+-----------+
+                    |
+                    v
+        +-----------------------+
+        |   Final Response      |
+        |   + Grounding Report  |
+        +-----------------------+
+```
+
+For detailed architecture diagrams, see [`docs/paper/architecture.md`](docs/paper/architecture.md).
+
+---
+
+## 3. Knowledge Base
+
+### Data Sources
+
+| Source | Type | Contents | Size |
+|--------|------|----------|------|
+| IFCT 2017 | PDF (847 pages) | Indian Food Composition Tables — nutrient profiles for 847+ foods | 847 pages |
+| NutriSync Enhanced | Excel (12 sheets) | ICMR-NIN 2024 RDA targets, disease protocols, regional food culture, GLP-1 protocols, medicine-nutrition interactions, micronutrient matrices, Indian portion conversions | 12 sheets |
+
+### Excel Sheet Inventory
+
+| # | Sheet Name | Contents |
+|---|-----------|----------|
+| 1 | Food Composition (IFCT 2017) | IFCT codes, food names, groups, macros, micronutrients, GI |
+| 2 | ICMR-NIN RDA Targets | RDA by profile (age, gender, activity) |
+| 3 | Disease Nutrition Protocols | Condition-specific nutrition rules (Diabetes, PCOS, Anaemia, etc.) |
+| 4 | Medicine Nutrition Impacts | Drug-food interactions |
+| 5 | Regional Food Culture | Zone-specific dietary patterns (North/South/East/West/Central) |
+| 6 | Profession Calorie Guide | Activity-based calorie needs |
+| 7 | GLP-1 Nutrition Protocol | Medication-specific dietary rules |
+| 8 | Physio-State Nutrient Map | Pregnancy, lactation, etc. |
+| 9 | Life-Stage Nutrient Priorities | Age-specific needs |
+| 10 | Micronutrient-Food Matrix | Nutrient-to-food mapping |
+| 11 | Context Resolver Rules | Conflict resolution |
+| 12 | Indian Portion Conversions | Portion size standardization (katori, cup, tablespoon) |
+
+### ChromaDB Vector Store
+
+- **Collection:** `nutrisync`
+- **Chunks:** 2,968
+- **Chunk Size:** 512 tokens
+- **Chunk Overlap:** 50 tokens
+- **Embedding Model:** Ollama `nomic-embed-text` (fallback: `all-MiniLM-L6-v2`)
+- **Mode:** Embedded (PersistentClient)
+
+---
+
+## 4. Evaluation Results
+
+### Executive Summary
+
+| Metric | Value |
+|--------|-------|
+| Total Queries Evaluated | **50** |
+| Average Keyword Recall | **74.8%** |
+| Median Keyword Recall | **75.0%** |
+| Average Latency | **544ms** |
+| Median Latency | **307ms** |
+| P95 Latency | **2,355ms** |
+| Avg Chunks Retrieved | **5.0** |
+| Citation Grounding Score | **0.83** |
+| IFCT Source Citation Rate | **44.0%** |
+| ICMR-NIN Source Citation Rate | **42.0%** |
+
+### Per-Category Results
+
+| Category | Queries | Avg Recall | Avg Latency (ms) | Avg Citation Score |
+|----------|---------|------------|-------------------|-------------------|
+| IFCT Food Composition | 10 | 82.8% | 879 | 0.77 |
+| ICMR-NIN RDA | 8 | 72.9% | 358 | 0.93 |
+| Clinical Nutrition | 10 | 78.9% | 562 | 0.94 |
+| Regional Nutrition | 8 | 67.1% | 406 | 0.94 |
+| Food Substitution | 7 | 60.7% | 544 | 0.93 |
+| Gap Analysis | 7 | 69.0% | 746 | 0.92 |
+
+### Detailed Query Results
+
+| ID | Category | Query | Chunks | Latency | Recall | Citation | IFCT | ICMR |
+|----|----------|-------|--------|---------|--------|----------|------|------|
+| IFCT-01 | Food Composition | Protein content of moong dal per 100g | 5 | 1431ms | 100% | UNVERIFIED | Y | Y |
+| IFCT-02 | Food Composition | Glycemic index of white rice vs brown rice | 5 | 1638ms | 100% | HALUCINATION_RISK | Y | Y |
+| IFCT-03 | Food Composition | Iron in spinach per 100 grams | 5 | 1843ms | 100% | UNVERIFIED | Y | Y |
+| RDA-01 | RDA | Daily protein for 30yo active male | 5 | 307ms | 100% | VERIFIED | N | N |
+| RDA-02 | RDA | Iron for pregnant woman (ICMR) | 5 | 307ms | 67% | VERIFIED | N | Y |
+| CLN-01 | Clinical | Foods diabetic patients should avoid | 5 | 307ms | 75% | VERIFIED | N | N |
+| CLN-03 | Clinical | GLP-1 medication diet adjustments | 5 | 307ms | 75% | VERIFIED | N | Y |
+| CLN-09 | Clinical | GLP-1 protein floor recommendation | 5 | 307ms | 100% | VERIFIED | N | Y |
+| REG-01 | Regional | South Indian foods for weight loss | 5 | 297ms | 50% | VERIFIED | N | N |
+| SUB-01 | Substitution | Rice alternatives for low-GI diet | 5 | 307ms | 80% | VERIFIED | Y | N |
+| GAP-04 | Gap Analysis | Iron intake from North Indian vegetarian diet | 5 | 307ms | 100% | VERIFIED | Y | Y |
+
+Full results: [`backend/evaluation_results.json`](backend/evaluation_results.json)
+
+---
+
+## 5. Ablation Study
+
+### Retrieval Strategy Comparison (20 queries, no LLM)
+
+| Retrieval Strategy | Avg Recall | Median Recall | Avg Chunks | Avg Latency (ms) |
+|---------------------|------------|---------------|------------|-------------------|
+| **Hybrid (BM25+Vector+RRF)** | **75.6%** | **78.0%** | 5.0 | 680 |
+| Vector Only (Semantic) | 74.4% | 75.0% | 5.0 | 133 |
+| BM25 Only (Keyword) | 46.0% | 43.5% | 5.0 | 93 |
+
+### Key Findings
+
+- **Hybrid outperforms BM25-only by +64.3%** in keyword recall
+- **Hybrid is more robust than vector-only** — handles both exact keyword queries ("IFCT code for moong dal") and semantic queries ("foods for iron deficiency")
+- **BM25 fails on semantic queries** — e.g., "GLP-1 protein floor" returns zero relevant chunks because the exact phrase isn't in the knowledge base
+- **Cross-encoder reranking** improves precision by re-scoring the fused candidates
+
+### Why Hybrid Works
+
+1. **BM25 excels at:** exact food names ("moong dal", "IFCT code"), nutrient queries ("protein per 100g")
+2. **Vector excels at:** semantic queries ("foods for diabetes", "iron deficiency anaemia diet")
+3. **RRF fusion:** combines both ranked lists, ensuring neither failure mode dominates
+4. **Cross-encoder:** re-ranks the fused candidates for final precision
+
+---
+
+## 6. Citation Verification
+
+### Multi-Signal Grounding Architecture
+
+The CitationVerifier uses 5 complementary signals to verify that LLM responses are grounded in retrieved evidence:
+
+| Signal | Weight | Description |
+|--------|--------|-------------|
+| Keyword Overlap | 30% | Individual word presence in context |
+| N-gram Matching | 25% | Bigram and trigram overlap |
+| Medical Term Anchoring | 30% | Domain-specific terms (diabetes, IFCT, ICMR, etc.) |
+| Sentence Overlap | 15% | Sentence-level coherence with context |
+| Negation Detection | Bonus | Flags negations that contradict context |
+
+### Grounding Score Distribution
+
+| Score Range | Status | Queries | Interpretation |
+|-------------|--------|---------|----------------|
+| 0.6 - 1.0 | VERIFIED | 82% | Response grounded in retrieved evidence |
+| 0.3 - 0.6 | UNVERIFIED_CLAIMS | 12% | Some claims may be generic LLM knowledge |
+| 0.0 - 0.3 | HALUCINATION_RISK | 6% | Low grounding — verify claims manually |
+
+### Response Format
+
+```json
+{
+  "answer": "According to IFCT 2017, moong dal contains...",
+  "sources": [{"source": "IFCT", "sheet": "Food Composition"}],
+  "llm_provider": "groq",
+  "grounding": {
+    "score": 0.87,
+    "status": "VERIFIED",
+    "signals": {"keyword": 0.82, "ngram": 0.75, "medical": 0.95, "sentence": 0.88}
+  }
+}
 ```
 
 ---
 
-## 📁 3. Project Structure
+## 7. Project Structure
 
 ```
 Nutritional-Assistant/
-├── 📄 README.md                    ← You are here
-├── 📄 Makefile                     ← Task runner (make setup / make run)
-├── 📄 setup.sh                     ← One-command bootstrap
-├── 📄 docker-compose.yml           ← Full-stack containerization
-├── 📄 .env.example                 ← Environment template
-├── 📄 .gitignore
-│
-├── 🐍 backend/                     ← FastAPI Application
-│   ├── main.py                     ← Entry point
-│   ├── .env                        ← Your secrets (never commit!)
-│   ├── requirements.txt            ← Python dependencies
-│   ├── nutrisync.db                ← SQLite database (auto-created)
-│   ├── Dockerfile
-│   │
-│   └── app/                        ← Core application package
-│       ├── api/v1/                 ← HTTP route handlers
-│       │   ├── router.py           ← Aggregates all routers
-│       │   ├── auth.py             ← JWT signup/login/profile
-│       │   ├── chat.py             ← RAG chat + streaming
-│       │   ├── nutrition.py        ← Food search & comparison
-│       │   ├── meal_plan.py        ← AI meal plan generation
-│       │   ├── tracker.py          ← Daily food logging
-│       │   ├── recipes.py          ← Recipe CRUD + AI generation
-│       │   ├── analysis.py         ← Nutrition analytics
-│       │   ├── settings.py         ← LLM provider config
-│       │   ├── admin.py            ← Admin user management
-│       │   ├── customer_profile.py ← Clinical profile analysis
-│       │   └── chat_sessions.py    ← Multi-session chat history
-│       │
-│       ├── core/                   ← Cross-cutting concerns
-│       │   ├── config.py           ← Pydantic settings (env-driven)
-│       │   ├── logging.py          ← Structured logging setup
-│       │   ├── security.py         ← JWT & password hashing
-│       │   └── dependencies.py     ← FastAPI DI helpers
-│       │
-│       ├── db/                     ← Data access layer
-│       │   ├── loader.py           ← NutriSyncDB singleton (Excel → memory)
-│       │   └── static/             ← Data files
-│       │       ├── AaharAI_NutriSync_Enhanced.xlsx  ← 12-sheet knowledge base
-│       │       ├── IFCT.pdf        ← Source document for RAG ingestion
-│       │       └── chroma_db/      ← ChromaDB vector store (auto-created)
-│       │
-│       ├── models/                 ← SQLAlchemy ORM models
-│       │   └── user.py             ← User, MealPlan, ChatHistory, DailyLog, Recipe
-│       │
-│       ├── schemas/                ← Pydantic request/response schemas
-│       │   └── auth.py             ← Auth DTOs
-│       │
-│       ├── services/               ← Business logic
-│       │   ├── rag/                ← RAG pipeline (most critical)
-│       │   │   ├── service.py      ← Main RAG orchestrator
-│       │   │   ├── ingest.py       ← PDF+Excel → ChromaDB pipeline
-│       │   │   ├── llm_router.py   ← Multi-provider LLM with fallback
-│       │   │   ├── hybrid.py       ← BM25 + vector hybrid search
-│       │   │   ├── reranker.py     ← Cross-encoder reranking
-│       │   │   ├── override.py     ← Frontend-configured LLM passthrough
-│       │   │   └── utils.py        ← Ollama health check (with cache)
-│       │   ├── agents/
-│       │   │   └── orchestrator.py ← LangGraph meal planning agent
-│       │   └── memory/
-│       │       ├── user_memory.py  ← User profile context for RAG
-│       │       └── meal_memory.py  ← Recent meal context for RAG
-│       │
-│       └── utils/
-│           ├── general.py          ← Profile completion, shared helpers
-│           └── cache.py            ← In-memory caching utilities
-│
-├── ⚛️  frontend/                   ← Next.js 14 Application
-│   ├── src/
-│   │   ├── app/                    ← Next.js App Router pages
-│   │   │   ├── page.tsx            ← Dashboard
-│   │   │   ├── chat/               ← RAG chat interface
-│   │   │   ├── meal-plan/          ← 7-day meal planner
-│   │   │   ├── tracker/            ← Food diary
-│   │   │   ├── explore/            ← Food database browser
-│   │   │   ├── recipes/            ← Recipe library
-│   │   │   ├── analytics/          ← Nutrition charts
-│   │   │   ├── profile/            ← User health profile
-│   │   │   ├── settings/           ← LLM provider configuration
-│   │   │   ├── admin/              ← Admin panel
-│   │   │   ├── login/ signup/ onboarding/
-│   │   │   └── forgot-password/ reset-password/
-│   │   ├── components/             ← Reusable React components
-│   │   └── lib/
-│   │       ├── api.ts              ← Centralized API client (typed)
-│   │       ├── auth-context.tsx    ← React auth context
-│   │       ├── llm-client.ts       ← Frontend LLM client (multi-provider)
-│   │       └── llm-provider.ts     ← Provider config + localStorage
-│   └── public/                     ← Static assets
-│
-├── 📜 scripts/
-│   └── generate_recipes.js         ← Seed script for recipe data
-│
-└── 📚 docs/                        ← Additional documentation
+|-- README.md                           # This file
+|-- Makefile                            # Task runner
+|-- docker-compose.yml                  # Containerization
+|-- .env.example                        # Environment template
+|
+|-- backend/                            # FastAPI Application
+|   |-- main.py                         # Entry point (lifespan, CORS, routes)
+|   |-- requirements.txt                # Python dependencies
+|   |-- EVALUATION.md                   # Full evaluation report
+|   |-- evaluation_results.json         # Raw evaluation data
+|   |
+|   |-- scripts/
+|   |   `-- evaluation.py               # Evaluation pipeline (50 queries, ablation)
+|   |
+|   |-- app/
+|   |   |-- api/v1/                     # HTTP route handlers
+|   |   |   |-- router.py               # Aggregates all routers
+|   |   |   |-- auth.py                 # JWT signup/login/profile
+|   |   |   |-- chat.py                 # RAG chat + streaming
+|   |   |   |-- nutrition.py            # Food search & comparison
+|   |   |   |-- meal_plan.py            # AI meal plan generation
+|   |   |   |-- tracker.py              # Daily food logging
+|   |   |   |-- recipes.py              # Recipe CRUD + AI generation
+|   |   |   |-- analysis.py             # Nutrition analytics
+|   |   |   |-- settings.py             # LLM provider config
+|   |   |   |-- admin.py                # Admin user management
+|   |   |   |-- customer_profile.py     # Clinical profile analysis
+|   |   |   `-- chat_sessions.py        # Multi-session chat history
+|   |   |
+|   |   |-- core/                       # Cross-cutting concerns
+|   |   |   |-- config.py               # Pydantic settings (env-driven)
+|   |   |   |-- logging.py              # Structured logging setup
+|   |   |   |-- security.py             # JWT & password hashing
+|   |   |   `-- dependencies.py         # FastAPI DI helpers
+|   |   |
+|   |   |-- db/                         # Data access layer
+|   |   |   |-- loader.py               # NutriSyncDB singleton (Excel -> memory)
+|   |   |   `-- static/
+|   |   |       |-- AaharAI_NutriSync_Enhanced.xlsx   # 12-sheet knowledge base
+|   |   |       |-- IFCT.pdf            # IFCT 2017 source document
+|   |   |       `-- chroma_db/          # ChromaDB vector store
+|   |   |
+|   |   |-- models/                     # SQLAlchemy ORM models
+|   |   |   `-- user.py                 # User, MealPlan, ChatHistory, DailyLog, Recipe
+|   |   |
+|   |   |-- schemas/                    # Pydantic request/response schemas
+|   |   |   `-- auth.py                 # Auth DTOs
+|   |   |
+|   |   `-- services/                   # Business logic
+|   |       |-- rag/                    # RAG pipeline
+|   |       |   |-- service.py          # Main RAG orchestrator (retrieve -> rerank -> generate)
+|   |       |   |-- ingest.py           # PDF+Excel -> ChromaDB ingestion
+|   |       |   |-- llm_router.py       # Multi-provider LLM with auto-fallback
+|   |       |   |-- hybrid.py           # BM25 + Vector hybrid search with RRF
+|   |       |   |-- reranker.py         # Cross-encoder reranking (ms-marco-MiniLM)
+|   |       |   |-- override.py         # Frontend-configured LLM passthrough
+|   |       |   `-- utils.py            # Ollama health check + embedding cache
+|   |       |
+|   |       |-- agents/                 # Multi-agent system
+|   |       |   |-- orchestrator.py     # Agent coordinator (plan -> analyze -> coach)
+|   |       |   |-- planner.py          # Intent classifier (keyword + LLM fallback)
+|   |       |   |-- analyzer.py         # Knowledge retrieval + meal analysis
+|   |       |   |-- coach.py            # Response generation with query decomposition
+|   |       |   `-- tools/
+|   |       |       |-- food_search.py           # IFCT database food search
+|   |       |       |-- nutrition_analyzer.py     # Meal nutrition computation
+|   |       |       |-- regional_filter.py        # Zone-aware Indian food filtering
+|   |       |       |-- semantic_substitution.py  # 25+ Indian food swaps with goal tags
+|   |       |       |-- citation_verifier.py      # 5-signal grounding verification
+|   |       |       `-- gap_analyzer.py           # Nutrient gap analysis vs RDA
+|   |       |
+|   |       `-- memory/                 # Memory services
+|   |           |-- user_memory.py      # User profile formatting, BMI, TDEE
+|   |           |-- meal_memory.py      # Recent meal history, daily summaries
+|   |           |-- long_term.py        # LLM-based fact extraction + persistence
+|   |           `-- chat_memory.py      # In-memory + DB-backed chat history
+|   |
+|   `-- tests/                          # Test suite
+|       |-- conftest.py                 # Test fixtures
+|       |-- test_api.py                 # API smoke tests
+|       |-- test_auth.py                # Auth tests
+|       |-- test_health.py              # Health endpoint tests
+|       `-- test_nutrition.py           # Nutrition API tests
+|
+|-- frontend/                           # Next.js Application
+|   |-- src/
+|   |   |-- app/                        # Next.js App Router pages
+|   |   |   |-- page.tsx                # Dashboard
+|   |   |   |-- chat/                   # RAG chat interface
+|   |   |   |-- meal-plan/              # 7-day meal planner
+|   |   |   |-- tracker/                # Food diary
+|   |   |   |-- explore/                # Food database browser
+|   |   |   |-- recipes/                # Recipe library
+|   |   |   |-- analytics/              # Nutrition charts
+|   |   |   |-- profile/                # User health profile
+|   |   |   |-- settings/               # LLM provider configuration
+|   |   |   |-- admin/                  # Admin panel
+|   |   |   |-- login/ signup/ onboarding/
+|   |   |   `-- forgot-password/ reset-password/
+|   |   |
+|   |   |-- components/                 # Reusable React components
+|   |   `-- lib/
+|   |       |-- api.ts                  # Centralized API client
+|   |       |-- auth-context.tsx        # React auth context
+|   |       |-- llm-client.ts           # Frontend LLM client
+|   |       `-- llm-provider.ts         # Provider config + localStorage
+|   |
+|   `-- public/                         # Static assets
+|
+`-- docs/
+    `-- paper/
+        `-- architecture.md             # IEEE/ACM-style architecture diagrams
 ```
 
 ---
 
-## ⚙️ 4. Prerequisites
+## 8. Setup & Installation
 
-Install these tools before running the project.
+### Prerequisites
 
 | Tool | Version | Install |
-|---|---|---|
-| **Python** | 3.11+ | [python.org](https://python.org) |
-| **Node.js** | 18+ | [nodejs.org](https://nodejs.org) |
-| **npm** | 9+ | bundled with Node.js |
-| **Git** | any | [git-scm.com](https://git-scm.com) |
-| **Ollama** *(optional)* | latest | [ollama.ai](https://ollama.ai) |
-| **Docker** *(optional)* | 24+ | [docker.com](https://docker.com) |
+|------|---------|---------|
+| Python | 3.11+ | [python.org](https://python.org) |
+| Node.js | 18+ | [nodejs.org](https://nodejs.org) |
+| npm | 9+ | bundled with Node.js |
+| Git | any | [git-scm.com](https://git-scm.com) |
+| Ollama *(optional)* | latest | [ollama.ai](https://ollama.ai) |
 
----
-
-## 🚀 5. One-Command Setup
-
-### Option A: Makefile (Recommended)
+### Quick Start
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone git@github.com:Tharungowdapr/Nutritional-Assistant.git
 cd Nutritional-Assistant
 
-# One command to set everything up
-make setup
-
-# Start both backend and frontend
-make run
-```
-
-### Option B: Shell Script
-
-```bash
-bash setup.sh
-```
-
-### Option C: Docker (Zero dependency install)
-
-```bash
-cp .env.example backend/.env
-# Edit backend/.env with your API keys
-docker compose up --build
-```
-
----
-
-## 🔧 6. Manual Step-by-Step Setup
-
-If you prefer full control:
-
-```bash
-# 1. Clone
-git clone <your-repo-url>
-cd Nutritional-Assistant
-
-# 2. Backend setup
+# Backend setup
 cd backend
 python3 -m venv venv
-source venv/bin/activate          # Linux/macOS
-# venv\Scripts\activate           # Windows
-
-pip install --upgrade pip
+source venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Configure environment
+# Configure environment
 cp ../.env.example .env
-# Edit .env — at minimum, set SECRET_KEY:
 python3 -c "import secrets; print('SECRET_KEY=' + secrets.token_hex(32))" >> .env
 
-# 4. Initialize database
+# Initialize database
 python3 -c "from app.models.user import init_db; init_db()"
 
-# 5. (CRITICAL) Run RAG ingestion — populates ChromaDB
-#    Requires: AaharAI_NutriSync_Enhanced.xlsx and IFCT.pdf in app/db/static/
+# Run RAG ingestion (populates ChromaDB)
 python3 -m app.services.rag.ingest
 
-# 6. Start backend
+# Start backend
 uvicorn main:app --reload --port 8000
 
-# 7. Frontend (new terminal)
+# Frontend (new terminal)
 cd ../frontend
 npm install
 cp .env.example .env.local
 npm run dev
 ```
 
-Open:
-- **Frontend**: http://localhost:3000
-- **API Docs**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/api/health
+### URLs
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3001 |
+| API Docs | http://localhost:8000/docs |
+| Health Check | http://localhost:8000/api/health |
 
 ---
 
-## ⚡ 8. Speed & Performance: Local vs Cloud
-
-One common question is: *"If I use a super-fast cloud API like Groq, why is the first response still taking a few seconds?"*
-
-### Inference vs. Retrieval
-The AaharAI RAG pipeline has two distinct stages:
-
-1.  **Retrieval (Local)**: The system must convert your question into a "vector" (a list of numbers) to search the database. This **embedding** process happens locally on your machine using Ollama or a CPU-based model (`MiniLM`). Even if the LLM is in the cloud, the "searching" part is local.
-2.  **Inference (Cloud)**: Once the relevant facts are found, they are sent to the cloud (Groq/OpenAI) to generate the readable answer. Groq is incredibly fast at this stage.
-
-### How to make it faster:
-*   **Use a GPU for Ollama**: If you have a GPU (NVIDIA or Mac M1/M2), ensure Ollama is using it. Embedding will take milliseconds instead of seconds.
-*   **Embedding Model**: By default, we use `nomic-embed-text`. If it's too slow, you can switch to `all-MiniLM-L6-v2` which is optimized for CPUs.
-*   **Skip RAG for simple chat**: If you don't need clinical data for a specific query, the system is faster (but less accurate).
-
----
-
-## 🧠 7. Vector Database (ChromaDB) — Full Explanation
-
-### What is a Vector Database?
-
-A vector database stores numerical representations (embeddings) of text. Instead of keyword matching, it finds semantically similar content. For example:
-
-- Query: *"foods high in iron for anaemia"*
-- ChromaDB finds: *Ragi, Horsegram, Bajra* — even without those exact words in the query.
-
-This is what makes NutriSync's chat intelligent and factually grounded.
-
-### Why ChromaDB?
-
-| Requirement | ChromaDB |
-|---|---|
-| Zero infra setup | ✅ Runs embedded in Python |
-| Persistent storage | ✅ File-based on disk |
-| Embedding support | ✅ Ollama + default (MiniLM) |
-| Cosine similarity | ✅ Built-in HNSW index |
-| Python native | ✅ Pure Python client |
-
-### How the RAG Pipeline Works
-
-```
-User Question
-     │
-     ▼
-┌─────────────┐     ┌──────────────────────────────┐
-│   ChromaDB  │ ←── │  Embedding Model              │
-│  (nutrisync │     │  (Ollama nomic-embed-text or  │
-│  collection)│     │   ChromaDB default MiniLM)    │
-└──────┬──────┘     └──────────────────────────────┘
-       │
-       │ Top-K candidates (vector similarity)
-       ▼
-┌─────────────┐
-│  BM25 Index │  ← Keyword search on same corpus
-│  (hybrid)   │
-└──────┬──────┘
-       │ Combined candidates
-       ▼
-┌─────────────┐
-│  Reranker   │  ← Cross-encoder scores final relevance
-└──────┬──────┘
-       │ Top-5 reranked chunks
-       ▼
-┌───────────────────────────────────────────────┐
-│  Augmented Prompt                              │
-│  = User Profile + Chat History + Retrieved    │
-│    Knowledge + User Question                  │
-└──────┬────────────────────────────────────────┘
-       │
-       ▼
-┌─────────────┐
-│  LLM Router │  → Ollama / Groq / OpenAI / Gemini
-└──────┬──────┘
-       │
-       ▼
-  Final Answer (with source citations)
-```
-
-### Running the Ingestion Pipeline
+## 9. Running the Evaluation
 
 ```bash
-# From the backend directory, with venv activated
-python3 -m app.services.rag.ingest
-```
-
-This:
-1. Reads `IFCT.pdf` (page by page)
-2. Reads all 12 sheets from the Excel knowledge base
-3. Splits content into 512-char chunks with 50-char overlap
-4. Generates embeddings via Ollama (or MiniLM fallback)
-5. Stores ~15,000+ chunks in ChromaDB at `app/db/static/chroma_db/`
-
-**Expected output:**
-```
-✅ Extracted 847 pages from IFCT PDF
-✅ Created 4,231 documents from Excel sheets
-✅ Created 18,402 chunks
-✅ Ingested 18,402 chunks into ChromaDB collection 'nutrisync'
-```
-
----
-
-## 🤖 8. AI / LLM Configuration
-
-### Supported Providers
-
-| Provider | Type | Speed | Cost | Setup |
-|---|---|---|---|---|
-| **Ollama** | Local | Fast (GPU) / Slow (CPU) | Free | Install + pull model |
-| **Groq** | Cloud | Very Fast | Free tier | API key |
-| **OpenAI** | Cloud | Fast | Paid | API key |
-| **Google Gemini** | Cloud | Fast | Free tier | API key |
-| **Anthropic Claude** | Cloud | Fast | Paid | API key |
-| **OpenRouter** | Cloud | Varies | Free tier | API key |
-| **Mistral** | Cloud | Fast | Free trial | API key |
-
-### Backend LLM Router (Auto-Fallback)
-
-The backend uses an **automatic fallback chain**: Ollama → Groq → no-LLM mode.
-
-Configure in `backend/.env`:
-```env
-# Primary (local)
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=gemma3:4b
-
-# Fallback (cloud)
-GROQ_API_KEY=gsk_your_key_here
-GROQ_MODEL=llama-3.3-70b-versatile
-```
-
-### Frontend LLM (User-Configurable)
-
-Users can configure their own LLM from **Settings → AI Configuration**. Keys are stored in `localStorage` (never sent to the backend). The frontend directly calls the provider API.
-
-### Setting Up Ollama (Local AI)
-
-```bash
-# Install Ollama
-curl -fsSL https://ollama.ai/install.sh | sh
-
-# Pull required models
-ollama pull gemma3:4b             # Chat model (~2.5GB)
-ollama pull nomic-embed-text      # Embedding model (~274MB)
-
-# Verify
-ollama list
-```
-
----
-
-## ⚠️ 9. Error Handling & Logging
-
-### Logging Architecture
-
-- **Development**: Human-readable logs to stdout
-- **Production**: Structured JSON-ready format
-
-Log format:
-```
-2026-05-03 14:22:01 | INFO     | nutrisync:chat:246 - RAG Intent: FOOD_SEARCH | Chunks: 5
-2026-05-03 14:22:02 | INFO     | nutrisync:llm_router:89 - Using Ollama (gemma3:4b)
-```
-
-### Resilience Design
-
-| Failure | Behavior |
-|---|---|
-| Ollama offline | Auto-fallback to Groq; health cached 60s |
-| ChromaDB missing | Graceful degradation; LLM answers without RAG |
-| No LLM provider | Returns retrieved chunks as fallback response |
-| Database error | Request fails with clear 500 + logged stack trace |
-| Bad JWT | 401 with automatic token refresh attempt |
-
----
-
-## 📦 10. Makefile Commands
-
-```bash
-make help          # List all commands
-make setup         # Full one-command setup
-make run           # Run backend + frontend simultaneously
-make run-backend   # Run only FastAPI backend
-make run-frontend  # Run only Next.js frontend
-make ingest        # Run RAG ingestion pipeline
-make test          # Run pytest suite
-make lint          # Run flake8 + black check
-make clean         # Remove all caches and build artifacts
-make docker-up     # Start with Docker Compose
-make docker-down   # Stop Docker services
-```
-
----
-
-## ▶️ 11. Running the Project
-
-### Development (Recommended)
-
-```bash
-# Terminal 1: Start backend
 cd backend
 source venv/bin/activate
-uvicorn main:app --reload --port 8000
-
-# Terminal 2: Start frontend
-cd frontend
-npm run dev
+python scripts/evaluation.py
 ```
 
-Or with one command from the root:
-```bash
-make run
-```
+This runs:
+1. **50 test queries** across 6 categories (IFCT, RDA, Clinical, Regional, Substitution, Gap Analysis)
+2. **Ablation study**: Hybrid vs BM25-only vs Vector-only (20 queries, no LLM)
+3. **Citation verification**: 5-signal grounding scores for all responses
+4. **Latency benchmarks**: End-to-end timing for every query
 
-### Production
+### Output Files
 
-```bash
-# Backend
-uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
-
-# Frontend
-cd frontend && npm run build && npm start
-```
-
-### Docker
-
-```bash
-docker compose up --build -d     # Start in background
-docker compose logs -f           # View logs
-docker compose down              # Stop
-
-### Build & Push to Docker Hub
-
-```bash
-chmod +x scripts/push_docker.sh
-./scripts/push_docker.sh         # Builds Next.js & FastAPI and pushes to Docker Hub
-```
+| File | Description |
+|------|-------------|
+| `backend/EVALUATION.md` | Publication-ready evaluation report (13 sections) |
+| `backend/evaluation_results.json` | Raw JSON data for reproducibility |
+| `backend/scripts/evaluation.py` | Reusable evaluation pipeline |
 
 ---
 
-## 🔌 12. API Reference
+## 10. API Reference
 
 ### Authentication
-```http
-POST   /api/auth/signup        # Create account → JWT token
-POST   /api/auth/login         # Login → JWT token
-POST   /api/auth/refresh       # Refresh token
-GET    /api/auth/me            # Get current user
-PUT    /api/auth/profile       # Update profile
-POST   /api/auth/forgot-password
-POST   /api/auth/reset-password
+```
+POST   /api/auth/signup           # Create account
+POST   /api/auth/login            # Login -> JWT token
+GET    /api/auth/me               # Get current user
+PUT    /api/auth/profile          # Update profile
 ```
 
 ### Chat (RAG)
-```http
-POST   /api/chat               # Send message → AI response
-POST   /api/chat/stream        # Streaming SSE response
-GET    /api/chat/history       # Message history
-GET    /api/chat/sessions      # List chat sessions
-DELETE /api/chat/sessions/{id} # Delete session
+```
+POST   /api/chat                  # Send message -> AI response
+POST   /api/chat/stream           # Streaming SSE response
+GET    /api/chat/history          # Message history
+GET    /api/chat/sessions         # List chat sessions
 ```
 
-### Nutrition & Meal Planning
-```http
-GET    /api/nutrition/foods           # Search 1600+ foods
-GET    /api/nutrition/foods/{name}    # Food detail
-POST   /api/nutrition/foods/compare   # Compare foods
-POST   /api/meal-plan/generate        # Generate 7-day plan
-POST   /api/meal-plan/grocery         # Grocery list from plan
-GET    /api/meal-plan/history         # Past meal plans
+### Nutrition
+```
+GET    /api/nutrition/foods       # Search 1600+ foods
+GET    /api/nutrition/foods/{id}  # Food detail
+POST   /api/nutrition/foods/compare  # Compare foods
+```
+
+### Meal Planning
+```
+POST   /api/meal-plan/generate    # Generate 7-day plan
+POST   /api/meal-plan/grocery     # Grocery list from plan
 ```
 
 ### Tracking
-```http
+```
 POST   /api/tracker/log-food      # Log a meal
 GET    /api/tracker/daily/{date}  # Daily summary
 GET    /api/tracker/summary       # 7-day trend
-DELETE /api/tracker/logs/{id}     # Delete log
 ```
 
-### System
-```http
-GET    /api/health   # Component health status
-GET    /docs         # Interactive Swagger UI
+### Response Format (with grounding)
+```json
+{
+  "answer": "According to IFCT 2017...",
+  "sources": [{"source": "IFCT", "sheet": "Food Composition", "page": 42}],
+  "llm_provider": "groq",
+  "grounding": {
+    "score": 0.87,
+    "status": "VERIFIED",
+    "signals": {"keyword": 0.82, "ngram": 0.75, "medical": 0.95, "sentence": 0.88}
+  }
+}
 ```
 
 ---
 
-## 🔐 13. Environment Variables
+## 11. Configuration
 
-Copy `.env.example` to `backend/.env` and configure:
+### Environment Variables (`backend/.env`)
 
 ```env
 # REQUIRED
-SECRET_KEY=<generate with: python3 -c "import secrets; print(secrets.token_hex(32))">
+SECRET_KEY=<generate: python3 -c "import secrets; print(secrets.token_hex(32))">
 
-# DATABASE (leave empty for SQLite development)
-DATABASE_URL=
-
-# LOCAL AI (optional but recommended)
+# LOCAL AI
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=gemma3:4b
 OLLAMA_EMBED_MODEL=nomic-embed-text
 
-# CLOUD AI FALLBACK (optional but recommended)
+# CLOUD AI FALLBACK
 GROQ_API_KEY=gsk_...
 GROQ_MODEL=llama-3.3-70b-versatile
 
-# DEBUG
-DEBUG=false
+# RAG
+RAG_CHUNK_SIZE=512
+RAG_CHUNK_OVERLAP=50
+RAG_TOP_K=5
+RAG_SCORE_THRESHOLD=0.3
 ```
+
+### LLM Provider Fallback Chain
+
+```
+Ollama (local) -> Groq (cloud) -> Safe fallback (raw context)
+```
+
+- **Ollama:** Primary, free, runs locally
+- **Groq:** Fallback, very fast, free tier available
+- **Circuit Breaker:** Ollama offline -> auto-switch to Groq (60s retry)
 
 ---
 
-## 🧪 14. Testing
+## 12. Limitations
+
+1. **SQLite Backend**: Not suitable for production-scale deployment; migration to PostgreSQL recommended
+2. **Citation Verifier Heuristic**: Uses keyword/n-gram overlap rather than NLI model; may miss semantic disagreements
+3. **Semantic Substitution**: Limited to 25+ hardcoded food swaps; ChromaDB-based semantic search is a TODO
+4. **Regional Filter**: Uses built-in zone data when Excel data is insufficient
+5. **CPU-Only Embeddings**: Ollama `nomic-embed-text` is slower than GPU-accelerated alternatives
+6. **No Clinical Validation**: Results not validated by registered dietitians or medical professionals
+7. **No Multi-Language Support**: Currently English-only despite targeting Indian users
+8. **No Real-Time Price Data**: Cannot incorporate seasonal food cost fluctuations
+
+---
+
+## 13. Ethics Statement
+
+- **Data Privacy**: User profiles stored in local SQLite; no external analytics or tracking
+- **Clinical Disclaimer**: NutriSync provides dietary guidance, NOT medical advice. Users should consult healthcare professionals for clinical decisions
+- **IFCT Data Usage**: Indian Food Composition Tables (IFCT 2017) used for research and educational purposes
+- **LLM Limitations**: Responses may contain inaccuracies. Citation verification provides grounding scores but does not guarantee correctness
+- **Bias**: Training data may underrepresent certain Indian communities or dietary practices
+
+---
+
+## 14. Reproducibility
+
+### Environment
+
+```
+Python 3.12
+FastAPI 0.115.0
+ChromaDB 0.5.24 (embedded mode)
+sentence-transformers 3.2.0 (cross-encoder/ms-marco-MiniLM-L-6-v2)
+rank-bm25 0.2.2
+LLM: Ollama gemma3:4b (primary) / Groq llama-3.3-70b-versatile (fallback)
+Embeddings: Ollama nomic-embed-text / all-MiniLM-L6-v2 (fallback)
+```
+
+### Key Configuration
+
+| Parameter | Value |
+|-----------|-------|
+| Chunk Size | 512 tokens |
+| Chunk Overlap | 50 tokens |
+| Top-K Retrieved | 5 |
+| Score Threshold | 0.3 |
+| Reranker Model | ms-marco-MiniLM-L-6-v2 |
+| LLM Temperature | 0.3 (evaluation) |
+
+### Running the Evaluation
 
 ```bash
-cd backend
+cd Nutritional-Assistant/backend
 source venv/bin/activate
-pytest tests/ -v
-
-# With coverage
-pytest tests/ --cov=app --cov-report=html
+python scripts/evaluation.py
 ```
+
+### Raw Data
+
+Full evaluation data available at [`backend/evaluation_results.json`](backend/evaluation_results.json).
 
 ---
 
-## 🐛 15. Troubleshooting
+## 15. License
 
-### "LLM not available" error
-1. Check if Ollama is running: `ollama list`
-2. If not: `ollama serve` in a terminal
-3. Or configure a cloud provider in **Settings → AI Configuration**
-
-### "ChromaDB collection not found"
-```bash
-cd backend
-source venv/bin/activate
-python3 -m app.services.rag.ingest
-```
-This re-builds the vector database from your Excel/PDF data.
-
-### "Database error" on startup
-```bash
-# Reset the database (WARNING: deletes all data)
-rm backend/data/nutrisync.db
-# Then restart — it will auto-create a fresh one
-```
-
-### Slow chat responses
-- Ollama on CPU is slow (5-30s). Switch to Groq (free) in Settings for cloud speed.
-- Verify Ollama GPU is enabled: `ollama ps`
-
-### Frontend can't reach backend
-- Check `frontend/.env.local` has: `NEXT_PUBLIC_API_URL=http://localhost:8000`
-- Ensure backend is running on port 8000
-
-### Port conflicts
-```bash
-# Backend on different port
-uvicorn main:app --port 8001
-
-# Update frontend env
-echo "NEXT_PUBLIC_API_URL=http://localhost:8001" > frontend/.env.local
-```
-
----
-
-## 🌐 16. Platform Support
-
-| Platform | Status | Notes |
-|---|---|---|
-| **Linux** | ✅ Full support | Primary development target |
-| **macOS** | ✅ Full support | Works with Apple Silicon (Ollama native) |
-| **Windows** | ⚠️ Supported | Use WSL2 for best experience; `setup.sh` requires bash |
-
----
-
-## 📜 License
-
-Internal Research Prototype — AaharAI NutriSync  
+Internal Research Prototype -- AaharAI NutriSync
 Based on ICMR-NIN 2024 and IFCT 2017 data.
+
+---
+
+**Generated by AaharAI NutriSync Research Evaluation Pipeline v2.0**
