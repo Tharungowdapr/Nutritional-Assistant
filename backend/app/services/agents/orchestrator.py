@@ -90,11 +90,17 @@ class OrchestratorAgent:
             if source not in sources:
                 sources.append(source)
         
+        # Citation verification
+        from app.services.agents.tools.citation_verifier import citation_verifier
+        context_texts = [c.get("text", "") for c in knowledge[:3]]
+        grounding = citation_verifier.verify(response_text, context_texts)
+
         return self._standard_response(
             answer=response_text,
             sources=sources,
             intent=intent_analysis["intent"],
             analysis={"knowledge": knowledge[:3], "meal_analysis": meal_analysis},
+            grounding=grounding,
         )
     
     def _validate_response(self, output: str) -> str:
@@ -105,9 +111,9 @@ class OrchestratorAgent:
             return output[:10000] + "... (truncated)"
         return output.strip()
     
-    def _standard_response(self, answer: str, sources: list, intent: str, analysis: dict = None) -> dict:
+    def _standard_response(self, answer: str, sources: list, intent: str, analysis: dict = None, grounding: dict = None) -> dict:
         """Standard response format for all agents."""
-        return {
+        resp = {
             "success": True,
             "data": {
                 "answer": answer,
@@ -118,6 +124,9 @@ class OrchestratorAgent:
             "error": None,
             "llm_provider": "ollama" if self.llm_router else "unknown",
         }
+        if grounding:
+            resp["data"]["grounding"] = grounding
+        return resp
     
     async def process_meal_plan(
         self,

@@ -379,7 +379,12 @@ Please provide a detailed, evidence-based answer. Cite sources. Always maintain 
                 fallback += "No knowledge-base results available."
             response_text = fallback
 
-        # 4. Format sources
+        # 4. Citation verification — ground LLM response against retrieved chunks
+        from app.services.agents.tools.citation_verifier import citation_verifier
+        context_texts = [c["text"] for c in chunks]
+        verification = citation_verifier.verify(response_text, context_texts)
+
+        # 5. Format sources
         sources = [
             {
                 "source": c.get("metadata", {}).get("source", "unknown"),
@@ -394,6 +399,7 @@ Please provide a detailed, evidence-based answer. Cite sources. Always maintain 
             "answer": response_text,
             "sources": sources,
             "llm_provider": provider,
+            "grounding": verification,
         }
 
     async def chat_stream(self, query: str, user_profile: Optional[dict] = None, 
@@ -464,6 +470,13 @@ Please provide a detailed, evidence-based answer. Respond token-by-token. Contin
                 else:
                     fallback += "No knowledge-base results available."
                 yield fallback
+            else:
+                # Citation verification for streaming response
+                from app.services.agents.tools.citation_verifier import citation_verifier
+                context_texts = [c["text"] for c in chunks]
+                verification = citation_verifier.verify(full_response, context_texts)
+                if verification["alerts"]:
+                    yield f"\n\n**Grounding Report:** {verification['status']} (score: {verification['score']:.2f}) — {'; '.join(verification['alerts'])}"
 
     @property
     def is_ready(self) -> bool:
