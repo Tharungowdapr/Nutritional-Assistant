@@ -8,7 +8,6 @@ anchoring, negation detection, and sentence-level coherence scoring.
 import logging
 import re
 from typing import List, Dict
-from collections import Counter
 
 logger = logging.getLogger(__name__)
 
@@ -184,7 +183,7 @@ class CitationVerifier:
         words = text.split()
         ngrams = set()
         for i in range(len(words) - n + 1):
-            ngram = " ".join(words[i : i + n])
+            ngram = " ".join(words[i: i + n])
             ngrams.add(ngram)
         return ngrams
 

@@ -196,7 +196,7 @@ def _get_deficiency_risks(profile: dict) -> list:
             risks.append(
                 {
                     "nutrient": "Chromium & Magnesium",
-                    "reason": "Diabetes increases excretion of these minerals. Both are essential for glucose metabolism.",
+                    "reason": "Diabetes increases mineral excretion. Essential for glucose metabolism.",
                     "severity": "medium",
                     "fix": "Ragi, almonds, and green leafy vegetables are rich sources.",
                 }
@@ -206,7 +206,7 @@ def _get_deficiency_risks(profile: dict) -> list:
         risks.append(
             {
                 "nutrient": "Vitamin B12",
-                "reason": "No animal-source foods — curd and paneer are your only dietary sources. After 5+ years vegetarian, supplement may be needed.",
+                "reason": "No animal-source foods — only curd and paneer. After 5+ years, supplement needed.",
                 "severity": "high",
                 "fix": "Daily curd (150g), paneer 3x/week, or B12 supplement 2.4mcg/day",
             }
@@ -214,9 +214,9 @@ def _get_deficiency_risks(profile: dict) -> list:
         risks.append(
             {
                 "nutrient": "Iron (non-heme)",
-                "reason": "Plant iron absorbs at only 5–10% vs 25% for heme iron. High tea/coffee intake further blocks absorption.",
+                "reason": "Plant iron absorbs at 5–10% vs 25% for heme iron. High tea/coffee blocks absorption.",
                 "severity": "high",
-                "fix": "Pair iron foods with Vit C (amla, guava, lemon). Bajra roti + palak sabzi is ideal. Avoid tea 1hr around meals.",
+                "fix": "Pair with Vit C (amla, guava, lemon). Bajra roti + palak sabzi is ideal.",
             }
         )
 
@@ -224,9 +224,9 @@ def _get_deficiency_risks(profile: dict) -> list:
         risks.append(
             {
                 "nutrient": "Iron (menstrual losses)",
-                "reason": "Menstrual iron loss adds ~2mg/day requirement. Indian women have 57% anaemia prevalence (NFHS-5).",
+                "reason": "Menstrual iron loss adds ~2mg/day requirement. Indian women have 57% anaemia prevalence.",
                 "severity": "high",
-                "fix": "Target 21mg/day. Amaranth leaves, masoor dal, bajra, and moringa are top sources.",
+                "fix": "Target 21mg/day. Amaranth leaves, masoor dal, bajra, moringa are top sources.",
             }
         )
         if age < 40:
@@ -243,7 +243,7 @@ def _get_deficiency_risks(profile: dict) -> list:
         risks.append(
             {
                 "nutrient": "Vitamin D",
-                "reason": "Bone density declines post-50. Indoor lifestyle common in urban India — sun exposure inadequate.",
+                "reason": "Bone density declines post-50. Indoor lifestyle common — sun exposure inadequate.",
                 "severity": "medium",
                 "fix": "15–20 min morning sun daily. Eggs (if non-veg). Supplement 600–800 IU/day recommended.",
             }
@@ -252,7 +252,7 @@ def _get_deficiency_risks(profile: dict) -> list:
     risks.append(
         {
             "nutrient": "Calcium",
-            "reason": "Spinach oxalates block absorption. Dairy calcium best, but most adults consume below 600mg/day target.",
+            "reason": "Spinach oxalates block absorption. Dairy calcium best, but most adults below 600mg/day target.",
             "severity": "medium",
             "fix": "Ragi (344mg/100g), sesame seeds (975mg/100g), and curd are best veg sources.",
         }
@@ -351,7 +351,10 @@ async def get_customer_profile(
             "bmr": bmr,
             "tdee": tdee,
             "pal": pal,
-            "bmr_formula": f"Mifflin-St Jeor: 10×{weight} + 6.25×{height} − 5×{age} {'+ 5' if 'male' in gender.lower() else '− 161'} = {bmr}",
+            "bmr_formula": (
+                f"Mifflin-St Jeor: BMR = (10×{weight}) + (6.25×{height}) − (5×{age}) "
+                f"{'+ 5' if 'male' in gender.lower() else '− 161'} = {bmr}"
+            ),
             "tdee_formula": f"BMR {bmr} × PAL {pal} = {tdee} kcal",
         },
         "icmr_match": rda_match,

@@ -123,7 +123,11 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Ses
                         "from": "AaharAI NutriSync <noreply@nutrisync.app>",
                         "to": [user.email],
                         "subject": "Password Reset — AaharAI NutriSync",
-                        "html": f"<p>Reset your password: <a href='http://localhost:3001/reset-password?token={token}'>Click here</a></p><p>This link expires in 1 hour.</p>",
+                        "html": (
+                            f"<p>Reset your password: <a href='http://localhost:3001/reset-password?token={token}'>"
+                            f"Click here</a></p>"
+                            f"<p>This link expires in 1 hour.</p>"
+                        ),
                     }
                 )
             except Exception as e:
@@ -133,7 +137,7 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Ses
         else:
             import logging
 
-            logging.getLogger(__name__).info(f"RESEND_API_KEY not set — email based password reset unavailable")
+            logging.getLogger(__name__).info("RESEND_API_KEY not set — email based password reset unavailable")
 
     return {"message": "If that email exists, password reset instructions have been sent."}
 

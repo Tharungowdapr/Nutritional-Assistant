@@ -5,18 +5,14 @@ Run this once: python -m rag.ingest
 """
 
 import logging
-import sys
 from pathlib import Path
+
+from app.core.config import settings
 
 import chromadb
 import fitz  # PyMuPDF
 import pandas as pd
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-# Add backend dir to path so config can be imported
-# From rag/ingest.py, go up 4 levels to reach the backend root
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
-from app.core.config import settings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s — %(message)s")
 logger = logging.getLogger(__name__)
@@ -186,7 +182,7 @@ def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
     batch_size = 100
     total_batches = (len(chunks) // batch_size) + 1
     for i in range(0, len(chunks), batch_size):
-        batch = chunks[i : i + batch_size]
+        batch = chunks[i: i + batch_size]
 
         # Ensure all metadata values are strings (ChromaDB requirement)
         clean_metadatas = []
@@ -232,7 +228,7 @@ def run_ingestion():
     ingest_to_chroma(chunks)
 
     logger.info("\n" + "=" * 60)
-    logger.info(f"Ingestion complete!")
+    logger.info("Ingestion complete!")
     logger.info(f"   PDF pages: {len(pdf_docs)}")
     logger.info(f"   Excel rows: {len(excel_docs)}")
     logger.info(f"   Total chunks: {len(chunks)}")

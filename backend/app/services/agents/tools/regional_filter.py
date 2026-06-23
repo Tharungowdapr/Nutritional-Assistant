@@ -7,9 +7,9 @@ Supports zone-specific dietary patterns for 5 Indian regions.
 import logging
 from typing import List, Dict, Optional
 
-logger = logging.getLogger(__name__)
-
 from app.db.loader import db
+
+logger = logging.getLogger(__name__)
 
 # Zone-specific staple mappings (fallback when Excel data is insufficient)
 ZONE_STAPLES = {
@@ -94,7 +94,6 @@ ZONE_KEYWORDS = {
     "pune": "West",
     "goa": "West",
     "west": "West",
-    "rajasthan": "West",
     "central": "Central",
     "madhya pradesh": "Central",
     "chhattisgarh": "Central",

@@ -1,7 +1,7 @@
 import httpx
 import json
 import logging
-from typing import Optional, AsyncGenerator, Union
+from typing import Optional, AsyncGenerator
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)

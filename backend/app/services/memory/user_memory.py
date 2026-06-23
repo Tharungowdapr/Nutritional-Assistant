@@ -44,7 +44,7 @@ def format_user_profile(profile: Optional[Dict[str, Any]]) -> str:
             elif bmi < 18.5:
                 bmi_cat = "Underweight"
             parts.append(f"BMI: {bmi:.1f} ({bmi_cat})")
-        except:
+        except Exception:
             pass
 
     # Diet type

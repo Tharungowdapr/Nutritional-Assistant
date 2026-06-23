@@ -148,11 +148,12 @@ Provide a personalized response using the above context."""
         provider_override: Optional[Dict] = None,
     ) -> str:
         """Break complex queries into sub-questions and answer each independently."""
-        decompose_prompt = f"""Analyze this nutrition query and break it into 2-4 specific sub-questions that together answer it fully.
-
-Query: {query}
-
-Return ONLY a numbered list of specific sub-questions, one per line."""
+        decompose_prompt = (
+            f"Analyze this nutrition query and break it into 2-4 specific "
+            f"sub-questions that together answer it fully.\n\n"
+            f"Query: {query}\n\n"
+            "Return ONLY a numbered list of specific sub-questions, one per line."
+        )
 
         try:
             raw, _ = await self.llm_router.generate(
@@ -221,7 +222,7 @@ Answer concisely with specific data from the context."""
         plan_parts = [
             f"Meal Plan for {days} days:",
             "",
-            f"Daily Targets:",
+            "Daily Targets:",
             f"- Calories: {targets.get('calories', 'varies')} kcal",
             f"- Protein: {targets.get('protein_g', 'varies')}g",
             "",

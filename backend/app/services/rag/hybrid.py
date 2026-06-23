@@ -79,7 +79,7 @@ class HybridRetriever:
                 )
             except Exception as e:
                 if "Embedding function conflict" in str(e):
-                    logger.warning(f"Embedding conflict in hybrid. Falling back to collection defaults.")
+                    logger.warning("Embedding conflict in hybrid. Falling back to collection defaults.")
                     collection = self.chroma_client.get_collection(name=self.collection_name)
                 else:
                     raise e

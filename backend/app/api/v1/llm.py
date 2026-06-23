@@ -2,7 +2,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from app.models.user import get_db, LLMConfigDB, UserDB
-from app.core.dependencies import get_current_user, require_user
+from app.core.dependencies import require_user
 from app.core.crypt import decrypt_api_key
 from app.services.llm.proxy import LLMProxy
 from app.core.security import decode_access_token
@@ -70,7 +70,7 @@ async def chat_proxy(
     elif user and provider:
         config = (
             db.query(LLMConfigDB)
-            .filter(LLMConfigDB.user_id == user.id, LLMConfigDB.provider == provider, LLMConfigDB.is_active == True)
+            .filter(LLMConfigDB.user_id == user.id, LLMConfigDB.provider == provider, LLMConfigDB.is_active.is_(True))
             .first()
         )
         if config:
@@ -135,7 +135,6 @@ async def test_connection(data: LLMSettingsUpdate, user: UserDB = Depends(requir
             api_key = decrypt_api_key(config.api_key_encrypted)
 
     try:
-        start_time = 0  # In a real scenario, you'd measure this
         response = await LLMProxy.complete(
             provider=data.provider,
             model=data.model or "gpt-4o-mini",  # default for test

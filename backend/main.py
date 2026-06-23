@@ -43,7 +43,7 @@ def get_llm_router():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: load database, initialize services in background."""
-    global _llm_router, _rag_service, _meal_agent, _startup_done
+    global _startup_done
 
     logger.info("Starting AaharAI NutriSync...")
 

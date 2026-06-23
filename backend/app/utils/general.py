@@ -90,7 +90,7 @@ def parse_meal_plan_response(llm_response: str) -> dict:
     if json_match:
         try:
             plan.update(json.loads(json_match.group()))
-        except:
+        except Exception:
             pass
 
     return plan
@@ -123,9 +123,9 @@ def generate_meal_plan_title(days: int, num_people: int, diet_type: str = "VEG")
     Generate a descriptive title for a meal plan.
     """
     titles = {
-        (3, 1, "VEG"): f"3-Day Vegetarian Plan for 1",
-        (7, 1, "VEG"): f"Weekly Vegetarian Plan for 1",
-        (7, 4, "VEG"): f"Weekly Vegetarian Family Plan (4 people)",
+        (3, 1, "VEG"): "3-Day Vegetarian Plan for 1",
+        (7, 1, "VEG"): "Weekly Vegetarian Plan for 1",
+        (7, 4, "VEG"): "Weekly Vegetarian Family Plan (4 people)",
     }
 
     key = (days, num_people, diet_type)

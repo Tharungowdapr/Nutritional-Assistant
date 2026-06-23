@@ -118,7 +118,7 @@ async def search_foods(
 
     total = len(results) if hasattr(results, "__len__") else 0
     skip = (page - 1) * limit
-    foods = results.iloc[skip : skip + limit].to_dict(orient="records") if hasattr(results, "iloc") else []
+    foods = results.iloc[skip: skip + limit].to_dict(orient="records") if hasattr(results, "iloc") else []
 
     return {"foods": foods, "total": total, "page": page, "limit": limit, "pages": (total + limit - 1) // limit}
 

@@ -29,7 +29,10 @@ if settings.DATABASE_URL:
 else:
     # PostgreSQL fallback if env vars set
     if settings.POSTGRES_PASSWORD:
-        DATABASE_URL = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
+        DATABASE_URL = (
+            f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
+            f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
+        )
     else:
         # SQLite for development
         DATABASE_URL = f"sqlite:///{settings.SQLITE_DB_PATH}"

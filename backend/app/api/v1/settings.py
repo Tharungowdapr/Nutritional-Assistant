@@ -5,7 +5,7 @@ API keys encrypted with Fernet before storing.
 """
 
 import logging
-from typing import Optional, List
+from typing import Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -147,7 +147,7 @@ async def list_ollama_models():
 
 def get_user_active_provider(user: UserDB, db: Session):
     """Retrieve the user's active LLM provider configuration from the database."""
-    config = db.query(LLMConfigDB).filter(LLMConfigDB.user_id == user.id, LLMConfigDB.is_active == True).first()
+    config = db.query(LLMConfigDB).filter(LLMConfigDB.user_id == user.id, LLMConfigDB.is_active.is_(True)).first()
 
     if not config:
         return None

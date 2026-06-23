@@ -7,7 +7,6 @@ Integrated with LLMProxy for unified provider handling.
 import time
 import logging
 import httpx
-import json
 from app.services.llm.proxy import LLMProxy
 
 logger = logging.getLogger(__name__)

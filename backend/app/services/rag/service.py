@@ -4,7 +4,7 @@ Orchestrates: user query → hybrid search → rerank → augment prompt → gen
 """
 
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 from sqlalchemy.orm import Session
 
 try:
@@ -409,7 +409,7 @@ Answer using the retrieved knowledge. Cite sources. Maintain continuity with his
                     header = f"- Source {i+1}: {src}"
                     if ident:
                         header += f" ({ident})"
-                    fallback += f"{header}\n{c.get('text','')}\n\n"
+                    fallback += f"{header}\n{c.get('text', '')}\n\n"
             else:
                 fallback += "No knowledge-base results available."
             response_text = fallback
@@ -454,10 +454,9 @@ Answer using the retrieved knowledge. Cite sources. Maintain continuity with his
 
             LongTermMemory.extract_and_save_fact(user_id, query, db, self.llm_router)
 
-        # 2. Classify intent (keyword-only, free) and retrieve in parallel
+        # 2. Retrieve in parallel
         import asyncio
 
-        intent = self.classify_intent(query)
         retrieve_task = asyncio.to_thread(self.retrieve, query, collection_name="nutrisync")
         chunks = await retrieve_task
 
@@ -510,7 +509,7 @@ Answer using the retrieved knowledge. Cite sources. Respond token-by-token."""
                         header = f"- Source {i+1}: {src}"
                         if ident:
                             header += f" ({ident})"
-                        fallback += f"{header}\n{c.get('text','')}\n\n"
+                        fallback += f"{header}\n{c.get('text', '')}\n\n"
                 else:
                     fallback += "No knowledge-base results available."
                 yield fallback

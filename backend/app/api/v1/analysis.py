@@ -8,11 +8,8 @@ import logging
 import math
 from fastapi import APIRouter, Query, Depends
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
-
 from app.core.config import settings
 from app.db.loader import db as nutri_db
-from app.models.user import get_db, UserDB
 from app.core.dependencies import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -37,7 +34,6 @@ def _safe(val):
 async def analysis_report():
     """Return full sheet data for NutriSync analysis report as JSON."""
     import pandas as pd
-    from pathlib import Path
 
     path = settings.DATA_DIR / "NutriSync_Analysis_Report.xlsx"
     try:
@@ -335,10 +331,7 @@ async def personal_analysis(user=Depends(get_current_user)):
     """Redirect to customer-profile for backward compatibility."""
     if user is None:
         return {"error": "Login required for personal analysis"}
-    # Just proxy to the existing customer-profile endpoint logic
-    from app.api.v1.customer_profile import get_customer_profile
 
-    # We can't easily call it, so return instructions
     return {
         "redirect": "/api/analysis/customer-profile",
         "note": "Use /api/analysis/customer-profile for full personal data.",

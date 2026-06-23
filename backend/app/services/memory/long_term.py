@@ -51,7 +51,7 @@ class LongTermMemory:
         try:
             # Check for duplicates (fuzzy match)
             existing = (
-                db.query(UserMemoryDB).filter(UserMemoryDB.user_id == user_id, UserMemoryDB.is_active == True).all()
+                db.query(UserMemoryDB).filter(UserMemoryDB.user_id == user_id, UserMemoryDB.is_active.is_(True)).all()
             )
 
             for mem in existing:
@@ -103,7 +103,7 @@ class LongTermMemory:
 
         try:
             memories = (
-                db.query(UserMemoryDB).filter(UserMemoryDB.user_id == user_id, UserMemoryDB.is_active == True).all()
+                db.query(UserMemoryDB).filter(UserMemoryDB.user_id == user_id, UserMemoryDB.is_active.is_(True)).all()
             )
             return [m.fact for m in memories]
         except Exception as e:

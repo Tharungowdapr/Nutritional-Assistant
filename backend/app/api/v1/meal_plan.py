@@ -117,7 +117,7 @@ def _clean_json(raw: str) -> str:
         elif ch == end_char:
             depth -= 1
             if depth == 0:
-                return raw[start_pos : i + 1]
+                return raw[start_pos: i + 1]
 
     return raw
 
@@ -326,11 +326,6 @@ async def stream_meal_plan(
                 }
 
     p = _extract_profile_params(profile)
-
-    extra = ""
-    suggestions = getattr(meal_request, "suggestions", None)
-    if suggestions:
-        extra = f"Additional notes: {suggestions}"
 
     user_params = {
         "age": p["a"],
