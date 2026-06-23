@@ -182,7 +182,7 @@ def ingest_to_chroma(chunks: list[dict], collection_name: str = "nutrisync"):
     batch_size = 100
     total_batches = (len(chunks) // batch_size) + 1
     for i in range(0, len(chunks), batch_size):
-        batch = chunks[i: i + batch_size]
+        batch = chunks[i : i + batch_size]
 
         # Ensure all metadata values are strings (ChromaDB requirement)
         clean_metadatas = []

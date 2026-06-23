@@ -117,7 +117,7 @@ def _clean_json(raw: str) -> str:
         elif ch == end_char:
             depth -= 1
             if depth == 0:
-                return raw[start_pos: i + 1]
+                return raw[start_pos : i + 1]
 
     return raw
 
@@ -345,12 +345,14 @@ async def stream_meal_plan(
         nl = "\n"
 
         try:
-            yield f"data: {json.dumps({'token': f'Planning {total_days}-day meal plan...{nl}'})}\n\n"
+            plan_msg = f"Planning {total_days}-day meal plan...{nl}"
+            yield f"data: {json.dumps({'token': plan_msg})}\n\n"
 
             # Generate 1 day at a time — guarantees all days are produced
             for day_num in range(1, total_days + 1):
                 day_label = DAYS_LIST[(day_num - 1) % 7]
-                yield f"data: {json.dumps({'token': f'Day {day_num} ({day_label})...{nl}'})}\n\n"
+                day_msg = f"Day {day_num} ({day_label})...{nl}"
+                yield f"data: {json.dumps({'token': day_msg})}\n\n"
 
                 day = await _generate_chunk(llm, day_num, total_days, user_params, active_provider)
 
@@ -378,7 +380,8 @@ async def stream_meal_plan(
                 raise Exception("Failed to generate any meal plan days")
 
             # Generate grocery list
-            yield f"data: {json.dumps({'token': 'Generating grocery list...\n'})}\n\n"
+            grocery_msg = "Generating grocery list...\n"
+            yield f"data: {json.dumps({'token': grocery_msg})}\n\n"
             grocery_data = await _generate_grocery(llm, all_days, p["budget"], active_provider)
 
             plan = _enforce_day_slots(

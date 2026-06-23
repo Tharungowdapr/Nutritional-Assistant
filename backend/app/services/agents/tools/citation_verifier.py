@@ -183,7 +183,7 @@ class CitationVerifier:
         words = text.split()
         ngrams = set()
         for i in range(len(words) - n + 1):
-            ngram = " ".join(words[i: i + n])
+            ngram = " ".join(words[i : i + n])
             ngrams.add(ngram)
         return ngrams
 
