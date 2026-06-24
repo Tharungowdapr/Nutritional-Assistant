@@ -242,6 +242,63 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
               </div>
             </div>
 
+            {/* User Summary */}
+            {profile?.profile_summary && (
+              <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-lg">
+                <div className="flex items-center gap-2 mb-4">
+                  <User className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-semibold">Your Profile</h2>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-muted-foreground text-xs">Age</span>
+                    <p className="font-medium">{profile.profile_summary.age}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground text-xs">Gender</span>
+                    <p className="font-medium capitalize">{profile.profile_summary.gender}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground text-xs">Diet</span>
+                    <p className="font-medium">{profile.profile_summary.diet_type}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground text-xs">Activity</span>
+                    <p className="font-medium capitalize">{profile.profile_summary.activity_level}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground text-xs">BMI</span>
+                    <p className="font-medium">{profile.body_metrics?.bmi} ({profile.body_metrics?.status})</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground text-xs">TDEE</span>
+                    <p className="font-medium">{profile.body_metrics?.tdee} kcal</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground text-xs">Weight</span>
+                    <p className="font-medium">{profile.body_metrics?.weight_kg} kg</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground text-xs">Height</span>
+                    <p className="font-medium">{profile.body_metrics?.height_cm} cm</p>
+                  </div>
+                  {profile.profile_summary.region && (
+                    <div className="col-span-2">
+                      <span className="text-muted-foreground text-xs">Region</span>
+                      <p className="font-medium">{profile.profile_summary.region}</p>
+                    </div>
+                  )}
+                </div>
+                {profile.streak_days > 0 && (
+                  <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-2 text-sm">
+                    <Activity className="w-4 h-4 text-primary" />
+                    <span className="text-muted-foreground">Tracking streak:</span>
+                    <span className="font-bold">{profile.streak_days} days</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* AI Analysis */}
             {llmAnalysis && (
               <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-lg">
