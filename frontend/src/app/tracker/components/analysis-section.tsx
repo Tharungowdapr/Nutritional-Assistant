@@ -43,7 +43,7 @@ function saveCache(summary: any, targets: any, range: number) {
   } catch { /* ignore */ }
 }
 
-export default function AnalysisSection() {
+export default function AnalysisSection({ refreshKey = 0 }: { refreshKey?: number }) {
   const [range, setRange] = useState(7);
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<any>(null);
@@ -73,6 +73,10 @@ export default function AnalysisSection() {
       setTargets(cached.targets);
     }
   }, [range]);
+
+  useEffect(() => {
+    if (refreshKey > 0) fetchAnalysis(range);
+  }, [refreshKey]);
 
   const nutrients: NutrientStatus[] = useMemo(() => {
     if (!summary || !targets) return [];

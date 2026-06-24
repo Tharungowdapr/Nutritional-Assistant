@@ -1,6 +1,6 @@
 "use client";
 
-import { Flame, Activity, Target, Utensils } from "lucide-react";
+import { Flame, Activity, Target, Utensils, Leaf } from "lucide-react";
 import { DailySummary } from "../types";
 
 interface Props {
@@ -13,11 +13,12 @@ const STATS = [
   { label: "Protein", key: "total_protein_g", targetKey: "protein_g", unit: "g", color: "var(--color-protein)", icon: Activity },
   { label: "Carbs", key: "total_carbs_g", targetKey: "carbs_g", unit: "g", color: "var(--color-carbs)", icon: Target },
   { label: "Fat", key: "total_fat_g", targetKey: "fat_g", unit: "g", color: "var(--color-fat)", icon: Utensils },
+  { label: "Fibre", key: "total_fibre_g", targetKey: "fibre_g", unit: "g", color: "var(--color-fibre)", icon: Leaf },
 ];
 
 export default function SummaryCards({ summary, targets }: Props) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
       {STATS.map(stat => {
         const val = (summary as any)?.[stat.key] || 0;
         const target = targets[stat.targetKey] || 1;

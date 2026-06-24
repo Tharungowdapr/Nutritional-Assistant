@@ -33,6 +33,7 @@ export default function TrackerPage() {
   const [historyData, setHistoryData] = useState<any>(null);
   const [historyRange, setHistoryRange] = useState(7);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [analysisRefresh, setAnalysisRefresh] = useState(0);
 
   useEffect(() => {
     const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
@@ -96,12 +97,12 @@ export default function TrackerPage() {
       }
       toast.success(`${selectedFood["Food Name"]} logged`);
       setShowAddFood(false); setSelectedFood(null); setFoodSearch(""); setFoodResults([]);
-      loadDailySummary(todayDate); loadHistory(historyRange);
+      loadDailySummary(todayDate); loadHistory(historyRange); setAnalysisRefresh(n => n + 1);
     } catch (err: any) { toast.error(err.message || "Failed to log food"); }
   };
 
   const rawTargets = user?.profile?.rda_match || user?.profile?.icmr_match || {};
-  const targets = Object.keys(rawTargets).length > 0 ? rawTargets : { energy: 2000, protein_g: 60, carbs_g: 300, fat_g: 65 };
+  const targets = Object.keys(rawTargets).length > 0 ? rawTargets : { energy: 2000, protein_g: 60, carbs_g: 300, fat_g: 65, fibre_g: 25 };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
@@ -127,7 +128,7 @@ export default function TrackerPage() {
       </div>
 
       <div className="mt-12">
-        <AnalysisSection />
+        <AnalysisSection refreshKey={analysisRefresh} />
       </div>
 
       <AddFoodDialog

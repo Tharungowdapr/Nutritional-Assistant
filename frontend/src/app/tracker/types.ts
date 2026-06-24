@@ -6,6 +6,7 @@ export interface MealLog {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
+  fibre_g?: number;
   [key: string]: any;
 }
 
@@ -15,6 +16,7 @@ export interface DailySummary {
   total_protein_g: number;
   total_carbs_g: number;
   total_fat_g: number;
+  total_fibre_g?: number;
   meal_count: number;
   meals_by_slot: { [key: string]: MealLog[] };
 }
