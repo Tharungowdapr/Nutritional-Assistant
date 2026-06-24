@@ -12,10 +12,10 @@ function getToken(): string | null {
   return localStorage.getItem("nutrisync_token");
 }
 
-/** Set JWT token — persists in localStorage AND a cookie for middleware */
+/** Set JWT token — persists in localStorage AND a cookie for proxy */
 export function setToken(token: string) {
   localStorage.setItem("nutrisync_token", token);
-  // Set a cookie so Next.js middleware.ts can read it server-side.
+  // Set a cookie so Next.js proxy.ts can read it server-side.
   // SameSite=Strict, no httpOnly so JS can clear it on logout.
   // Max-age: 24 hours (matches JWT_EXPIRE_MINUTES = 1440).
   if (typeof window !== "undefined") {

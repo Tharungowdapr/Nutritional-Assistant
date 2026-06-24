@@ -1,5 +1,5 @@
 /**
- * NutriSync — Next.js Middleware
+ * NutriSync — Next.js Proxy
  * Server-side route protection. Runs before any page renders.
  */
 import { NextRequest, NextResponse } from "next/server";
@@ -16,7 +16,7 @@ const PROTECTED_PREFIXES = [
   "/admin",
 ];
 
-/** Decode JWT payload without verifying the signature (middleware has no secret). */
+/** Decode JWT payload without verifying the signature (proxy has no secret). */
 function decodeToken(token: string): { exp?: number } | null {
   try {
     const payload = token.split(".")[1];
@@ -34,7 +34,7 @@ function clearStaleCookie(response: NextResponse) {
   response.cookies.set("nutrisync_token", "", { maxAge: 0, path: "/" });
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const rawToken = req.cookies.get("nutrisync_token")?.value;
