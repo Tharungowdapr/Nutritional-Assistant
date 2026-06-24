@@ -422,7 +422,7 @@ Nutritional-Assistant/
 | Node.js | 18+ | [nodejs.org](https://nodejs.org) |
 | npm | 9+ | bundled with Node.js |
 | Git | any | [git-scm.com](https://git-scm.com) |
-| Ollama *(optional)* | latest | [ollama.ai](https://ollama.ai) |
+| Groq API Key | — | [console.groq.com](https://console.groq.com) |
 
 ### Quick Start
 
@@ -438,14 +438,13 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Configure environment
-cp ../.env.example .env
-python3 -c "import secrets; print('SECRET_KEY=' + secrets.token_hex(32))" >> .env
+cp .env.example .env
+# Edit .env — set GROQ_API_KEY (required) and SECRET_KEY
+# GROQ_API_KEY=gsk_your_key_here
+# DATABASE_URL=postgresql://... (optional, defaults to SQLite)
 
 # Initialize database
 python3 -c "from app.models.user import init_db; init_db()"
-
-# Run RAG ingestion (populates ChromaDB)
-python3 -m app.services.rag.ingest
 
 # Start backend
 uvicorn main:app --reload --port 8000
@@ -578,15 +577,14 @@ RAG_TOP_K=5
 RAG_SCORE_THRESHOLD=0.3
 ```
 
-### LLM Provider Fallback Chain
+### LLM Provider
 
 ```
-Ollama (local) -> Groq (cloud) -> Safe fallback (raw context)
+Groq (cloud) -> Safe fallback (raw context)
 ```
 
-- **Ollama:** Primary, free, runs locally
-- **Groq:** Fallback, very fast, free tier available
-- **Circuit Breaker:** Ollama offline -> auto-switch to Groq (60s retry)
+- **Groq:** Primary LLM provider (llama-3.3-70b-versatile). Requires `GROQ_API_KEY` in `.env`.
+- **Safe Fallback:** Returns raw context without LLM generation if Groq is unavailable.
 
 ---
 
@@ -618,13 +616,12 @@ Ollama (local) -> Groq (cloud) -> Safe fallback (raw context)
 ### Environment
 
 ```
-Python 3.12
-FastAPI 0.115.0
-ChromaDB 0.5.24 (embedded mode)
-sentence-transformers 3.2.0 (cross-encoder/ms-marco-MiniLM-L-6-v2)
+Python 3.11+
+FastAPI 0.115.0+
+ChromaDB 1.5.9 (embedded mode, lazy-loaded)
 rank-bm25 0.2.2
-LLM: Ollama gemma3:4b (primary) / Groq llama-3.3-70b-versatile (fallback)
-Embeddings: Ollama nomic-embed-text / all-MiniLM-L6-v2 (fallback)
+LLM: Groq llama-3.3-70b-versatile (primary)
+Embeddings: ChromaDB built-in ONNX default (all-MiniLM-L6-v2, lazy-loaded on first query)
 ```
 
 ### Key Configuration

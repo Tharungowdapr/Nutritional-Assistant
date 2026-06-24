@@ -34,6 +34,7 @@ def _log_mem(stage: str):
     """Log RSS memory usage."""
     try:
         import resource
+
         rss_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         unit = "KB" if os.uname().sysname == "Linux" else "KB"
         logger.info(f"MEM [{stage}]: {rss_kb // 1024} MB")
@@ -60,8 +61,10 @@ def ensure_rag():
         return _rag_service
     try:
         from app.services.rag.service import RAGService
+
         _rag_service = RAGService(llm_router=_llm_router)
         from app.services.agents.orchestrator import OrchestratorAgent
+
         _meal_agent = OrchestratorAgent(llm_router=_llm_router)
         _log_mem("RAG ready")
         logger.info("RAG services ready")
