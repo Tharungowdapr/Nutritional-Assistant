@@ -2,6 +2,17 @@
 
 > **A Hybrid RAG System for Clinically-Grounded Indian Nutrition Advisory Using IFCT 2017 and ICMR-NIN 2024 Guidelines**
 
+[![Frontend](https://img.shields.io/badge/Frontend-Vercel-000?logo=vercel)](https://frontend-azure-omega-45f4cqwbni.vercel.app)
+[![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render)](https://nutritional-assistant-jg6k.onrender.com)
+[![API Docs](https://img.shields.io/badge/API-Docs-8A2BE2?logo=fastapi)](https://nutritional-assistant-jg6k.onrender.com/docs)
+
+| Service | URL |
+|---------|-----|
+| **Frontend (Live)** | [https://frontend-azure-omega-45f4cqwbni.vercel.app](https://frontend-azure-omega-45f4cqwbni.vercel.app) |
+| **Backend API (Live)** | [https://nutritional-assistant-jg6k.onrender.com](https://nutritional-assistant-jg6k.onrender.com) |
+| **API Docs (Swagger)** | [https://nutritional-assistant-jg6k.onrender.com/docs](https://nutritional-assistant-jg6k.onrender.com/docs) |
+| **Health Check** | [https://nutritional-assistant-jg6k.onrender.com/api/health](https://nutritional-assistant-jg6k.onrender.com/api/health) |
+
 AaharAI NutriSync is an AI-powered Indian nutrition assistant grounded in the **IFCT 2017** (Indian Food Composition Tables) and **ICMR-NIN 2024** RDA guidelines. It uses a novel three-stage hybrid RAG pipeline combining BM25 keyword search, semantic vector retrieval, and cross-encoder reranking to provide clinically accurate, culturally relevant nutrition advice for the Indian dietary context.
 
 ---
@@ -446,13 +457,22 @@ cp .env.example .env.local
 npm run dev
 ```
 
-### URLs
+### Local URLs
 
 | Service | URL |
 |---------|-----|
 | Frontend | http://localhost:3001 |
 | API Docs | http://localhost:8000/docs |
 | Health Check | http://localhost:8000/api/health |
+
+### Live URLs
+
+| Service | URL |
+|---------|-----|
+| Frontend | [https://frontend-azure-omega-45f4cqwbni.vercel.app](https://frontend-azure-omega-45f4cqwbni.vercel.app) |
+| Backend API | [https://nutritional-assistant-jg6k.onrender.com](https://nutritional-assistant-jg6k.onrender.com) |
+| API Docs | [https://nutritional-assistant-jg6k.onrender.com/docs](https://nutritional-assistant-jg6k.onrender.com/docs) |
+| Health Check | [https://nutritional-assistant-jg6k.onrender.com/api/health](https://nutritional-assistant-jg6k.onrender.com/api/health) |
 
 ---
 
