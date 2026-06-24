@@ -37,7 +37,7 @@ class Settings(BaseSettings):
             self.SECRET_KEY = os.urandom(32).hex()
 
     # ── Security ───────────────────────────────────────────────
-    SECRET_KEY: str
+    SECRET_KEY: str = ""
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 1440
 
