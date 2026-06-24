@@ -300,7 +300,7 @@ export default function MealPlanPage() {
           const kcal = item.cal ? `${item.cal} kcal` : "";
           const prot = item.protein_g ? `${item.protein_g}g` : "";
           const nutr = [kcal, prot].filter(Boolean).join(" · ");
-          doc.text(`☐ ${item.name} (${item.qty})`, margin + 4, y);
+          doc.text(`[ ] ${item.name} (${item.qty})`, margin + 4, y);
           if (nutr) {
             doc.setFontSize(7); doc.setTextColor(140);
             doc.text(nutr, margin + 90, y);
@@ -321,7 +321,7 @@ export default function MealPlanPage() {
     if (y > 200) addPage();
     header("Grocery List", 14);
     doc.setFont("helvetica", "normal"); doc.setFontSize(8);
-    doc.text("☐ = to buy   ☑ = bought", margin, y, { align: "left" });
+    doc.text("[ ] = to buy   [x] = bought", margin, y, { align: "left" });
     y += 2;
     if (plan.grocery_total_inr) {
       doc.setFont("helvetica", "bold"); doc.setFontSize(9);
@@ -342,8 +342,7 @@ export default function MealPlanPage() {
       for (const item of cat.items || []) {
         if (y > 270) addPage();
         doc.setFont("helvetica", "normal"); doc.setFontSize(9);
-        doc.text(`☐`, margin, y);
-        doc.text(item.name, margin + 6, y);
+        doc.text(`[ ] ${item.name}`, margin, y);
         doc.setFontSize(8); doc.setTextColor(120);
         doc.text(item.qty, margin + 80, y);
         doc.text(`₹${item.cost_inr}`, margin + 120, y);
