@@ -58,7 +58,7 @@ Age: ${p.profile_summary?.age}, Gender: ${p.profile_summary?.gender}
 BMI: ${p.body_metrics?.bmi} (${p.body_metrics?.status}), Weight: ${p.body_metrics?.weight_kg}kg, Height: ${p.body_metrics?.height_cm}cm
 TDEE: ${p.body_metrics?.tdee} kcal/day, BMR: ${p.body_metrics?.bmr}
 Diet: ${p.profile_summary?.diet_type}, Activity: ${p.profile_summary?.activity_level}
-RDA Targets: Energy ${p.rda_match?.energy}kcal, Protein ${p.rda_match?.protein_g}g
+RDA Targets: Energy ${p.icmr_match?.energy}kcal, Protein ${p.icmr_match?.protein_g}g
 Top Risks: ${(p.deficiency_risks || []).slice(0,2).map((r: any) => r.nutrient).join(", ")}
 ${p.disease_protocol ? `Condition: ${p.disease_protocol.condition}` : ""}
 ${p.regional_concern ? `Region: ${p.regional_concern.region} — ${p.regional_concern.detail}` : ""}
