@@ -18,7 +18,8 @@ langchain-text-splitters>=0.3.0
 langgraph>=0.0.10
 langchain>=0.1.0
 langchain-community>=0.0.20
-sentence-transformers>=2.5.0
+# sentence-transformers removed — ChromaDB uses built-in ONNX default (lighter)
+# Also avoids pulling torch+transformers which OOM Render's 512MB free tier
 rank-bm25>=0.2.2
 
 # PDF parsing
