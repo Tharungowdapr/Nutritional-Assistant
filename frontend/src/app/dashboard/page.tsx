@@ -89,7 +89,7 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
     trackerApi.getDailySummary(todayIST).then(setDaily).catch(console.error);
   }, [user, todayIST]);
 
-  const targets = useMemo(() => profile?.rda_match || { energy: 2000, protein_g: 60, carbs_g: 300, fat_g: 65, iron_mg: 17, calcium_mg: 600, fibre_g: 30 }, [profile]);
+  const targets = useMemo(() => profile?.icmr_match || { energy: 2000, protein_g: 60, carbs_g: 300, fat_g: 65, iron_mg: 17, calcium_mg: 600, fibre_g: 30 }, [profile]);
   const d = useMemo(() => daily || { total_calories: 0, total_protein_g: 0, total_carbs_g: 0, total_fat_g: 0, total_iron_mg: 0, total_calcium_mg: 0, total_fibre_g: 0, meals_by_slot: {}, meal_count: 0 }, [daily]);
 
   const nutritionScore = useMemo(() => {
@@ -450,7 +450,7 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
                           <div className="text-xs text-muted-foreground">{(items as any[]).length} items</div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-semibold">{(items as any[]).reduce((sum, item) => sum + (item.cal || 0), 0)} kcal</div>
+                          <div className="text-sm font-semibold">{(items as any[]).reduce((sum, item) => sum + (item.calories || 0), 0)} kcal</div>
                           <div className="text-xs text-muted-foreground">{(items as any[]).reduce((sum, item) => sum + (item.protein_g || 0), 0)}g protein</div>
                         </div>
                       </div>

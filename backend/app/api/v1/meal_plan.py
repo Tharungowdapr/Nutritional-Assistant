@@ -143,7 +143,7 @@ Budget: ₹{budget}/day
 RULES:
 1. {diet_type} only — Indian foods
  2. 5 slots: breakfast, mid_morning, lunch, snack, dinner
- 3. Each item: {{"name":str,"qty":str,"cal":int,"protein_g":int}}
+ 3. Each item: {{"name":str,"qty":str,"cal":int,"protein_g":int,"carbs_g":int,"fat_g":int,"fibre_g":int}}
  4. Day format: {{"day":{day_num},"label":"{day_label}",
       "breakfast":[],"mid_morning":[],"lunch":[],"snack":[],
       "dinner":[],"cal_approx":int}}

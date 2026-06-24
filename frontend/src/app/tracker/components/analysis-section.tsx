@@ -24,28 +24,54 @@ const NUTRIENT_MAP: { label: string; key: string; unit: string; targetKey: strin
   { label: "Fibre", key: "avg_daily_fibre_g", unit: "g", targetKey: "fibre_g" },
 ];
 
+const CACHE_KEY = "nutrisync_analysis_cache";
+
+function loadCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const cached = JSON.parse(raw);
+    if (Date.now() - cached.ts < 24 * 60 * 60 * 1000) return cached;
+    localStorage.removeItem(CACHE_KEY);
+  } catch { /* ignore */ }
+  return null;
+}
+
+function saveCache(summary: any, targets: any, range: number) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ summary, targets, range, ts: Date.now() }));
+  } catch { /* ignore */ }
+}
+
 export default function AnalysisSection() {
   const [range, setRange] = useState(7);
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<any>(null);
   const [targets, setTargets] = useState<any>(null);
 
+  const fetchAnalysis = async (r: number) => {
+    setLoading(true);
+    try {
+      const [sumData, profile] = await Promise.all([
+        apiFetch<any>(`/api/tracker/summary?days=${r}`),
+        apiFetch<any>("/api/analysis/customer-profile"),
+      ]);
+      setSummary(sumData);
+      setTargets(profile?.icmr_match || {});
+      saveCache(sumData, profile?.icmr_match || {}, r);
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const [sumData, profile] = await Promise.all([
-          apiFetch<any>(`/api/tracker/summary?days=${range}`),
-          apiFetch<any>("/api/analysis/customer-profile"),
-        ]);
-        setSummary(sumData);
-        setTargets(profile?.rda_match || {});
-      } catch {
-        // ignore
-      } finally {
-        setLoading(false);
-      }
-    })();
+    const cached = loadCache();
+    if (cached && cached.range === range) {
+      setSummary(cached.summary);
+      setTargets(cached.targets);
+    }
   }, [range]);
 
   const nutrients: NutrientStatus[] = useMemo(() => {
