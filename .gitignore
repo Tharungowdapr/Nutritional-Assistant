@@ -46,3 +46,4 @@ backend/.coverage
 
 # Docker
 backend/nutrisync.db
+.vercel

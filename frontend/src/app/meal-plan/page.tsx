@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Loader2, RefreshCw, History, Clock, ChevronRight, FileSpreadsheet, FileText } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { jsPDF } from "jspdf";
 import { FoodItem, MealPlan, SavedPlan, QuestionnaireState, DEFAULT_Q, SLOTS } from "./types";
 import Questionnaire from "./components/questionnaire";
 import PlanView from "./components/plan-view";
@@ -216,8 +215,9 @@ export default function MealPlanPage() {
     XLSX.writeFile(wb, `meal-plan-${new Date().toISOString().split('T')[0]}.xlsx`);
   }, [plan]);
 
-  const exportToPDF = useCallback(() => {
+  const exportToPDF = useCallback(async () => {
     if (!plan) return;
+    const { jsPDF } = await import("jspdf");
     const doc = new jsPDF();
     const pageW = 210;
     const margin = 14;

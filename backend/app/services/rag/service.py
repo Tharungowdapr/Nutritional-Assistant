@@ -78,6 +78,8 @@ class RAGService:
                     docs.append({"text": text, "metadata": meta})
                 hybrid.load_documents(docs)
                 logger.info(f"Loaded {len(docs)} documents into hybrid retriever BM25 index")
+            else:
+                logger.warning("ChromaDB collection is empty — no documents loaded. RAG will return no results. Run `python -m app.services.rag.ingest` to populate the vector store.")
         except Exception as e:
             logger.warning(f"Failed to load documents for hybrid BM25: {e}")
 

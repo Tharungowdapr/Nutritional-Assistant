@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -17,13 +17,16 @@ export const metadata: Metadata = {
   title: "AaharAI NutriSync — AI-Powered Indian Nutrition Assistant",
   description: "Your personalized AI nutritional assistant grounded in ICMR-NIN 2024 standards and IFCT 2017 data. Track meals, get AI meal plans, and optimize your health with Indian food intelligence.",
   manifest: "/manifest.json",
-  themeColor: "#00D68F",
   keywords: ["nutrition", "AI", "Indian food", "meal planner", "calorie tracker", "ICMR", "IFCT", "health"],
   openGraph: {
     title: "AaharAI NutriSync",
     description: "AI-powered Indian nutrition intelligence platform",
     type: "website",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#00D68F",
 };
 
 export default function RootLayout({
