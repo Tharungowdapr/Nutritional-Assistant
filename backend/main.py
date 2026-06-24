@@ -4,6 +4,7 @@ Entry point for the FastAPI application.
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,8 +30,19 @@ _meal_agent = None
 _startup_done = False
 
 
+def _log_mem(stage: str):
+    """Log RSS memory usage."""
+    try:
+        import resource
+        rss_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        unit = "KB" if os.uname().sysname == "Linux" else "KB"
+        logger.info(f"MEM [{stage}]: {rss_kb // 1024} MB")
+    except Exception:
+        pass
+
+
 def get_rag_service():
-    return _rag_service
+    return ensure_rag()
 
 
 def get_meal_agent():
@@ -41,9 +53,28 @@ def get_llm_router():
     return _llm_router
 
 
+def ensure_rag():
+    """Lazy-init RAG on first use to avoid ChromaDB OOM at startup."""
+    global _rag_service, _meal_agent
+    if _rag_service is not None:
+        return _rag_service
+    try:
+        from app.services.rag.service import RAGService
+        _rag_service = RAGService(llm_router=_llm_router)
+        from app.services.agents.orchestrator import OrchestratorAgent
+        _meal_agent = OrchestratorAgent(llm_router=_llm_router)
+        _log_mem("RAG ready")
+        logger.info("RAG services ready")
+    except Exception as e:
+        logger.warning(f"RAG service init deferred: {e}")
+    return _rag_service
+
+
 async def _init_background():
-    """Initialize data loading, LLM router, and RAG services in background."""
-    global _llm_router, _rag_service, _meal_agent
+    """Initialize data loading and LLM router in background. RAG is lazy."""
+    global _llm_router
+
+    _log_mem("before_db_load")
 
     # Load Knowledge Base (Excel parsing is I/O heavy)
     try:
@@ -52,11 +83,12 @@ async def _init_background():
     except Exception as e:
         logger.warning(f"Database load failed: {e}. Degraded mode active.")
 
+    _log_mem("after_db_load")
+
     # Initialize LLM Router (makes remote HTTP calls)
     try:
         from app.services.rag.llm_router import LLMRouter
 
-        global _llm_router
         _llm_router = LLMRouter(
             ollama_base_url=settings.OLLAMA_BASE_URL,
             ollama_model=settings.OLLAMA_MODEL,
@@ -65,22 +97,10 @@ async def _init_background():
             retry_interval=settings.LLM_FALLBACK_RETRY_SECONDS,
         )
         await _llm_router.initialize()
+        _log_mem("after_llm_router")
         logger.info(f"LLM Router ready — provider: {_llm_router.active_provider}")
     except Exception as e:
         logger.warning(f"LLM router init deferred: {e}")
-
-    # Initialize RAG Services (imports chromadb — heavy)
-    try:
-        from app.services.rag.service import RAGService
-
-        global _rag_service, _meal_agent
-        _rag_service = RAGService(llm_router=_llm_router)
-        from app.services.agents.orchestrator import OrchestratorAgent
-
-        _meal_agent = OrchestratorAgent(llm_router=_llm_router)
-        logger.info("RAG services ready")
-    except Exception as e:
-        logger.warning(f"RAG service init deferred: {e}")
 
 
 @asynccontextmanager
