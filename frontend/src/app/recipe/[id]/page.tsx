@@ -80,10 +80,10 @@ export default function RecipeDetailPage() {
         </div>
 
         {/* Nutrition Card */}
-        {(recipe.calories || recipe.protein_g || recipe.fat_g || recipe.carbs_g) && (
+        {(recipe.calories || recipe.protein_g || recipe.fat_g || recipe.carbs_g || recipe.fibre_g) && (
           <Card className="p-6 mb-8">
             <h2 className="text-lg font-semibold mb-4">Nutrition Facts (per serving)</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {recipe.calories && (
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-2">
@@ -118,6 +118,15 @@ export default function RecipeDetailPage() {
                   </div>
                   <p className="text-2xl font-bold">{recipe.carbs_g.toFixed(1)}g</p>
                   <p className="text-xs text-muted-foreground">Carbs</p>
+                </div>
+              )}
+              {recipe.fibre_g && (
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Flame className="w-5 h-5 text-green-500" />
+                  </div>
+                  <p className="text-2xl font-bold">{recipe.fibre_g.toFixed(1)}g</p>
+                  <p className="text-xs text-muted-foreground">Fibre</p>
                 </div>
               )}
             </div>

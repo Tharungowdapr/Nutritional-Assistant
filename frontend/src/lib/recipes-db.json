@@ -39,7 +39,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 62.1,
+    "fat_g": 10.5,
+    "fibre_g": 5.5
   },
   {
     "id": "rec_1",
@@ -76,7 +79,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 50.0,
+    "fat_g": 10.0,
+    "fibre_g": 5.0
   },
   {
     "id": "rec_2",
@@ -118,7 +124,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 74.4,
+    "fat_g": 9.7,
+    "fibre_g": 6.0
   },
   {
     "id": "rec_3",
@@ -160,7 +169,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 45.7,
+    "fat_g": 8.6,
+    "fibre_g": 4.8
   },
   {
     "id": "rec_4",
@@ -201,7 +213,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 94.8,
+    "fat_g": 13.1,
+    "fibre_g": 6.8
   },
   {
     "id": "rec_5",
@@ -243,7 +258,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 69.6,
+    "fat_g": 12.3,
+    "fibre_g": 5.8
   },
   {
     "id": "rec_6",
@@ -284,7 +302,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 61.3,
+    "fat_g": 12.1,
+    "fibre_g": 5.5
   },
   {
     "id": "rec_7",
@@ -322,7 +343,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 15.0,
+    "fat_g": 5.9,
+    "fibre_g": 3.6
   },
   {
     "id": "rec_8",
@@ -364,7 +388,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 23.3,
+    "fat_g": 7.2,
+    "fibre_g": 3.9
   },
   {
     "id": "rec_9",
@@ -405,7 +432,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 32.7,
+    "fat_g": 5.9,
+    "fibre_g": 4.3
   },
   {
     "id": "rec_10",
@@ -446,7 +476,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 58.3,
+    "fat_g": 10.1,
+    "fibre_g": 5.3
   },
   {
     "id": "rec_11",
@@ -488,7 +521,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 100.8,
+    "fat_g": 14.4,
+    "fibre_g": 7.0
   },
   {
     "id": "rec_12",
@@ -530,7 +566,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 52.8,
+    "fat_g": 10.1,
+    "fibre_g": 5.1
   },
   {
     "id": "rec_13",
@@ -572,7 +611,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 47.3,
+    "fat_g": 9.1,
+    "fibre_g": 4.9
   },
   {
     "id": "rec_14",
@@ -612,7 +654,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 9.1,
+    "fat_g": 5.3,
+    "fibre_g": 3.4
   },
   {
     "id": "rec_15",
@@ -651,7 +696,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 68.1,
+    "fat_g": 9.5,
+    "fibre_g": 5.7
   },
   {
     "id": "rec_16",
@@ -692,7 +740,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 56.9,
+    "fat_g": 8.5,
+    "fibre_g": 5.3
   },
   {
     "id": "rec_17",
@@ -734,7 +785,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 60.8,
+    "fat_g": 10.2,
+    "fibre_g": 5.4
   },
   {
     "id": "rec_18",
@@ -776,7 +830,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 81.0,
+    "fat_g": 13.8,
+    "fibre_g": 6.2
   },
   {
     "id": "rec_19",
@@ -817,7 +874,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 90.8,
+    "fat_g": 13.1,
+    "fibre_g": 6.6
   },
   {
     "id": "rec_20",
@@ -859,7 +919,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 23.4,
+    "fat_g": 6.4,
+    "fibre_g": 3.9
   },
   {
     "id": "rec_21",
@@ -899,7 +962,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 25.4,
+    "fat_g": 5.5,
+    "fibre_g": 4.0
   },
   {
     "id": "rec_22",
@@ -941,7 +1007,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 88.9,
+    "fat_g": 12.5,
+    "fibre_g": 6.6
   },
   {
     "id": "rec_23",
@@ -981,7 +1050,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 25.2,
+    "fat_g": 3.8,
+    "fibre_g": 4.0
   },
   {
     "id": "rec_24",
@@ -1022,7 +1094,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 58.7,
+    "fat_g": 10.8,
+    "fibre_g": 5.3
   },
   {
     "id": "rec_25",
@@ -1062,7 +1137,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 45.6,
+    "fat_g": 10.4,
+    "fibre_g": 4.8
   },
   {
     "id": "rec_26",
@@ -1101,7 +1179,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 16.5,
+    "fat_g": 5.2,
+    "fibre_g": 3.7
   },
   {
     "id": "rec_27",
@@ -1142,7 +1223,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 19.5,
+    "fat_g": 8.7,
+    "fibre_g": 3.8
   },
   {
     "id": "rec_28",
@@ -1181,7 +1265,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 49.8,
+    "fat_g": 11.3,
+    "fibre_g": 5.0
   },
   {
     "id": "rec_29",
@@ -1223,7 +1310,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 93.0,
+    "fat_g": 12.0,
+    "fibre_g": 6.7
   },
   {
     "id": "rec_30",
@@ -1261,7 +1351,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 83.1,
+    "fat_g": 13.4,
+    "fibre_g": 6.3
   },
   {
     "id": "rec_31",
@@ -1300,7 +1393,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 93.5,
+    "fat_g": 12.1,
+    "fibre_g": 6.7
   },
   {
     "id": "rec_32",
@@ -1339,7 +1435,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 88.2,
+    "fat_g": 12.9,
+    "fibre_g": 6.5
   },
   {
     "id": "rec_33",
@@ -1378,7 +1477,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 23.8,
+    "fat_g": 7.3,
+    "fibre_g": 4.0
   },
   {
     "id": "rec_34",
@@ -1417,7 +1519,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 83.2,
+    "fat_g": 11.9,
+    "fibre_g": 6.3
   },
   {
     "id": "rec_35",
@@ -1457,7 +1562,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 30.4,
+    "fat_g": 5.5,
+    "fibre_g": 4.2
   },
   {
     "id": "rec_36",
@@ -1497,7 +1605,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 42.5,
+    "fat_g": 9.9,
+    "fibre_g": 4.7
   },
   {
     "id": "rec_37",
@@ -1537,7 +1648,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 56.7,
+    "fat_g": 9.6,
+    "fibre_g": 5.3
   },
   {
     "id": "rec_38",
@@ -1577,7 +1691,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 65.3,
+    "fat_g": 9.3,
+    "fibre_g": 5.6
   },
   {
     "id": "rec_39",
@@ -1617,7 +1734,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 42.0,
+    "fat_g": 7.1,
+    "fibre_g": 4.7
   },
   {
     "id": "rec_40",
@@ -1657,7 +1777,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 24.8,
+    "fat_g": 6.1,
+    "fibre_g": 4.0
   },
   {
     "id": "rec_41",
@@ -1697,7 +1820,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 28.1,
+    "fat_g": 4.4,
+    "fibre_g": 4.1
   },
   {
     "id": "rec_42",
@@ -1737,7 +1863,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 28.8,
+    "fat_g": 5.0,
+    "fibre_g": 4.2
   },
   {
     "id": "rec_43",
@@ -1778,7 +1907,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 33.9,
+    "fat_g": 5.6,
+    "fibre_g": 4.4
   },
   {
     "id": "rec_44",
@@ -1820,7 +1952,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 83.3,
+    "fat_g": 14.2,
+    "fibre_g": 6.3
   },
   {
     "id": "rec_45",
@@ -1859,7 +1994,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 46.0,
+    "fat_g": 8.1,
+    "fibre_g": 4.8
   },
   {
     "id": "rec_46",
@@ -1901,7 +2039,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 59.8,
+    "fat_g": 9.2,
+    "fibre_g": 5.4
   },
   {
     "id": "rec_47",
@@ -1943,7 +2084,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 49.2,
+    "fat_g": 6.8,
+    "fibre_g": 5.0
   },
   {
     "id": "rec_48",
@@ -1984,7 +2128,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 32.0,
+    "fat_g": 8.2,
+    "fibre_g": 4.3
   },
   {
     "id": "rec_49",
@@ -2022,7 +2169,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 62.2,
+    "fat_g": 11.8,
+    "fibre_g": 5.5
   },
   {
     "id": "rec_50",
@@ -2064,7 +2214,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 74.8,
+    "fat_g": 12.0,
+    "fibre_g": 6.0
   },
   {
     "id": "rec_51",
@@ -2106,7 +2259,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 39.8,
+    "fat_g": 9.1,
+    "fibre_g": 4.6
   },
   {
     "id": "rec_52",
@@ -2143,7 +2299,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 57.5,
+    "fat_g": 10.2,
+    "fibre_g": 5.3
   },
   {
     "id": "rec_53",
@@ -2184,7 +2343,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 52.5,
+    "fat_g": 8.2,
+    "fibre_g": 5.1
   },
   {
     "id": "rec_54",
@@ -2226,7 +2388,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 85.2,
+    "fat_g": 12.6,
+    "fibre_g": 6.4
   },
   {
     "id": "rec_55",
@@ -2267,7 +2432,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 88.0,
+    "fat_g": 12.9,
+    "fibre_g": 6.5
   },
   {
     "id": "rec_56",
@@ -2306,7 +2474,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 52.9,
+    "fat_g": 10.7,
+    "fibre_g": 5.1
   },
   {
     "id": "rec_57",
@@ -2345,7 +2516,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 84.8,
+    "fat_g": 11.3,
+    "fibre_g": 6.4
   },
   {
     "id": "rec_58",
@@ -2387,7 +2561,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 60.5,
+    "fat_g": 11.2,
+    "fibre_g": 5.4
   },
   {
     "id": "rec_59",
@@ -2428,7 +2605,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 53.9,
+    "fat_g": 10.5,
+    "fibre_g": 5.2
   },
   {
     "id": "rec_60",
@@ -2468,7 +2648,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 33.4,
+    "fat_g": 6.6,
+    "fibre_g": 4.3
   },
   {
     "id": "rec_61",
@@ -2508,7 +2691,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 70.7,
+    "fat_g": 9.6,
+    "fibre_g": 5.8
   },
   {
     "id": "rec_62",
@@ -2549,7 +2735,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 41.5,
+    "fat_g": 6.2,
+    "fibre_g": 4.7
   },
   {
     "id": "rec_63",
@@ -2590,7 +2779,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 53.3,
+    "fat_g": 10.4,
+    "fibre_g": 5.1
   },
   {
     "id": "rec_64",
@@ -2631,7 +2823,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 47.8,
+    "fat_g": 10.1,
+    "fibre_g": 4.9
   },
   {
     "id": "rec_65",
@@ -2669,7 +2864,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 20.0,
+    "fat_g": 8.7,
+    "fibre_g": 3.8
   },
   {
     "id": "rec_66",
@@ -2711,7 +2909,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 35.3,
+    "fat_g": 12.2,
+    "fibre_g": 2.2
   },
   {
     "id": "rec_67",
@@ -2752,7 +2953,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 50.4,
+    "fat_g": 13.7,
+    "fibre_g": 2.5
   },
   {
     "id": "rec_68",
@@ -2794,7 +2998,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 93.4,
+    "fat_g": 19.8,
+    "fibre_g": 3.4
   },
   {
     "id": "rec_69",
@@ -2836,7 +3043,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 37.8,
+    "fat_g": 15.2,
+    "fibre_g": 2.3
   },
   {
     "id": "rec_70",
@@ -2877,7 +3087,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 46.2,
+    "fat_g": 13.9,
+    "fibre_g": 2.4
   },
   {
     "id": "rec_71",
@@ -2918,7 +3131,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 14.8,
+    "fat_g": 11.2,
+    "fibre_g": 1.8
   },
   {
     "id": "rec_72",
@@ -2960,7 +3176,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 51.8,
+    "fat_g": 13.1,
+    "fibre_g": 2.5
   },
   {
     "id": "rec_73",
@@ -3001,7 +3220,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 52.9,
+    "fat_g": 14.8,
+    "fibre_g": 2.6
   },
   {
     "id": "rec_74",
@@ -3043,7 +3265,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 45.4,
+    "fat_g": 15.5,
+    "fibre_g": 2.4
   },
   {
     "id": "rec_75",
@@ -3085,7 +3310,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 59.9,
+    "fat_g": 16.8,
+    "fibre_g": 2.7
   },
   {
     "id": "rec_76",
@@ -3122,7 +3350,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 25.4,
+    "fat_g": 12.5,
+    "fibre_g": 2.0
   },
   {
     "id": "rec_77",
@@ -3159,7 +3390,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 23.8,
+    "fat_g": 10.0,
+    "fibre_g": 2.0
   },
   {
     "id": "rec_78",
@@ -3201,7 +3435,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 48.5,
+    "fat_g": 17.0,
+    "fibre_g": 2.5
   },
   {
     "id": "rec_79",
@@ -3241,7 +3478,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 67.2,
+    "fat_g": 17.9,
+    "fibre_g": 2.8
   },
   {
     "id": "rec_80",
@@ -3280,7 +3520,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 33.4,
+    "fat_g": 13.7,
+    "fibre_g": 2.2
   },
   {
     "id": "rec_81",
@@ -3319,7 +3562,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 27.0,
+    "fat_g": 11.0,
+    "fibre_g": 2.0
   },
   {
     "id": "rec_82",
@@ -3359,7 +3605,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 35.2,
+    "fat_g": 13.8,
+    "fibre_g": 2.2
   },
   {
     "id": "rec_83",
@@ -3399,7 +3648,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 48.8,
+    "fat_g": 13.3,
+    "fibre_g": 2.5
   },
   {
     "id": "rec_84",
@@ -3439,7 +3691,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 20.9,
+    "fat_g": 9.5,
+    "fibre_g": 1.9
   },
   {
     "id": "rec_85",
@@ -3479,7 +3734,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 41.2,
+    "fat_g": 10.8,
+    "fibre_g": 2.3
   },
   {
     "id": "rec_86",
@@ -3519,7 +3777,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 45.3,
+    "fat_g": 13.3,
+    "fibre_g": 2.4
   },
   {
     "id": "rec_87",
@@ -3559,7 +3820,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 31.3,
+    "fat_g": 12.4,
+    "fibre_g": 2.1
   },
   {
     "id": "rec_88",
@@ -3600,7 +3864,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 72.8,
+    "fat_g": 17.0,
+    "fibre_g": 3.0
   },
   {
     "id": "rec_89",
@@ -3638,7 +3905,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 16.8,
+    "fat_g": 10.3,
+    "fibre_g": 1.8
   },
   {
     "id": "rec_90",
@@ -3680,7 +3950,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 60.9,
+    "fat_g": 16.4,
+    "fibre_g": 2.7
   },
   {
     "id": "rec_91",
@@ -3722,7 +3995,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 46.9,
+    "fat_g": 13.7,
+    "fibre_g": 2.4
   },
   {
     "id": "rec_92",
@@ -3763,7 +4039,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 47.6,
+    "fat_g": 14.3,
+    "fibre_g": 2.5
   },
   {
     "id": "rec_93",
@@ -3804,7 +4083,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 77.9,
+    "fat_g": 19.7,
+    "fibre_g": 3.1
   },
   {
     "id": "rec_94",
@@ -3846,7 +4128,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 37.1,
+    "fat_g": 11.4,
+    "fibre_g": 2.2
   },
   {
     "id": "rec_95",
@@ -3888,7 +4173,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 66.5,
+    "fat_g": 20.0,
+    "fibre_g": 2.8
   },
   {
     "id": "rec_96",
@@ -3930,7 +4218,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 30.8,
+    "fat_g": 10.3,
+    "fibre_g": 2.1
   },
   {
     "id": "rec_97",
@@ -3971,7 +4262,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 75.3,
+    "fat_g": 19.1,
+    "fibre_g": 3.0
   },
   {
     "id": "rec_98",
@@ -4013,7 +4307,10 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 64.6,
+    "fat_g": 16.3,
+    "fibre_g": 2.8
   },
   {
     "id": "rec_99",
@@ -4055,6 +4352,9 @@
     "tips": [
       "For a healthier version, reduce the oil/ghee by half and use a heavy non-stick pan.",
       "Roasting the dry spices on low heat before adding wet ingredients dramatically enhances the flavor profile."
-    ]
+    ],
+    "carbs_g": 53.6,
+    "fat_g": 15.2,
+    "fibre_g": 2.6
   }
 ]

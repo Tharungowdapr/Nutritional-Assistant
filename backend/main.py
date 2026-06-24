@@ -36,7 +36,6 @@ def _log_mem(stage: str):
         import resource
 
         rss_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        unit = "KB" if os.uname().sysname == "Linux" else "KB"
         logger.info(f"MEM [{stage}]: {rss_kb // 1024} MB")
     except Exception:
         pass

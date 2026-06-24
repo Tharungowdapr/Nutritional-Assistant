@@ -1,14 +1,14 @@
 const fs = require('fs');
 
 const baseRecipes = [
-  { name:"Ragi Mudde + Sambar", category:"Breakfast", diet_type:"VEG", region:"Karnataka", prep_time_min:20, servings:2, cal:390, protein_g:11, iron_mg:8.2, calcium_mg:620 },
-  { name:"Rajma Rice Bowl", category:"Lunch", diet_type:"VEG", region:"North India", prep_time_min:15, servings:2, cal:545, protein_g:20, iron_mg:6.1, calcium_mg:134 },
-  { name:"Bajra Roti + Methi Sabzi", category:"Dinner", diet_type:"VEG", region:"Rajasthan", prep_time_min:30, servings:2, cal:424, protein_g:13.8, iron_mg:12.8, calcium_mg:228 },
-  { name:"Moong Dal Cheela", category:"Breakfast", diet_type:"VEG", region:"All India", prep_time_min:20, servings:3, cal:210, protein_g:14, iron_mg:2.8, calcium_mg:48 },
-  { name:"Chicken Tikka Masala", category:"Dinner", diet_type:"NON-VEG", region:"North India", prep_time_min:45, servings:4, cal:550, protein_g:35, iron_mg:3.2, calcium_mg:100 },
-  { name:"Fish Curry", category:"Lunch", diet_type:"NON-VEG", region:"Bengal", prep_time_min:30, servings:3, cal:400, protein_g:28, iron_mg:2.5, calcium_mg:150 },
-  { name:"Paneer Bhurji", category:"Breakfast", diet_type:"VEG", region:"North India", prep_time_min:15, servings:2, cal:350, protein_g:18, iron_mg:1.5, calcium_mg:400 },
-  { name:"Egg Curry", category:"Dinner", diet_type:"NON-VEG", region:"All India", prep_time_min:25, servings:2, cal:300, protein_g:16, iron_mg:2.5, calcium_mg:80 },
+  { name:"Ragi Mudde + Sambar", category:"Breakfast", diet_type:"VEG", region:"Karnataka", prep_time_min:20, servings:2, cal:390, protein_g:11, fat_g:8.5, carbs_g:68, fibre_g:9, iron_mg:8.2, calcium_mg:620 },
+  { name:"Rajma Rice Bowl", category:"Lunch", diet_type:"VEG", region:"North India", prep_time_min:15, servings:2, cal:545, protein_g:20, fat_g:12, carbs_g:82, fibre_g:8, iron_mg:6.1, calcium_mg:134 },
+  { name:"Bajra Roti + Methi Sabzi", category:"Dinner", diet_type:"VEG", region:"Rajasthan", prep_time_min:30, servings:2, cal:424, protein_g:13.8, fat_g:9.5, carbs_g:70, fibre_g:10, iron_mg:12.8, calcium_mg:228 },
+  { name:"Moong Dal Cheela", category:"Breakfast", diet_type:"VEG", region:"All India", prep_time_min:20, servings:3, cal:210, protein_g:14, fat_g:5, carbs_g:28, fibre_g:4, iron_mg:2.8, calcium_mg:48 },
+  { name:"Chicken Tikka Masala", category:"Dinner", diet_type:"NON-VEG", region:"North India", prep_time_min:45, servings:4, cal:550, protein_g:35, fat_g:18, carbs_g:55, fibre_g:3, iron_mg:3.2, calcium_mg:100 },
+  { name:"Fish Curry", category:"Lunch", diet_type:"NON-VEG", region:"Bengal", prep_time_min:30, servings:3, cal:400, protein_g:28, fat_g:12, carbs_g:42, fibre_g:2, iron_mg:2.5, calcium_mg:150 },
+  { name:"Paneer Bhurji", category:"Breakfast", diet_type:"VEG", region:"North India", prep_time_min:15, servings:2, cal:350, protein_g:18, fat_g:14, carbs_g:35, fibre_g:3, iron_mg:1.5, calcium_mg:400 },
+  { name:"Egg Curry", category:"Dinner", diet_type:"NON-VEG", region:"All India", prep_time_min:25, servings:2, cal:300, protein_g:16, fat_g:11, carbs_g:32, fibre_g:2, iron_mg:2.5, calcium_mg:80 },
 ];
 
 const variants = [
@@ -35,6 +35,9 @@ for (let b of baseRecipes) {
       
       let newCal = Math.round(b.cal * v.calMod);
       let newProt = Math.round(b.protein_g * v.protMod);
+      let newFat = Math.round((b.fat_g * v.calMod) * 10) / 10;
+      let newCarbs = Math.round((b.carbs_g * v.calMod) * 10) / 10;
+      let newFibre = Math.round((b.fibre_g * v.calMod) * 10) / 10;
       
       let badge = "";
       let badgeColor = "teal";
@@ -52,6 +55,9 @@ for (let b of baseRecipes) {
         servings: b.servings,
         cal: newCal,
         protein_g: newProt,
+        fat_g: newFat,
+        carbs_g: newCarbs,
+        fibre_g: newFibre,
         iron_mg: b.iron_mg,
         calcium_mg: b.calcium_mg,
         badge: badge,
