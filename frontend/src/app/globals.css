@@ -76,6 +76,8 @@
     --color-carbs: #7B8EDE;
     --color-fat: #E85A5A;
     --color-fibre: #7BBE8E;
+    --color-iron: #F59E0B;
+    --color-calcium: #6366F1;
 
     --radius: 0.875rem;
   }
@@ -120,6 +122,8 @@
     --color-carbs: #7B8EDE;
     --color-fat: #E85A5A;
     --color-fibre: #6DAF80;
+    --color-iron: #F59E0B;
+    --color-calcium: #6366F1;
   }
 }
 

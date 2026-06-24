@@ -136,7 +136,7 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
         </div>
 
         {/* Nutrition Score Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <div className="bg-card border border-border/60 rounded-xl p-5 hover:shadow-lg transition-all duration-300">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
@@ -191,6 +191,23 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
           <div className="bg-card border border-border/60 rounded-xl p-5 hover:shadow-lg transition-all duration-300">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
+                <Milk className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold mb-1">Calcium Intake</h3>
+                <p className="text-xs text-muted-foreground mb-2">Daily calcium consumption vs recommended target</p>
+                <div className="flex items-center gap-2">
+                  <div className="text-xl font-bold text-indigo-600">{(d.total_calcium_mg || 0).toLocaleString()}mg</div>
+                  <div className="text-xs text-muted-foreground">/ {targets.calcium_mg}mg</div>
+                </div>
+                <ProgressBar value={d.total_calcium_mg || 0} max={targets.calcium_mg} color="var(--color-calcium)" label="Calcium" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border/60 rounded-xl p-5 hover:shadow-lg transition-all duration-300">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
                 <Target className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">
@@ -216,11 +233,13 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
                 <Target className="w-5 h-5 text-primary" />
                 <h2 className="text-lg font-semibold">Nutrition Profile</h2>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <MacroRing label="Calories" current={d.total_calories || 0} target={targets.energy} unit="kcal" size={120} />
                 <MacroRing label="Protein" current={d.total_protein_g || 0} target={targets.protein_g} unit="g" size={120} />
                 <MacroRing label="Carbs" current={d.total_carbs_g || 0} target={targets.carbs_g} unit="g" size={120} />
                 <MacroRing label="Fat" current={d.total_fat_g || 0} target={targets.fat_g} unit="g" size={120} />
+                <MacroRing label="Iron" current={d.total_iron_mg || 0} target={targets.iron_mg} unit="mg" size={120} color="var(--color-iron)" />
+                <MacroRing label="Calcium" current={d.total_calcium_mg || 0} target={targets.calcium_mg} unit="mg" size={120} color="var(--color-calcium)" />
               </div>
               <div className="mt-6 space-y-3">
                 <div className="flex justify-between text-sm">
@@ -238,6 +257,14 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Fat</span>
                   <span className="font-medium">{(d.total_fat_g || 0).toLocaleString()}g</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Iron</span>
+                  <span className="font-medium">{(d.total_iron_mg || 0).toLocaleString()}mg</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Calcium</span>
+                  <span className="font-medium">{(d.total_calcium_mg || 0).toLocaleString()}mg</span>
                 </div>
               </div>
             </div>
