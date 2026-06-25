@@ -88,7 +88,7 @@ class Settings(BaseSettings):
     ]
 
     # ── Security ──
-    ALLOWED_HOSTS: list[str] = []  # Set via env in production (e.g., ["nutrisync.app", "api.nutrisync.app"])
+    ALLOWED_HOSTS: list[str] = ["*"]  # Allow all in dev; override via env in production
 
     # ── Redis / Celery ─────────────────────────────────────────
     REDIS_HOST: str = "localhost"
