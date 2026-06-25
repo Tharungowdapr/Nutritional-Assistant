@@ -19,7 +19,7 @@ to Q2 venues such as **Applied Sciences (MDPI)** or **JMIR AI**.
 - **Frontend source**: `frontend/` at repo root
 - **Live demo**: https://frontend-azure-omega-45f4cqwbni.vercel.app
 - **API docs**: https://nutritional-assistant-jg6k.onrender.com/docs
-- **LLM**: Groq `llama-3.3-70b-versatile` (via `REDACTED`)
+- **LLM**: Groq `llama-3.3-70b-versatile` (via environment variable)
 
 ## Journal Target: Applied Sciences (MDPI) — Q2
 

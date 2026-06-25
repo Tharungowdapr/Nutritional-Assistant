@@ -4,7 +4,7 @@
 Complete Q2 journal publication for AaharAI NutriSync — statistical validation, RAGAS evaluation, ground truth dataset (NutriSyncBench v2.0), failure analysis, cross-encoder ablation, chunk size ablation, retrieval quality improvements, and account deletion.
 
 ## Constraints & Preferences
-- No Ollama — use only cloud LLM providers (Groq primary: `REDACTED`)
+- No Ollama — use only cloud LLM providers (Groq primary)
 - Render free tier (512MB) — avoid torch/transformers OOM; lazy RAG init
 - Frontend on Vercel, backend on Render, Neon PostgreSQL
 - Dark mode (black bg) and light mode (white bg) both supported — all colors use semantic Tailwind/CSS variable classes

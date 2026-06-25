@@ -23,7 +23,7 @@ from typing import Dict, List, Any, Optional, Tuple
 
 import httpx
 
-GROQ_API_KEY = "REDACTED"
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_MODEL = "llama-3.3-70b-versatile"
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 
