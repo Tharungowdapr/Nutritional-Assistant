@@ -60,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     clearToken();
     setUser(null);
+    window.location.href = "/";
   };
 
   const updateProfile = async (profileData: Record<string, any>) => {

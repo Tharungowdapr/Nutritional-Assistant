@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth-context";
+import { authApi, setToken } from "@/lib/api";
 import { toast } from "sonner";
 
 function LoginForm() {
@@ -17,10 +18,10 @@ function LoginForm() {
   const { login, user, loading } = useAuth();
   const router = useRouter();
 
-  // If already authenticated, redirect to dashboard
+  // If already authenticated, redirect to dashboard or onboarding
   useEffect(() => {
     if (!loading && user) {
-      router.replace("/dashboard");
+      router.replace(user.profile_completion && user.profile_completion >= 50 ? "/dashboard" : "/onboarding");
     }
   }, [user, loading, router]);
   const searchParams = useSearchParams();
@@ -30,9 +31,11 @@ function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await login(email, password);
+      const data: any = await authApi.login({ email, password });
+      setToken(data.access_token);
       toast.success("Welcome back!");
-      router.push(redirect);
+      const hasProfile = data.user?.profile_completion && data.user.profile_completion >= 50;
+      window.location.href = hasProfile ? redirect : "/onboarding";
       router.refresh();
     } catch (err: any) {
       toast.error(err.message || "Login failed");

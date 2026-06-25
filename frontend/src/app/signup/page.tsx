@@ -18,9 +18,9 @@ export default function SignupPage() {
   const { signup, user, loading } = useAuth();
   const router = useRouter();
 
-  // If already authenticated, redirect to dashboard
+  // If already authenticated with profile, redirect to dashboard
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && user.profile_completion && user.profile_completion >= 50) {
       router.replace("/dashboard");
     }
   }, [user, loading, router]);
@@ -31,8 +31,7 @@ export default function SignupPage() {
     try {
       await signup(name, email, password);
       toast.success("Account created!");
-      router.push("/onboarding");
-      router.refresh();
+      window.location.href = "/onboarding";
     } catch (err: any) {
       toast.error(err.message || "Signup failed");
     } finally {
