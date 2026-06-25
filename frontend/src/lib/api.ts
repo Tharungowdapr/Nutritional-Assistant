@@ -16,10 +16,12 @@ function getToken(): string | null {
 export function setToken(token: string) {
   localStorage.setItem("nutrisync_token", token);
   // Set a cookie so Next.js proxy.ts can read it server-side.
-  // SameSite=Strict, no httpOnly so JS can clear it on logout.
+  // Secure + HttpOnly in production; SameSite=Strict for CSRF protection.
   // Max-age: 24 hours (matches JWT_EXPIRE_MINUTES = 1440).
   if (typeof window !== "undefined") {
-    document.cookie = `nutrisync_token=${token}; path=/; max-age=86400; SameSite=Strict`;
+    const isProd = window.location.protocol === "https:";
+    const flags = `path=/; max-age=86400; SameSite=Strict${isProd ? "; Secure; HttpOnly" : ""}`;
+    document.cookie = `nutrisync_token=${token}; ${flags}`;
   }
 }
 

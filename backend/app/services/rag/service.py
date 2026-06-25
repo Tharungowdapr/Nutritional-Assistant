@@ -4,6 +4,7 @@ Orchestrates: user query → hybrid search → rerank → augment prompt → gen
 """
 
 import logging
+import time
 from typing import Optional, Any
 from sqlalchemy.orm import Session
 
@@ -20,6 +21,7 @@ from app.core.config import settings
 from app.services.rag.llm_router import LLMRouter
 from app.services.rag.hybrid import create_hybrid_retriever
 from app.services.rag.reranker import rerank_documents
+from app.services.rag.timing import ComponentTimer
 
 logger = logging.getLogger(__name__)
 
@@ -350,6 +352,10 @@ class RAGService:
         """Enhanced RAG pipeline with intent routing and tool use."""
         import asyncio
 
+        # Timing
+        pipeline_start = time.perf_counter()
+        timings = {}
+
         # 1. Process "Remember" commands
         if user_id and db:
             from app.services.memory.long_term import LongTermMemory
@@ -358,14 +364,18 @@ class RAGService:
 
         # 2. Classify intent (keyword-only, free) and retrieve in parallel
         intent = self.classify_intent(query)
-        retrieve_task = asyncio.to_thread(self.retrieve, query, collection_name="nutrisync")
-        chunks = await retrieve_task
+        with ComponentTimer("retrieve", enabled=True):
+            retrieve_task = asyncio.to_thread(self.retrieve, query, collection_name="nutrisync")
+            chunks = await retrieve_task
         logger.info(f"RAG Intent: {intent} | Chunks: {len(chunks)}")
 
         # 2. Build augmented prompt
-        context = self._build_context(chunks)
-        user_ctx = self._build_user_context(user_profile, user_id, db)
-        history_str = self._format_history(history or [])
+        with ComponentTimer("build_context", enabled=True):
+            context = self._build_context(chunks)
+        with ComponentTimer("build_user_context", enabled=True):
+            user_ctx = self._build_user_context(user_profile, user_id, db)
+        with ComponentTimer("format_history", enabled=True):
+            history_str = self._format_history(history or [])
 
         prompt = f"""{user_ctx}
 {history_str}
@@ -398,11 +408,12 @@ Answer using the retrieved knowledge. Cite sources. Maintain continuity with his
                 logger.error(f"Failed custom LLM generation: {e}")
                 provider = "none"
         else:
-            response_text, provider = await self.llm_router.generate(
-                prompt=prompt,
-                system=SYSTEM_PROMPT,
-                temperature=0.7,
-            )
+            with ComponentTimer("llm_generation", enabled=True):
+                response_text, provider = await self.llm_router.generate(
+                    prompt=prompt,
+                    system=SYSTEM_PROMPT,
+                    temperature=0.7,
+                )
 
         # If no LLM provider was available, provide a safe fallback using retrieved
         # context so the API remains useful even without a working local LLM.
@@ -422,27 +433,41 @@ Answer using the retrieved knowledge. Cite sources. Maintain continuity with his
             response_text = fallback
 
         # 4. Citation verification — ground LLM response against retrieved chunks
-        from app.services.agents.tools.citation_verifier import citation_verifier
+        with ComponentTimer("citation_verification", enabled=True):
+            from app.services.agents.tools.citation_verifier import citation_verifier
 
-        context_texts = [c["text"] for c in chunks]
-        verification = citation_verifier.verify(response_text, context_texts)
+            context_texts = [c["text"] for c in chunks]
+            verification = citation_verifier.verify(response_text, context_texts)
 
         # 5. Format sources
-        sources = [
-            {
-                "source": c.get("metadata", {}).get("source", "unknown"),
-                "identifier": c.get("metadata", {}).get("identifier", ""),
-                "page": c.get("metadata", {}).get("page_number", None),
-                "sheet": c.get("metadata", {}).get("sheet", None),
-            }
-            for c in chunks
-        ]
+        with ComponentTimer("format_sources", enabled=True):
+            sources = [
+                {
+                    "source": c.get("metadata", {}).get("source", "unknown"),
+                    "identifier": c.get("metadata", {}).get("identifier", ""),
+                    "page": c.get("metadata", {}).get("page_number", None),
+                    "sheet": c.get("metadata", {}).get("sheet", None),
+                }
+                for c in chunks
+            ]
+
+        # Collect timing summary
+        with ComponentTimer("total", enabled=True):
+            pass
+        timings = ComponentTimer.get_summary()
+        ComponentTimer._timings.clear()
+
+        total_ms = (time.perf_counter() - pipeline_start) * 1000
 
         return {
             "answer": response_text,
             "sources": sources,
             "llm_provider": provider,
             "grounding": verification,
+            "timings": {
+                "total_ms": round(total_ms, 1),
+                "components": timings,
+            },
         }
 
     async def chat_stream(

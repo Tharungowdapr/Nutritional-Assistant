@@ -59,37 +59,38 @@ class CitationVerifier:
         answer_lower = answer.lower()
         signals = []
 
-        # Signal 1: Keyword overlap (20% weight)
+        # Signal 1: Keyword overlap (30% weight)
         answer_words = set(answer_lower.split())
         important_words = {w for w in answer_words if len(w) > 4 and w.isalpha()}
         if important_words:
             kw_hits = sum(1 for w in important_words if w in context_words)
             kw_score = kw_hits / len(important_words)
-            signals.append(("keyword", kw_score, 0.20))
+            signals.append(("keyword", kw_score, 0.30))
 
-        # Signal 2: N-gram overlap (15% weight)
+        # Signal 2: N-gram overlap (25% weight)
         answer_ngrams = self._get_ngrams(answer_lower, 2) | self._get_ngrams(answer_lower, 3)
         context_ngrams = self._get_ngrams(context_blob, 2) | self._get_ngrams(context_blob, 3)
         if answer_ngrams:
             ng_hits = len(answer_ngrams & context_ngrams)
             ng_score = ng_hits / len(answer_ngrams)
-            signals.append(("ngram", ng_score, 0.15))
+            signals.append(("ngram", ng_score, 0.25))
 
-        # Signal 3: Medical term anchoring (20% weight)
+        # Signal 3: Medical term anchoring (30% weight)
         answer_medical = {t for t in MEDICAL_ANCHORS if t in answer_lower}
         context_medical = {t for t in MEDICAL_ANCHORS if t in context_blob}
         if answer_medical:
             med_hits = len(answer_medical & context_medical)
             med_score = med_hits / len(answer_medical)
-            signals.append(("medical", med_score, 0.20))
+            signals.append(("medical", med_score, 0.30))
         else:
-            signals.append(("medical", 1.0, 0.20))
+            signals.append(("medical", 1.0, 0.30))
 
-        # Signal 4: Cross-encoder semantic NLI (25% weight)
+        # Signal 4: Cross-encoder semantic NLI (bonus/penalty modifier)
         ce_score = self._compute_cross_encoder_score(answer, context_chunks)
-        signals.append(("cross_encoder", ce_score, 0.25))
+        # Cross-encoder acts as a confidence modifier rather than fixed weight
+        ce_modifier = (ce_score - 0.5) * 0.2  # Range: -0.1 to +0.1
 
-        # Signal 5: Sentence-level overlap (20% weight)
+        # Signal 5: Sentence-level overlap (15% weight)
         answer_sentences = [s.strip() for s in re.split(r"[.!?]", answer) if len(s.strip()) > 15]
         if answer_sentences:
             sent_hits = 0
@@ -100,7 +101,15 @@ class CitationVerifier:
                     if overlap > 0.4:
                         sent_hits += 1
             sent_score = sent_hits / len(answer_sentences) if answer_sentences else 0
-            signals.append(("sentence", sent_score, 0.20))
+            signals.append(("sentence", sent_score, 0.15))
+
+        # Apply cross-encoder modifier
+        if signals:
+            total_weight = sum(w for _, _, w in signals)
+            score = sum(s * w for _, s, w in signals) / total_weight
+            score = max(0.0, min(1.0, score + ce_modifier))  # Clamp to [0,1]
+        else:
+            score = 0.0
 
         if signals:
             total_weight = sum(w for _, _, w in signals)
@@ -116,6 +125,15 @@ class CitationVerifier:
         elif score < 0.55:
             status = "UNVERIFIED_CLAIMS"
             alerts.append("Partial grounding: Some advice may be generic LLM knowledge rather than retrieved evidence.")
+
+        # Negation check — bonus/penalty modifier
+        answer_has_negation = any(re.search(p, answer_lower) for p in NEGATION_PATTERNS)
+        context_has_negation = any(re.search(p, context_blob) for p in NEGATION_PATTERNS)
+        if answer_has_negation and not context_has_negation:
+            score -= 0.1  # Penalty for negation in answer not supported by context
+        elif answer_has_negation and context_has_negation:
+            score += 0.05  # Bonus for consistent negation
+        score = max(0.0, min(1.0, score))
 
         if answer_medical and not context_medical:
             status = "HALUCINATION_RISK"

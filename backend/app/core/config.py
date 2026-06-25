@@ -87,6 +87,9 @@ class Settings(BaseSettings):
         "http://localhost:8000",
     ]
 
+    # ── Security ──
+    ALLOWED_HOSTS: list[str] = []  # Set via env in production (e.g., ["nutrisync.app", "api.nutrisync.app"])
+
     # ── Redis / Celery ─────────────────────────────────────────
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
