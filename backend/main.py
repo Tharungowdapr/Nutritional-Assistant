@@ -128,7 +128,6 @@ async def lifespan(app: FastAPI):
     yield
     logger.info("Shutting down...")
 
-
     # Rate Limiter — use X-Forwarded-For for Render/proxy support
     def _get_client_ip(request):
         forwarded = request.headers.get("X-Forwarded-For")
@@ -137,6 +136,7 @@ async def lifespan(app: FastAPI):
         return request.client.host if request.client else "unknown"
 
     limiter = Limiter(key_func=_get_client_ip)
+
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -160,6 +160,7 @@ if not settings.DEBUG:
         TrustedHostMiddleware,
         allowed_hosts=settings.ALLOWED_HOSTS if hasattr(settings, "ALLOWED_HOSTS") else ["*"],
     )
+
 
 # Security headers middleware
 @app.middleware("http")
@@ -191,6 +192,7 @@ async def add_security_headers(request: Request, call_next):
     # Permissions policy
     response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
     return response
+
 
 app.include_router(api_router)
 app.state.limiter = limiter

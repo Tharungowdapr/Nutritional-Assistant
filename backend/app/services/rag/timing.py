@@ -33,11 +33,13 @@ class ComponentTimer:
         if self.enabled and self._start is not None:
             self._elapsed = (time.perf_counter() - self._start) * 1000  # ms
             timings = self._get_thread_timings()
-            timings.append({
-                "component": self.component,
-                "elapsed_ms": round(self._elapsed, 2),
-                "timestamp": time.time(),
-            })
+            timings.append(
+                {
+                    "component": self.component,
+                    "elapsed_ms": round(self._elapsed, 2),
+                    "timestamp": time.time(),
+                }
+            )
 
     @classmethod
     def _get_thread_timings(cls) -> list:

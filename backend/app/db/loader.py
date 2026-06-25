@@ -175,9 +175,7 @@ class NutriSyncDB:
             mask &= self.food["Food Group"].str.upper() == food_group.upper()
         if region:
             if "Region Availability" in self.food.columns:
-                mask &= self.food["Region Availability"].str.contains(
-                    region, case=False, na=False, regex=False
-                )
+                mask &= self.food["Region Availability"].str.contains(region, case=False, na=False, regex=False)
             elif "Region" in self.food.columns:
                 mask &= self.food["Region"].str.contains(region, case=False, na=False, regex=False)
 

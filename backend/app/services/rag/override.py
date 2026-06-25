@@ -56,9 +56,7 @@ async def stream_generate_override(
 
         client = await _get_http_client()
         try:
-            async with client.stream(
-                "POST", url, json=payload, headers={"Authorization": f"Bearer {api_key}"}
-            ) as resp:
+            async with client.stream("POST", url, json=payload, headers={"Authorization": f"Bearer {api_key}"}) as resp:
                 if resp.status_code == 401 or resp.status_code == 403:
                     yield "INVALID_API_KEY"
                     return
