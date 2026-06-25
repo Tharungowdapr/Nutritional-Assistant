@@ -319,4 +319,4 @@ Make ingredients specific and steps professional."""
         return json.loads(raw)
     except Exception as e:
         logger.error(f"Recipe generation failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Recipe generation failed. Please try again.")

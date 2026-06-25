@@ -167,7 +167,7 @@ class NutriSyncDB:
         mask = pd.Series([True] * len(self.food), index=self.food.index)
 
         if query:
-            mask &= self.food["Food Name"].str.contains(re.escape(query), case=False, na=False, regex=False)
+            mask &= self.food["Food Name"].str.contains(query, case=False, na=False, regex=False)
         if diet_type:
             if "Diet Type" in self.food.columns:
                 mask &= self.food["Diet Type"].str.upper() == diet_type.upper()
@@ -176,10 +176,10 @@ class NutriSyncDB:
         if region:
             if "Region Availability" in self.food.columns:
                 mask &= self.food["Region Availability"].str.contains(
-                    re.escape(region), case=False, na=False, regex=False
+                    region, case=False, na=False, regex=False
                 )
             elif "Region" in self.food.columns:
-                mask &= self.food["Region"].str.contains(re.escape(region), case=False, na=False, regex=False)
+                mask &= self.food["Region"].str.contains(region, case=False, na=False, regex=False)
 
         if gi_category and "GI (Glycaemic Index)" in self.food.columns:
             cat = gi_category.lower()
@@ -199,7 +199,7 @@ class NutriSyncDB:
             return None
         match = self.food[self.food["Food Name"].str.lower() == name.lower()]  # Case-insensitive exact match
         if match.empty:
-            match = self.food[self.food["Food Name"].str.contains(re.escape(name), case=False, na=False, regex=False)]
+            match = self.food[self.food["Food Name"].str.contains(name, case=False, na=False, regex=False)]
         if match.empty:
             return None
         return match.iloc[0].to_dict()
@@ -209,7 +209,7 @@ class NutriSyncDB:
 
         if getattr(self, "rda", None) is None:
             return None
-        match = self.rda[self.rda["Profile"].str.contains(re.escape(profile), case=False, na=False, regex=False)]
+        match = self.rda[self.rda["Profile"].str.contains(profile, case=False, na=False, regex=False)]
         if match.empty:
             return None
         return match.iloc[0].to_dict()

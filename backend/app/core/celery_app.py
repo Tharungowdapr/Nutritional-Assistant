@@ -1,27 +1,33 @@
 """
 AaharAI NutriSync — Background Task Framework (Celery)
-Handles long-running agentic tasks offline.
+Optional: gracefully degrades if celery/redis are not installed.
 """
 
-from celery import Celery
-from app.core.config import settings
+try:
+    from celery import Celery
+    from app.core.config import settings
 
-celery_app = Celery(
-    "nutrisync",
-    broker=f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}",
-    backend=f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}",
-    include=["app.tasks"],  # future task modules go here
-)
+    celery_app = Celery(
+        "nutrisync",
+        broker=f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}",
+        backend=f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}",
+        include=["app.tasks"],
+    )
 
-celery_app.conf.update(
-    task_serializer="json",
-    accept_content=["json"],
-    result_serializer="json",
-    timezone="UTC",
-    enable_utc=True,
-    task_track_started=True,
-    task_time_limit=3600,  # 1 hour max
-)
+    celery_app.conf.update(
+        task_serializer="json",
+        accept_content=["json"],
+        result_serializer="json",
+        timezone="UTC",
+        enable_utc=True,
+        task_track_started=True,
+        task_time_limit=3600,
+    )
+except ImportError:
+    celery_app = None
+except Exception:
+    celery_app = None
 
 if __name__ == "__main__":
-    celery_app.start()
+    if celery_app:
+        celery_app.start()

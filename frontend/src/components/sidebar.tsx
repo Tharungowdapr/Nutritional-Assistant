@@ -77,7 +77,7 @@ function DesktopNav() {
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
               }`}>
                 {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-primary" />}
-                <item.icon className={`w-[18px] h-[18px] ${isActive ? "text-primary" : ""}`} />
+                <item.icon className={`w-5 h-5 ${isActive ? "text-primary" : ""}`} />
                 {item.label}
               </div>
             </Link>
@@ -115,7 +115,7 @@ function DesktopNav() {
               ? "bg-primary/10 text-primary"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
           }`}>
-            <Settings className="w-[18px] h-[18px]" />
+            <Settings className="w-5 h-5" />
             Settings
           </div>
         </Link>

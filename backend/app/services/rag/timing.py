@@ -13,10 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class ComponentTimer:
-    """Collects per-component timing data. Thread-safe singleton."""
+    """Collects per-component timing data. Uses thread-local storage for request isolation."""
 
     _local = threading.local()
-    _timings: list = []
     _lock = threading.Lock()
 
     def __init__(self, component: str, enabled: bool = True):
@@ -33,26 +32,33 @@ class ComponentTimer:
     def __exit__(self, *args):
         if self.enabled and self._start is not None:
             self._elapsed = (time.perf_counter() - self._start) * 1000  # ms
-            with self._lock:
-                self._timings.append({
-                    "component": self.component,
-                    "elapsed_ms": round(self._elapsed, 2),
-                    "timestamp": time.time(),
-                })
+            timings = self._get_thread_timings()
+            timings.append({
+                "component": self.component,
+                "elapsed_ms": round(self._elapsed, 2),
+                "timestamp": time.time(),
+            })
+
+    @classmethod
+    def _get_thread_timings(cls) -> list:
+        """Get or create the timings list for the current thread."""
+        if not hasattr(cls._local, "timings"):
+            cls._local.timings = []
+        return cls._local.timings
 
     @classmethod
     def get_and_clear(cls) -> list:
-        """Return all accumulated timings and reset."""
-        with cls._lock:
-            timings = list(cls._timings)
-            cls._timings.clear()
-        return timings
+        """Return all accumulated timings for the current thread and reset."""
+        timings = cls._get_thread_timings()
+        result = list(timings)
+        timings.clear()
+        return result
 
     @classmethod
     def get_summary(cls, timings: Optional[list] = None) -> dict:
         """Aggregate timings by component name."""
         if timings is None:
-            timings = cls._timings
+            timings = cls._get_thread_timings()
         if not timings:
             return {}
         by_component: dict = {}

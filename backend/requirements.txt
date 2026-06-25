@@ -15,7 +15,6 @@ numpy>=1.26.4,<2.0.0
 # RAG & LLM
 chromadb>=0.5.5
 langchain-text-splitters>=0.3.0
-langgraph>=0.0.10
 langchain>=0.1.0
 langchain-community>=0.0.20
 # sentence-transformers removed — ChromaDB uses built-in ONNX default (lighter)

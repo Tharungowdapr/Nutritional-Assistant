@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
-  Target, Flame, TrendingUp, AlertTriangle,
-  ChevronRight, Activity, Sparkles, Utensils, User, Brain, Plus, Loader2,
-  Wheat, Apple, Milk, Beef, LeafyGreen, Coffee, Sun, Moon
+  Flame, TrendingUp, AlertTriangle, ChevronRight, Activity,
+  Sparkles, Utensils, User, Brain, Plus, Loader2, Settings,
+  Wheat, Apple, Milk, Beef, LeafyGreen, Coffee, Sun, Moon, BarChart3, Shield, Target
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
@@ -17,24 +17,124 @@ import ReactMarkdown from "react-markdown";
 const pct = (v: number, t: number) => t ? Math.min(100, Math.round((v / t) * 100)) : 0;
 
 const SLOTS = [
-  { key: "Breakfast", label: "Breakfast", icon: Coffee },
-  { key: "Lunch", label: "Lunch", icon: Sun },
-  { key: "Dinner", label: "Dinner", icon: Moon },
-  { key: "Snack", label: "Snack", icon: Apple },
+  { key: "Breakfast", label: "Breakfast", icon: Coffee, color: "text-amber-500" },
+  { key: "Lunch", label: "Lunch", icon: Sun, color: "text-orange-500" },
+  { key: "Dinner", label: "Dinner", icon: Moon, color: "text-indigo-500" },
+  { key: "Snack", label: "Snack", icon: Apple, color: "text-emerald-500" },
 ];
 
-const ProgressBar = React.memo(({ value, max, color = "var(--primary)", label }: { value: number; max: number; color?: string; label?: string }) => {
-  const p = pct(value, max);
+const SkeletonPulse = ({ className }: { className?: string }) => (
+  <div className={`animate-pulse rounded-lg bg-muted/50 ${className}`} />
+);
+
+const NutritionSkeleton = () => (
+  <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="max-w-7xl mx-auto p-4 md:p-8">
+      {/* Header Skeleton */}
+      <div className="mb-8 space-y-3">
+        <SkeletonPulse className="h-10 w-64" />
+        <SkeletonPulse className="h-5 w-48" />
+      </div>
+
+      {/* Hero Skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+        <div className="lg:col-span-1 bg-card border border-border/60 rounded-2xl p-6">
+          <div className="flex flex-col items-center space-y-4">
+            <SkeletonPulse className="h-32 w-32 rounded-full" />
+            <SkeletonPulse className="h-6 w-24" />
+            <SkeletonPulse className="h-4 w-16" />
+          </div>
+        </div>
+        <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-card border border-border/60 rounded-xl p-5">
+              <div className="flex items-start gap-4">
+                <SkeletonPulse className="h-10 w-10 rounded-xl" />
+                <div className="flex-1 space-y-3">
+                  <SkeletonPulse className="h-4 w-24" />
+                  <SkeletonPulse className="h-7 w-16" />
+                  <SkeletonPulse className="h-2 w-full" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Content Skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-card border border-border/60 rounded-2xl p-6">
+            <SkeletonPulse className="h-6 w-32 mb-6" />
+            <div className="grid grid-cols-3 gap-4">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <SkeletonPulse key={i} className="h-28" />
+              ))}
+            </div>
+          </div>
+          <div className="bg-card border border-border/60 rounded-2xl p-6">
+            <SkeletonPulse className="h-6 w-32 mb-6" />
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <SkeletonPulse key={i} className="h-16" />
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="space-y-6">
+          <div className="bg-card border border-border/60 rounded-2xl p-6">
+            <SkeletonPulse className="h-6 w-32 mb-6" />
+            <SkeletonPulse className="h-40" />
+          </div>
+          <div className="bg-card border border-border/60 rounded-2xl p-6">
+            <SkeletonPulse className="h-6 w-32 mb-6" />
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2, 3, 4].map((i) => (
+                <SkeletonPulse key={i} className="h-20" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const NutritionCard = ({ icon: Icon, label, sublabel, value, unit, target, color, iconBg }: {
+  icon: any;
+  label: string;
+  sublabel?: string;
+  value: number;
+  unit: string;
+  target: number;
+  color: string;
+  iconBg: string;
+}) => {
+  const p = pct(value, target);
   return (
-    <div className="space-y-2">
-      {label && <div className="flex justify-between text-xs font-medium text-muted-foreground"><span>{label}</span><span>{value}/{max}</span></div>}
-      <div className="h-2 bg-muted rounded-full overflow-hidden">
-        <div style={{ width: `${p}%`, backgroundColor: color }} className="h-full rounded-full transition-all duration-700 ease-out" />
+    <div className="group bg-card border border-border/60 rounded-xl p-5 hover:shadow-lg hover:border-border/80 transition-all duration-300">
+      <div className="flex items-start gap-4">
+        <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center shrink-0`}>
+          <Icon className={`w-5 h-5 ${color}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-semibold mb-0.5">{label}</h3>
+          {sublabel && <p className="text-xs text-muted-foreground mb-2 line-clamp-1">{sublabel}</p>}
+          <div className="flex items-baseline gap-1.5 mb-3">
+            <span className={`text-xl font-bold ${color}`}>{value.toLocaleString()}</span>
+            <span className="text-xs text-muted-foreground">/ {target.toLocaleString()} {unit}</span>
+          </div>
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              style={{ width: `${p}%` }}
+              className={`h-full rounded-full transition-all duration-700 ease-out ${color.replace('text-', 'bg-')}`}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
-});
-ProgressBar.displayName = 'ProgressBar';
+};
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -101,11 +201,7 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
     return [energyScore, proteinScore, ironScore, calciumScore];
   }, [d, targets]);
 
-  if (authLoading) return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <Loader2 className="w-8 h-8 animate-spin text-primary" />
-    </div>
-  );
+  if (authLoading || loadingProfile) return <NutritionSkeleton />;
 
   if (!user) {
     return (
@@ -124,191 +220,171 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
     );
   }
 
-  const avgScore = nutritionScore.reduce((a, b) => a + b, 0) / nutritionScore.length;
+  const avgScore = Math.round(nutritionScore.reduce((a, b) => a + b, 0) / nutritionScore.length);
+  const scoreColor = avgScore >= 75 ? "text-emerald-500" : avgScore >= 50 ? "text-amber-500" : "text-red-500";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="max-w-7xl mx-auto p-4 md:p-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Welcome back, {user.name?.split(' ')[0]}!</h1>
-          <p className="text-muted-foreground">Your nutrition dashboard for {todayIST}</p>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">
+            Welcome back, <span className="text-primary">{user.name?.split(' ')[0]}</span>
+          </h1>
+          <p className="text-muted-foreground text-sm md:text-base">
+            Here's your nutrition summary for {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "Asia/Kolkata" })}
+          </p>
         </div>
 
-        {/* Nutrition Score Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <div className="bg-card border border-border/60 rounded-xl p-5 hover:shadow-lg transition-all duration-300">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
-                <Flame className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold mb-1">Energy Intake</h3>
-                <p className="text-xs text-muted-foreground mb-2">Daily calorie consumption vs recommended target</p>
-                <div className="flex items-center gap-2">
-                  <div className="text-xl font-bold text-orange-600">{(d.total_calories || 0).toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground">/ {targets.energy} kcal</div>
-                </div>
-                <ProgressBar value={d.total_calories || 0} max={targets.energy} color="var(--color-calories)" label="Calories" />
+        {/* Hero Section: Score Ring + Nutrition Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+          {/* Score Ring */}
+          <div className="lg:col-span-1 bg-card border border-border/60 rounded-2xl p-6 flex flex-col items-center justify-center">
+            <div className="relative w-36 h-36">
+              <svg className="transform -rotate-90 w-full h-full" viewBox="0 0 144 144">
+                <circle cx="72" cy="72" r="64" fill="none" stroke="var(--border)" strokeWidth="8" />
+                <circle
+                  cx="72" cy="72" r="64" fill="none"
+                  stroke={avgScore >= 75 ? "var(--color-protein)" : avgScore >= 50 ? "var(--color-fat)" : "var(--color-iron)"}
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 64}
+                  strokeDashoffset={2 * Math.PI * 64 * (1 - avgScore / 100)}
+                  className="transition-all duration-1000 ease-out"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className={`text-4xl font-bold ${scoreColor}`}>{avgScore}</span>
+                <span className="text-xs text-muted-foreground">/ 100</span>
               </div>
             </div>
+            <h3 className="text-sm font-semibold mt-4">Nutrition Score</h3>
+            <p className="text-xs text-muted-foreground text-center mt-1">
+              {avgScore >= 75 ? "Great progress today!" : avgScore >= 50 ? "Keep going strong" : "Log meals to improve"}
+            </p>
           </div>
 
-          <div className="bg-card border border-border/60 rounded-xl p-5 hover:shadow-lg transition-all duration-300">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold mb-1">Protein Intake</h3>
-                <p className="text-xs text-muted-foreground mb-2">Daily protein consumption vs recommended target</p>
-                <div className="flex items-center gap-2">
-                  <div className="text-xl font-bold text-emerald-600">{(d.total_protein_g || 0).toLocaleString()}g</div>
-                  <div className="text-xs text-muted-foreground">/ {targets.protein_g}g</div>
-                </div>
-                <ProgressBar value={d.total_protein_g || 0} max={targets.protein_g} color="var(--color-protein)" label="Protein" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-card border border-border/60 rounded-xl p-5 hover:shadow-lg transition-all duration-300">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
-                <Beef className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold mb-1">Iron Intake</h3>
-                <p className="text-xs text-muted-foreground mb-2">Daily iron consumption vs recommended target</p>
-                <div className="flex items-center gap-2">
-                  <div className="text-xl font-bold text-blue-600">{(d.total_iron_mg || 0).toLocaleString()}mg</div>
-                  <div className="text-xs text-muted-foreground">/ {targets.iron_mg}mg</div>
-                </div>
-                <ProgressBar value={d.total_iron_mg || 0} max={targets.iron_mg} color="var(--color-iron)" label="Iron" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-card border border-border/60 rounded-xl p-5 hover:shadow-lg transition-all duration-300">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
-                <Milk className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold mb-1">Calcium Intake</h3>
-                <p className="text-xs text-muted-foreground mb-2">Daily calcium consumption vs recommended target</p>
-                <div className="flex items-center gap-2">
-                  <div className="text-xl font-bold text-indigo-600">{(d.total_calcium_mg || 0).toLocaleString()}mg</div>
-                  <div className="text-xs text-muted-foreground">/ {targets.calcium_mg}mg</div>
-                </div>
-                <ProgressBar value={d.total_calcium_mg || 0} max={targets.calcium_mg} color="var(--color-calcium)" label="Calcium" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-card border border-border/60 rounded-xl p-5 hover:shadow-lg transition-all duration-300">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
-                <Target className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold mb-1">Overall Nutrition Score</h3>
-                <p className="text-xs text-muted-foreground mb-2">Overall nutrition score based on key nutrients</p>
-                <div className="flex items-center gap-2">
-                  <div className="text-xl font-bold text-primary">{Math.round(avgScore)}</div>
-                  <div className="text-xs text-muted-foreground">/ 100</div>
-                </div>
-                <ProgressBar value={Math.round(avgScore)} max={100} color="var(--color-primary)" label="Overall Score" />
-              </div>
-            </div>
+          {/* Nutrition Cards */}
+          <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-4">
+            <NutritionCard
+              icon={Flame}
+              label="Energy"
+              sublabel="Calorie intake"
+              value={d.total_calories || 0}
+              unit="kcal"
+              target={targets.energy}
+              color="text-orange-500"
+              iconBg="bg-orange-500/10"
+            />
+            <NutritionCard
+              icon={Beef}
+              label="Protein"
+              sublabel="Essential for muscle"
+              value={d.total_protein_g || 0}
+              unit="g"
+              target={targets.protein_g}
+              color="text-emerald-500"
+              iconBg="bg-emerald-500/10"
+            />
+            <NutritionCard
+              icon={Wheat}
+              label="Carbohydrates"
+              sublabel="Energy source"
+              value={d.total_carbs_g || 0}
+              unit="g"
+              target={targets.carbs_g}
+              color="text-blue-500"
+              iconBg="bg-blue-500/10"
+            />
+            <NutritionCard
+              icon={LeafyGreen}
+              label="Iron"
+              sublabel="Blood health"
+              value={d.total_iron_mg || 0}
+              unit="mg"
+              target={targets.iron_mg}
+              color="text-rose-500"
+              iconBg="bg-rose-500/10"
+            />
+            <NutritionCard
+              icon={Milk}
+              label="Calcium"
+              sublabel="Bone strength"
+              value={d.total_calcium_mg || 0}
+              unit="mg"
+              target={targets.calcium_mg}
+              color="text-indigo-500"
+              iconBg="bg-indigo-500/10"
+            />
+            <NutritionCard
+              icon={Apple}
+              label="Fibre"
+              sublabel="Digestive health"
+              value={d.total_fibre_g || 0}
+              unit="g"
+              target={targets.fibre_g}
+              color="text-amber-500"
+              iconBg="bg-amber-500/10"
+            />
           </div>
         </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Macro Ring and Analysis */}
+          {/* Left Column: Macros + Profile + Analysis */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Macro Ring */}
-            <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center gap-2 mb-4">
+            {/* Macro Rings */}
+            <div className="bg-card border border-border/60 rounded-2xl p-6">
+              <div className="flex items-center gap-2 mb-5">
                 <Target className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-semibold">Nutrition Profile</h2>
+                <h2 className="text-lg font-semibold">Macronutrients</h2>
               </div>
-              <div className="grid grid-cols-3 gap-4">
-                <MacroRing label="Calories" current={d.total_calories || 0} target={targets.energy} unit="kcal" size={120} />
-                <MacroRing label="Protein" current={d.total_protein_g || 0} target={targets.protein_g} unit="g" size={120} />
-                <MacroRing label="Carbs" current={d.total_carbs_g || 0} target={targets.carbs_g} unit="g" size={120} />
-                <MacroRing label="Fat" current={d.total_fat_g || 0} target={targets.fat_g} unit="g" size={120} />
-                <MacroRing label="Iron" current={d.total_iron_mg || 0} target={targets.iron_mg} unit="mg" size={120} color="var(--color-iron)" />
-                <MacroRing label="Calcium" current={d.total_calcium_mg || 0} target={targets.calcium_mg} unit="mg" size={120} color="var(--color-calcium)" />
+              <div className="grid grid-cols-3 gap-2">
+                <MacroRing label="Calories" current={d.total_calories || 0} target={targets.energy} unit="kcal" size={100} />
+                <MacroRing label="Protein" current={d.total_protein_g || 0} target={targets.protein_g} unit="g" size={100} />
+                <MacroRing label="Carbs" current={d.total_carbs_g || 0} target={targets.carbs_g} unit="g" size={100} />
+                <MacroRing label="Fat" current={d.total_fat_g || 0} target={targets.fat_g} unit="g" size={100} />
+                <MacroRing label="Iron" current={d.total_iron_mg || 0} target={targets.iron_mg} unit="mg" size={100} color="var(--color-iron)" />
+                <MacroRing label="Calcium" current={d.total_calcium_mg || 0} target={targets.calcium_mg} unit="mg" size={100} color="var(--color-calcium)" />
               </div>
-              <div className="mt-6 space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Calories</span>
-                  <span className="font-medium">{(d.total_calories || 0).toLocaleString()} kcal</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Protein</span>
-                  <span className="font-medium">{(d.total_protein_g || 0).toLocaleString()}g</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Carbs</span>
-                  <span className="font-medium">{(d.total_carbs_g || 0).toLocaleString()}g</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Fat</span>
-                  <span className="font-medium">{(d.total_fat_g || 0).toLocaleString()}g</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Iron</span>
-                  <span className="font-medium">{(d.total_iron_mg || 0).toLocaleString()}mg</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Calcium</span>
-                  <span className="font-medium">{(d.total_calcium_mg || 0).toLocaleString()}mg</span>
-                </div>
+              <div className="mt-5 space-y-2.5 border-t border-border/40 pt-4">
+                {[
+                  { label: "Calories", value: d.total_calories || 0, unit: "kcal", color: "text-orange-500" },
+                  { label: "Protein", value: d.total_protein_g || 0, unit: "g", color: "text-emerald-500" },
+                  { label: "Carbs", value: d.total_carbs_g || 0, unit: "g", color: "text-blue-500" },
+                  { label: "Fat", value: d.total_fat_g || 0, unit: "g", color: "text-amber-500" },
+                  { label: "Iron", value: d.total_iron_mg || 0, unit: "mg", color: "text-rose-500" },
+                  { label: "Calcium", value: d.total_calcium_mg || 0, unit: "mg", color: "text-indigo-500" },
+                ].map((item) => (
+                  <div key={item.label} className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">{item.label}</span>
+                    <span className={`font-semibold ${item.color}`}>{item.value.toLocaleString()} {item.unit}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* User Summary */}
+            {/* Profile Card */}
             {profile?.profile_summary && (
-              <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-lg">
+              <div className="bg-card border border-border/60 rounded-2xl p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <User className="w-5 h-5 text-primary" />
                   <h2 className="text-lg font-semibold">Your Profile</h2>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-muted-foreground text-xs">Age</span>
-                    <p className="font-medium">{profile.profile_summary.age}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-xs">Gender</span>
-                    <p className="font-medium capitalize">{profile.profile_summary.gender}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-xs">Diet</span>
-                    <p className="font-medium">{profile.profile_summary.diet_type}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-xs">Activity</span>
-                    <p className="font-medium capitalize">{profile.profile_summary.activity_level}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-xs">BMI</span>
-                    <p className="font-medium">{profile.body_metrics?.bmi} ({profile.body_metrics?.status})</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-xs">TDEE</span>
-                    <p className="font-medium">{profile.body_metrics?.tdee} kcal</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-xs">Weight</span>
-                    <p className="font-medium">{profile.body_metrics?.weight_kg} kg</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground text-xs">Height</span>
-                    <p className="font-medium">{profile.body_metrics?.height_cm} cm</p>
-                  </div>
+                  {[
+                    { label: "Age", value: profile.profile_summary.age },
+                    { label: "Gender", value: profile.profile_summary.gender },
+                    { label: "Diet", value: profile.profile_summary.diet_type },
+                    { label: "Activity", value: profile.profile_summary.activity_level },
+                    { label: "BMI", value: `${profile.body_metrics?.bmi} (${profile.body_metrics?.status})` },
+                    { label: "TDEE", value: `${profile.body_metrics?.tdee} kcal` },
+                  ].map((item) => (
+                    <div key={item.label}>
+                      <span className="text-muted-foreground text-xs">{item.label}</span>
+                      <p className="font-medium capitalize">{item.value}</p>
+                    </div>
+                  ))}
                   {profile.profile_summary.region && (
                     <div className="col-span-2">
                       <span className="text-muted-foreground text-xs">Region</span>
@@ -317,122 +393,60 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
                   )}
                 </div>
                 {profile.streak_days > 0 && (
-                  <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-2 text-sm">
+                  <div className="mt-4 pt-3 border-t border-border/40 flex items-center gap-2 text-sm">
                     <Activity className="w-4 h-4 text-primary" />
                     <span className="text-muted-foreground">Tracking streak:</span>
-                    <span className="font-bold">{profile.streak_days} days</span>
+                    <span className="font-bold text-primary">{profile.streak_days} days</span>
                   </div>
                 )}
               </div>
             )}
 
             {/* AI Analysis */}
-            {llmAnalysis && (
-              <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-lg">
-                <div className="flex items-center gap-2 mb-4">
-                  <Brain className="w-5 h-5 text-primary" />
-                  <h2 className="text-lg font-semibold">AI Nutrition Analysis</h2>
-                  {llmLoading && <Loader2 className="w-4 h-4 animate-spin ml-auto" />}
+            <div className="bg-card border border-border/60 rounded-2xl p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Brain className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-semibold">AI Insights</h2>
+                {llmLoading && <Loader2 className="w-4 h-4 animate-spin ml-auto text-primary" />}
+              </div>
+              {llmError && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive mb-4">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>{llmError}</span>
                 </div>
-                {llmError && (
-                  <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-600">
-                    <AlertTriangle className="w-4 h-4" />
-                    <span>Error: {llmError}</span>
-                  </div>
-                )}
-                {llmAnalysis && (
-                  <div className="prose prose-sm max-w-none dark:prose-invert">
-                    <ReactMarkdown>{llmAnalysis}</ReactMarkdown>
-                  </div>
-                )}
-                {!llmAnalysis && !llmLoading && !llmError && (
-                  <div className="text-center py-8">
-                    <Sparkles className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-muted-foreground text-sm">Generate personalized nutrition analysis</p>
-                    <Button 
-                      onClick={generateAnalysis}
-                      disabled={llmLoading || !profile?.body_metrics}
-                      className="mt-4"
-                    >
-                      Generate Analysis
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Quick Actions */}
-            <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-lg">
-              <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-2 gap-3">
-                <Link href="/meal-plan">
-                  <div className="p-4 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/20 cursor-pointer transition-all duration-200">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Utensils className="w-4 h-4 text-primary" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium">Plan Meals</div>
-                        <div className="text-xs text-muted-foreground">Generate daily meal plans</div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-                <Link href="/tracker">
-                  <div className="p-4 rounded-xl bg-muted/50 hover:bg-muted/80 border border-border cursor-pointer transition-all duration-200">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                        <Activity className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium">Track Intake</div>
-                        <div className="text-xs text-muted-foreground">Log your meals</div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-                <Link href="/analytics">
-                  <div className="p-4 rounded-xl bg-muted/50 hover:bg-muted/80 border border-border cursor-pointer transition-all duration-200">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                        <Sparkles className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium">View Analytics</div>
-                        <div className="text-xs text-muted-foreground">Detailed insights</div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-                <Link href="/settings">
-                  <div className="p-4 rounded-xl bg-muted/50 hover:bg-muted/80 border border-border cursor-pointer transition-all duration-200">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                        <Settings className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium">Settings</div>
-                        <div className="text-xs text-muted-foreground">Configure preferences</div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </div>
+              )}
+              {llmAnalysis ? (
+                <div className="prose prose-sm max-w-none dark:prose-invert">
+                  <ReactMarkdown>{llmAnalysis}</ReactMarkdown>
+                </div>
+              ) : !llmLoading ? (
+                <div className="text-center py-6">
+                  <Sparkles className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm mb-4">Get personalized AI nutrition analysis</p>
+                  <Button
+                    onClick={generateAnalysis}
+                    disabled={llmLoading || !profile?.body_metrics}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Generate Analysis
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </div>
 
-          {/* Right Column - Daily Intake */}
+          {/* Right Column: Intake + Meals */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Daily Intake Card */}
-            <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-lg">
+            {/* Today's Intake */}
+            <div className="bg-card border border-border/60 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <Flame className="w-5 h-5 text-primary" />
                   <h2 className="text-lg font-semibold">Today's Intake</h2>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {todayIST}
-                </div>
+                <span className="text-sm text-muted-foreground font-medium">{d.meal_count || 0} meals</span>
               </div>
 
               {d.meal_count === 0 ? (
@@ -440,72 +454,59 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
                   <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
                     <Utensils className="w-8 h-8 text-muted-foreground/50" />
                   </div>
-                  <h3 className="text-lg font-medium mb-2">No meals logged today</h3>
-                  <p className="text-muted-foreground mb-6">Start tracking your nutrition by adding meals</p>
+                  <h3 className="text-lg font-medium mb-2">No meals logged yet</h3>
+                  <p className="text-muted-foreground text-sm mb-6 max-w-xs mx-auto">
+                    Start tracking your nutrition by adding your first meal of the day
+                  </p>
                   <Link href="/tracker">
-                    <Button>Add Your First Meal</Button>
+                    <Button className="gap-2">
+                      <Plus className="w-4 h-4" />
+                      Add Your First Meal
+                    </Button>
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Macro Progress Bars */}
+                <div className="space-y-5">
+                  {/* Macro Progress */}
                   <div className="space-y-3">
-                    <ProgressBar 
-                      value={d.total_calories || 0} 
-                      max={targets.energy} 
-                      color="var(--color-calories)"
-                      label="Calories"
-                    />
-                    <ProgressBar 
-                      value={d.total_protein_g || 0} 
-                      max={targets.protein_g} 
-                      color="var(--color-protein)"
-                      label="Protein"
-                    />
-                    <ProgressBar 
-                      value={d.total_carbs_g || 0} 
-                      max={targets.carbs_g} 
-                      color="var(--color-carbs)"
-                      label="Carbohydrates"
-                    />
-                    <ProgressBar 
-                      value={d.total_fat_g || 0} 
-                      max={targets.fat_g} 
-                      color="var(--color-fat)"
-                      label="Fat"
-                    />
-                    <ProgressBar 
-                      value={d.total_iron_mg || 0} 
-                      max={targets.iron_mg} 
-                      color="var(--color-iron)"
-                      label="Iron"
-                    />
-                    <ProgressBar 
-                      value={d.total_calcium_mg || 0} 
-                      max={targets.calcium_mg} 
-                      color="var(--color-calcium)"
-                      label="Calcium"
-                    />
+                    {[
+                      { label: "Calories", value: d.total_calories || 0, target: targets.energy, color: "var(--color-calories)" },
+                      { label: "Protein", value: d.total_protein_g || 0, target: targets.protein_g, color: "var(--color-protein)" },
+                      { label: "Carbs", value: d.total_carbs_g || 0, target: targets.carbs_g, color: "var(--color-carbs)" },
+                      { label: "Fat", value: d.total_fat_g || 0, target: targets.fat_g, color: "var(--color-fat)" },
+                      { label: "Iron", value: d.total_iron_mg || 0, target: targets.iron_mg, color: "var(--color-iron)" },
+                      { label: "Calcium", value: d.total_calcium_mg || 0, target: targets.calcium_mg, color: "var(--color-calcium)" },
+                    ].map((item) => (
+                      <div key={item.label} className="space-y-1.5">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground font-medium">{item.label}</span>
+                          <span className="font-semibold">
+                            {item.value.toLocaleString()} <span className="text-muted-foreground font-normal">/ {item.target.toLocaleString()}</span>
+                          </span>
+                        </div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            style={{ width: `${pct(item.value, item.target)}%`, backgroundColor: item.color }}
+                            className="h-full rounded-full transition-all duration-700 ease-out"
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
                   {/* Quick Stats */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border/60">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-primary">{(d.meal_count || 0)}</div>
-                      <div className="text-xs text-muted-foreground">Meals</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-orange-600">{(d.total_calories || 0).toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">Calories</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-emerald-600">{(d.total_protein_g || 0).toLocaleString()}g</div>
-                      <div className="text-xs text-muted-foreground">Protein</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-blue-600">{(d.total_carbs_g || 0).toLocaleString()}g</div>
-                      <div className="text-xs text-muted-foreground">Carbs</div>
-                    </div>
+                    {[
+                      { label: "Meals", value: d.meal_count || 0, color: "text-primary" },
+                      { label: "Calories", value: `${(d.total_calories || 0).toLocaleString()}`, color: "text-orange-500" },
+                      { label: "Protein", value: `${(d.total_protein_g || 0).toLocaleString()}g`, color: "text-emerald-500" },
+                      { label: "Carbs", value: `${(d.total_carbs_g || 0).toLocaleString()}g`, color: "text-blue-500" },
+                    ].map((stat) => (
+                      <div key={stat.label} className="text-center p-3 rounded-xl bg-muted/30">
+                        <div className={`text-xl font-bold ${stat.color}`}>{stat.value}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{stat.label}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -513,41 +514,68 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
 
             {/* Recent Meals */}
             {d.meal_count > 0 && (
-              <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-lg">
-                <div className="flex items-center justify-between mb-4">
+              <div className="bg-card border border-border/60 rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-5">
                   <h2 className="text-lg font-semibold">Recent Meals</h2>
                   <Link href="/tracker">
-                    <Button variant="outline" size="sm">View All</Button>
+                    <Button variant="ghost" size="sm" className="gap-1 text-primary">
+                      View All <ChevronRight className="w-4 h-4" />
+                    </Button>
                   </Link>
                 </div>
-
                 <div className="space-y-3">
-                  {Object.entries(d.meals_by_slot || {}).slice(0, 3).map(([slot, items]) => {
+                  {Object.entries(d.meals_by_slot || {}).slice(0, 4).map(([slot, items]) => {
                     const slotInfo = SLOTS.find(s => s.key === slot);
+                    const slotItems = items as any[];
+                    const totalCal = slotItems.reduce((sum, item) => sum + (item.calories || 0), 0);
+                    const totalProt = slotItems.reduce((sum, item) => sum + (item.protein_g || 0), 0);
                     return (
-                      <div key={slot} className="flex items-center gap-4 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                          {slotInfo ? React.createElement(slotInfo.icon, { className: "w-5 h-5 text-primary" }) : null}
+                      <div key={slot} className="flex items-center gap-4 p-3.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group">
+                        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                          {slotInfo ? React.createElement(slotInfo.icon, { className: `w-5 h-5 ${slotInfo.color}` }) : null}
                         </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium">{slotInfo?.label || slot}</div>
-                          <div className="text-xs text-muted-foreground">{(items as any[]).length} items</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold">{slotInfo?.label || slot}</div>
+                          <div className="text-xs text-muted-foreground">{slotItems.length} item{slotItems.length !== 1 ? 's' : ''}</div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm font-semibold">{(items as any[]).reduce((sum, item) => sum + (item.calories || 0), 0)} kcal</div>
-                          <div className="text-xs text-muted-foreground">{(items as any[]).reduce((sum, item) => sum + (item.protein_g || 0), 0)}g protein</div>
+                        <div className="text-right shrink-0">
+                          <div className="text-sm font-bold text-orange-500">{totalCal.toLocaleString()} kcal</div>
+                          <div className="text-xs text-emerald-500">{totalProt.toLocaleString()}g protein</div>
                         </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0" />
                       </div>
                     );
                   })}
                 </div>
               </div>
             )}
+
+            {/* Quick Actions */}
+            <div className="bg-card border border-border/60 rounded-2xl p-6">
+              <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { href: "/meal-plan", label: "Plan Meals", icon: Utensils, color: "text-primary", bg: "bg-primary/10" },
+                  { href: "/tracker", label: "Track Intake", icon: BarChart3, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                  { href: "/analytics", label: "Analytics", icon: Activity, color: "text-blue-500", bg: "bg-blue-500/10" },
+                  { href: "/settings", label: "Settings", icon: Settings, color: "text-amber-500", bg: "bg-amber-500/10" },
+                ].map((action) => (
+                  <Link key={action.href} href={action.href}>
+                    <div className="p-4 rounded-xl bg-muted/30 hover:bg-muted/60 border border-border/40 cursor-pointer transition-all duration-200 group">
+                      <div className="flex flex-col items-center gap-2.5 text-center">
+                        <div className={`w-10 h-10 rounded-xl ${action.bg} flex items-center justify-center`}>
+                          <action.icon className={`w-5 h-5 ${action.color}`} />
+                        </div>
+                        <div className="text-sm font-medium group-hover:text-primary transition-colors">{action.label}</div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-import { Settings } from "lucide-react";

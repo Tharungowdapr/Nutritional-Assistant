@@ -111,12 +111,6 @@ class CitationVerifier:
         else:
             score = 0.0
 
-        if signals:
-            total_weight = sum(w for _, _, w in signals)
-            score = sum(s * w for _, s, w in signals) / total_weight
-        else:
-            score = 0.0
-
         status = "VERIFIED"
         alerts = []
         if score < 0.3:

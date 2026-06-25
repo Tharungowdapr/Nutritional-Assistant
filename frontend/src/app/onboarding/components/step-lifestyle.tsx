@@ -19,7 +19,7 @@ export default function StepLifestyle({ data, onChange, onNext, onBack }: Props)
       <div className="space-y-4">
         <div className="space-y-2">
           <Label>Diet Type</Label>
-          <select className="w-full h-10 px-3 rounded-md border border-input bg-card" value={data.diet_type} onChange={(e) => onChange("diet_type", e.target.value)}>
+          <select className="w-full h-10 px-3 rounded-md border border-input bg-card focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" value={data.diet_type} onChange={(e) => onChange("diet_type", e.target.value)}>
             <option value="VEG">Vegetarian</option>
             <option value="NON-VEG">Non-Vegetarian</option>
             <option value="VEGAN">Vegan</option>
@@ -27,7 +27,7 @@ export default function StepLifestyle({ data, onChange, onNext, onBack }: Props)
         </div>
         <div className="space-y-2">
           <Label>Life Stage</Label>
-          <select className="w-full h-10 px-3 rounded-md border border-input bg-card" value={data.life_stage} onChange={(e) => onChange("life_stage", e.target.value)}>
+          <select className="w-full h-10 px-3 rounded-md border border-input bg-card focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" value={data.life_stage} onChange={(e) => onChange("life_stage", e.target.value)}>
             <option value="Child">Child</option>
             <option value="Teen">Teen</option>
             <option value="Adult">Adult</option>
@@ -38,7 +38,7 @@ export default function StepLifestyle({ data, onChange, onNext, onBack }: Props)
         </div>
         <div className="space-y-2">
           <Label>Activity Level</Label>
-          <select className="w-full h-10 px-3 rounded-md border border-input bg-card" value={data.activity_level} onChange={(e) => onChange("activity_level", e.target.value)}>
+          <select className="w-full h-10 px-3 rounded-md border border-input bg-card focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" value={data.activity_level} onChange={(e) => onChange("activity_level", e.target.value)}>
             <option value="Sedentary">Sedentary</option>
             <option value="Light">Light</option>
             <option value="Moderate">Moderate</option>
@@ -47,7 +47,7 @@ export default function StepLifestyle({ data, onChange, onNext, onBack }: Props)
         </div>
         <div className="space-y-2">
           <Label>Region (Zone)</Label>
-          <select className="w-full h-10 px-3 rounded-md border border-input bg-card" value={data.region_zone} onChange={(e) => onChange("region_zone", e.target.value)}>
+          <select className="w-full h-10 px-3 rounded-md border border-input bg-card focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" value={data.region_zone} onChange={(e) => onChange("region_zone", e.target.value)}>
             <option value="North">North</option>
             <option value="South">South</option>
             <option value="East">East</option>

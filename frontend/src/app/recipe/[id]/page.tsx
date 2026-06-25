@@ -6,8 +6,9 @@ import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Clock, Flame, Droplets, Zap } from "lucide-react";
+import { ArrowLeft, Clock, Flame, Droplets, Zap, Loader2, Utensils } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
@@ -35,15 +36,46 @@ export default function RecipeDetailPage() {
   }, [id, user, loading]);
 
   if (!user) {
-    return <div className="p-8">Please log in to view recipes.</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
+        <div className="bg-card border border-border/60 rounded-2xl p-8 max-w-md w-full text-center shadow-xl">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Utensils className="w-8 h-8 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold mb-2">Sign in to view recipes</h1>
+          <p className="text-muted-foreground mb-6 text-sm">Access IFCT-verified Indian recipes with full nutrition data.</p>
+          <Link href="/login"><Button className="w-full">Sign in</Button></Link>
+        </div>
+      </div>
+    );
   }
 
   if (isLoading) {
-    return <div className="p-8">Loading recipe...</div>;
+    return (
+      <div className="min-h-screen bg-background p-4 md:p-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="animate-pulse space-y-6">
+            <div className="h-5 w-24 rounded bg-muted/50" />
+            <div className="h-10 w-64 rounded bg-muted/50" />
+            <div className="h-40 rounded-xl bg-muted/50" />
+            <div className="h-60 rounded-xl bg-muted/50" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!recipe) {
-    return <div className="p-8">Recipe not found</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
+        <div className="bg-card border border-border/60 rounded-2xl p-8 max-w-md w-full text-center shadow-xl">
+          <Utensils className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
+          <h1 className="text-xl font-bold mb-2">Recipe not found</h1>
+          <p className="text-muted-foreground text-sm mb-6">The recipe you're looking for doesn't exist or has been removed.</p>
+          <Link href="/recipes"><Button>Back to Recipes</Button></Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -52,7 +84,7 @@ export default function RecipeDetailPage() {
         {/* Back Button */}
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -60,7 +92,7 @@ export default function RecipeDetailPage() {
 
         {/* Recipe Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-4">{recipe.title}</h1>
+          <h1 className="text-3xl font-bold mb-4">{recipe.title}</h1>
           <div className="flex flex-wrap gap-4 text-sm">
             {recipe.cook_time_minutes && (
               <div className="flex items-center gap-2 text-muted-foreground">
@@ -168,7 +200,6 @@ export default function RecipeDetailPage() {
           <Button onClick={() => router.push("/recipes")} variant="outline" className="flex-1">
             Back to Recipes
           </Button>
-          <Button className="flex-1">Save to Favorites</Button>
         </div>
       </div>
     </div>

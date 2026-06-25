@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 interface MacroRingProps {
   label: string;
   current: number;
@@ -17,7 +19,12 @@ export function MacroRing({ label, current, target, unit, color = "var(--primary
   const dashOffset = circumference - (pct / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center">
+    <motion.div 
+      className="flex flex-col items-center"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
+    >
       <div className="relative" style={{ width: size, height: size }}>
         <svg className="transform -rotate-90" viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
           <circle
@@ -28,7 +35,7 @@ export function MacroRing({ label, current, target, unit, color = "var(--primary
             stroke="var(--border)"
             strokeWidth={strokeWidth}
           />
-          <circle
+          <motion.circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
@@ -37,17 +44,39 @@ export function MacroRing({ label, current, target, unit, color = "var(--primary
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            className="transition-all duration-700 ease-out"
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: dashOffset }}
+            transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-sm font-bold leading-none">{current}</span>
+          <motion.span 
+            className="text-sm font-bold leading-none"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.8 }}
+          >
+            {current}
+          </motion.span>
           <span className="text-[9px] text-muted-foreground">{unit}</span>
         </div>
       </div>
-      <p className="text-xs font-medium text-muted-foreground mt-2">{label}</p>
-      <p className="text-[10px] text-muted-foreground/50">{pct}%</p>
-    </div>
+      <motion.p 
+        className="text-xs font-medium text-muted-foreground mt-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+      >
+        {label}
+      </motion.p>
+      <motion.p 
+        className="text-[10px] text-muted-foreground/50"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.1 }}
+      >
+        {pct}%
+      </motion.p>
+    </motion.div>
   );
 }

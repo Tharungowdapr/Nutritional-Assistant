@@ -26,7 +26,7 @@ export default function StepHealth({ data, onToggleCondition, onChange, onNext, 
               <label key={cond}
                 className={`flex items-center gap-2 p-2 rounded-lg border transition-colors cursor-pointer ${data.conditions.includes(cond) ? "bg-primary/10 border-primary" : "border-border hover:bg-muted/30"}`}
               >
-                <input type="checkbox" checked={data.conditions.includes(cond)} onChange={() => onToggleCondition(cond)} className="w-4 h-4 rounded" />
+                <input type="checkbox" checked={data.conditions.includes(cond)} onChange={() => onToggleCondition(cond)} className="w-4 h-4 rounded accent-primary focus-visible:ring-2 focus-visible:ring-ring" />
                 <span className="text-sm">{cond}</span>
               </label>
             ))}
@@ -34,7 +34,7 @@ export default function StepHealth({ data, onToggleCondition, onChange, onNext, 
         </div>
         <div className="space-y-2">
           <Label>GLP-1 Medication (if applicable)</Label>
-          <select className="w-full h-10 px-3 rounded-md border border-input bg-card" value={data.glp1_medication} onChange={(e) => onChange("glp1_medication", e.target.value)}>
+          <select className="w-full h-10 px-3 rounded-md border border-input bg-card focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" value={data.glp1_medication} onChange={(e) => onChange("glp1_medication", e.target.value)}>
             <option value="">None</option>
             <option value="Semaglutide">Semaglutide</option>
             <option value="Tirzepatide">Tirzepatide</option>
@@ -44,7 +44,7 @@ export default function StepHealth({ data, onToggleCondition, onChange, onNext, 
         {data.glp1_medication && (
           <div className="space-y-2">
             <Label>GLP-1 Phase</Label>
-            <select className="w-full h-10 px-3 rounded-md border border-input bg-card" value={data.glp1_phase} onChange={(e) => onChange("glp1_phase", e.target.value)}>
+            <select className="w-full h-10 px-3 rounded-md border border-input bg-card focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" value={data.glp1_phase} onChange={(e) => onChange("glp1_phase", e.target.value)}>
               <option value="">Select phase</option>
               <option value="Titration">Titration</option>
               <option value="Maintenance">Maintenance</option>

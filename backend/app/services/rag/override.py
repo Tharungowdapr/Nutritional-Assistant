@@ -2,6 +2,18 @@ import json
 import httpx
 import asyncio
 
+# Module-level shared HTTP client for connection reuse
+_http_client: httpx.AsyncClient | None = None
+_http_client_lock = asyncio.Lock()
+
+
+async def _get_http_client() -> httpx.AsyncClient:
+    """Get or create a shared async HTTP client."""
+    global _http_client
+    if _http_client is None or _http_client.is_closed:
+        _http_client = httpx.AsyncClient(timeout=120)
+    return _http_client
+
 
 async def stream_generate_override(
     prompt: str, system: str, config: dict, json_mode: bool = False, max_tokens: int = 1024
@@ -42,49 +54,49 @@ async def stream_generate_override(
         logger = logging.getLogger("app.services.rag.override")
         logger.info(f"Overriding LLM with {provider} ({model})")
 
-        async with httpx.AsyncClient(timeout=120) as client:
-            try:
-                async with client.stream(
-                    "POST", url, json=payload, headers={"Authorization": f"Bearer {api_key}"}
-                ) as resp:
-                    if resp.status_code == 401 or resp.status_code == 403:
-                        yield "INVALID_API_KEY"
-                        return
-                    if resp.status_code == 429 or resp.status_code == 413:
-                        yield "RATE_LIMITED"
-                        return
-                    if resp.status_code != 200:
-                        error_text = await resp.aread()
-                        logger.error(f"{provider} API failed ({resp.status_code}): {error_text.decode()}")
-                        yield f"Error from {provider}: {resp.status_code}"
-                        return
+        client = await _get_http_client()
+        try:
+            async with client.stream(
+                "POST", url, json=payload, headers={"Authorization": f"Bearer {api_key}"}
+            ) as resp:
+                if resp.status_code == 401 or resp.status_code == 403:
+                    yield "INVALID_API_KEY"
+                    return
+                if resp.status_code == 429 or resp.status_code == 413:
+                    yield "RATE_LIMITED"
+                    return
+                if resp.status_code != 200:
+                    error_text = await resp.aread()
+                    logger.error(f"{provider} API failed ({resp.status_code}): {error_text.decode()}")
+                    yield f"Error from {provider}: {resp.status_code}"
+                    return
 
-                    buf = ""
-                    last_yield = asyncio.get_event_loop().time()
-                    async for line in resp.aiter_lines():
-                        try:
-                            if not line.startswith("data: "):
-                                continue
-                            raw = line[6:]
-                            if raw.strip() == "[DONE]":
-                                break
-                            part = json.loads(raw)
-                            delta = part["choices"][0]["delta"].get("content", "")
-                            if not delta:
-                                continue
-                            buf += delta
-                            now = asyncio.get_event_loop().time()
-                            if len(buf) >= 30 or (now - last_yield) >= 0.15:
-                                yield buf
-                                buf = ""
-                                last_yield = now
-                        except Exception:
+                buf = ""
+                last_yield = asyncio.get_running_loop().time()
+                async for line in resp.aiter_lines():
+                    try:
+                        if not line.startswith("data: "):
                             continue
-                    if buf:
-                        yield buf
-            except Exception as e:
-                logger.error(f"{provider} Connection Error: {e}")
-                yield f"Connection error: {str(e)}"
+                        raw = line[6:]
+                        if raw.strip() == "[DONE]":
+                            break
+                        part = json.loads(raw)
+                        delta = part["choices"][0]["delta"].get("content", "")
+                        if not delta:
+                            continue
+                        buf += delta
+                        now = asyncio.get_running_loop().time()
+                        if len(buf) >= 30 or (now - last_yield) >= 0.15:
+                            yield buf
+                            buf = ""
+                            last_yield = now
+                    except Exception:
+                        continue
+                if buf:
+                    yield buf
+        except Exception as e:
+            logger.error(f"{provider} Connection Error: {e}")
+            yield f"Connection error: {str(e)}"
 
     elif provider == "gemini":
         import google.generativeai as genai
@@ -108,18 +120,18 @@ async def stream_generate_override(
     elif provider == "ollama":
         url = api_key if api_key.startswith("http") else "http://localhost:11434"
         payload = {"model": model, "prompt": prompt, "system": system, "stream": True}
-        async with httpx.AsyncClient(timeout=120) as client:
-            async with client.stream("POST", f"{url}/api/generate", json=payload) as resp:
-                resp.raise_for_status()
-                async for line in resp.aiter_lines():
-                    if not line:
-                        continue
-                    try:
-                        part = json.loads(line)
-                        if "response" in part:
-                            yield part["response"]
-                    except Exception:
-                        continue
+        client = await _get_http_client()
+        async with client.stream("POST", f"{url}/api/generate", json=payload) as resp:
+            resp.raise_for_status()
+            async for line in resp.aiter_lines():
+                if not line:
+                    continue
+                try:
+                    part = json.loads(line)
+                    if "response" in part:
+                        yield part["response"]
+                except Exception:
+                    continue
     elif provider == "cohere":
         import cohere
 

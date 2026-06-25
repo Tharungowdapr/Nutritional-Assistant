@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { adminApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
-import { Users, MessageSquare, TrendingUp, Settings, LogOut } from 'lucide-react';
+import { Users, MessageSquare, TrendingUp, Settings, LogOut, Loader2 } from 'lucide-react';
 
 interface Stats {
   total_users: number;
@@ -30,6 +30,37 @@ interface UsageStats {
   total_chats: number;
   avg_chats_per_user: number;
   top_active_users: Array<{ name: string; chats: number }>;
+}
+
+function AdminSkeleton() {
+  return (
+    <div className="min-h-screen bg-background p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8 space-y-3">
+          <div className="animate-pulse h-9 w-48 rounded-lg bg-muted/50" />
+          <div className="animate-pulse h-4 w-64 rounded-lg bg-muted/50" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="bg-card rounded-xl p-6 border border-border/60">
+              <div className="animate-pulse space-y-3">
+                <div className="h-4 w-20 rounded bg-muted/50" />
+                <div className="h-8 w-12 rounded bg-muted/50" />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="bg-card rounded-xl p-6 border border-border/60">
+          <div className="animate-pulse h-6 w-40 rounded bg-muted/50 mb-6" />
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-12 rounded-lg bg-muted/50" />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function AdminPage() {
@@ -82,26 +113,20 @@ export default function AdminPage() {
     setShowUserDetail(true);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading admin dashboard...</div>
-      </div>
-    );
-  }
+  if (loading) return <AdminSkeleton />;
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">System statistics and user management</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
+          <p className="text-muted-foreground text-sm">System statistics and user management</p>
         </div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <div className="bg-card rounded-lg p-6 border border-border flex items-center justify-between">
+          <div className="bg-card rounded-xl p-6 border border-border/60 flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm">Total Users</p>
               <p className="text-3xl font-bold text-foreground mt-2">{stats?.total_users || 0}</p>
@@ -109,7 +134,7 @@ export default function AdminPage() {
             <Users className="w-8 h-8 text-primary opacity-50" />
           </div>
 
-          <div className="bg-card rounded-lg p-6 border border-border flex items-center justify-between">
+          <div className="bg-card rounded-xl p-6 border border-border/60 flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm">Active (24h)</p>
               <p className="text-3xl font-bold text-foreground mt-2">{stats?.active_users_24h || 0}</p>
@@ -117,7 +142,7 @@ export default function AdminPage() {
             <TrendingUp className="w-8 h-8 text-chart-2 opacity-50" />
           </div>
 
-          <div className="bg-card rounded-lg p-6 border border-border flex items-center justify-between">
+          <div className="bg-card rounded-xl p-6 border border-border/60 flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm">Total Chats</p>
               <p className="text-3xl font-bold text-foreground mt-2">{stats?.total_chats || 0}</p>
@@ -125,7 +150,7 @@ export default function AdminPage() {
             <MessageSquare className="w-8 h-8 text-chart-4 opacity-50" />
           </div>
 
-          <div className="bg-card rounded-lg p-6 border border-border flex items-center justify-between">
+          <div className="bg-card rounded-xl p-6 border border-border/60 flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm">Chats (24h)</p>
               <p className="text-3xl font-bold text-foreground mt-2">{stats?.chats_24h || 0}</p>
@@ -133,7 +158,7 @@ export default function AdminPage() {
             <MessageSquare className="w-8 h-8 text-chart-5 opacity-50" />
           </div>
 
-          <div className="bg-card rounded-lg p-6 border border-border flex items-center justify-between">
+          <div className="bg-card rounded-xl p-6 border border-border/60 flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm">Avg Chats/User</p>
               <p className="text-3xl font-bold text-foreground mt-2">{usageStats?.avg_chats_per_user.toFixed(1) || 0}</p>
@@ -143,7 +168,7 @@ export default function AdminPage() {
         </div>
 
         {usageStats && usageStats.top_active_users.length > 0 && (
-          <div className="bg-card rounded-2xl p-6 border border-border mb-8">
+          <div className="bg-card rounded-xl p-6 border border-border/60 mb-8">
             <h2 className="text-xl font-bold text-foreground mb-4">Top Active Users</h2>
             <div className="space-y-3">
               {usageStats.top_active_users.map((user, idx) => (
@@ -158,7 +183,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        <div className="bg-card rounded-2xl p-6 border border-border">
+        <div className="bg-card rounded-xl p-6 border border-border/60">
           <h2 className="text-xl font-bold text-foreground mb-4">Users Management</h2>
           
           <div className="overflow-x-auto">
@@ -229,7 +254,7 @@ export default function AdminPage() {
               >
                 Previous
               </Button>
-              <span className="text-slate-300">
+              <span className="text-muted-foreground text-sm">
                 Page {page} of {totalPages}
               </span>
               <Button
@@ -246,28 +271,34 @@ export default function AdminPage() {
 
       {/* User Detail Modal */}
       {showUserDetail && selectedUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-2xl p-8 max-w-2xl w-full mx-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && setShowUserDetail(false)}>
+          <div
+            className="bg-card border border-border rounded-2xl p-8 max-w-2xl w-full mx-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`User details for ${selectedUser.name}`}
+            onKeyDown={(e) => { if (e.key === 'Escape') setShowUserDetail(false); }}
+          >
             <h2 className="text-2xl font-bold text-foreground mb-6">User Details</h2>
             
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-muted/50 rounded-lg p-4 border border-border">
+              <div className="bg-muted/50 rounded-xl p-4 border border-border/60">
                 <p className="text-xs text-muted-foreground mb-1">Name</p>
                 <p className="text-lg font-bold text-foreground">{selectedUser.name}</p>
               </div>
-              <div className="bg-muted/50 rounded-lg p-4 border border-border">
+              <div className="bg-muted/50 rounded-xl p-4 border border-border/60">
                 <p className="text-xs text-muted-foreground mb-1">Email</p>
                 <p className="text-lg font-bold text-foreground">{selectedUser.email}</p>
               </div>
-              <div className="bg-muted/50 rounded-lg p-4 border border-border">
+              <div className="bg-muted/50 rounded-xl p-4 border border-border/60">
                 <p className="text-xs text-muted-foreground mb-1">Admin Status</p>
                 <p className="text-lg font-bold text-foreground">{selectedUser.is_admin ? 'Yes' : 'No'}</p>
               </div>
-              <div className="bg-muted/50 rounded-lg p-4 border border-border">
+              <div className="bg-muted/50 rounded-xl p-4 border border-border/60">
                 <p className="text-xs text-muted-foreground mb-1">Email Verified</p>
                 <p className="text-lg font-bold text-foreground">{selectedUser.email_verified ? 'Yes' : 'No'}</p>
               </div>
-              <div className="bg-muted/50 rounded-lg p-4 border border-border col-span-2">
+              <div className="bg-muted/50 rounded-xl p-4 border border-border/60 col-span-2">
                 <p className="text-xs text-muted-foreground mb-1">Created</p>
                 <p className="text-lg font-bold text-foreground">{new Date(selectedUser.created_at).toLocaleDateString()}</p>
               </div>

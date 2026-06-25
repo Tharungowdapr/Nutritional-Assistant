@@ -229,21 +229,21 @@ export default function RecipesPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search recipes..."
-            className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-2.5 text-sm outline-none focus:border-primary"
+            className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-2.5 text-sm outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
 
         <div className="flex flex-wrap gap-2">
           {["All","Breakfast","Lunch","Dinner","Snack"].map(c => (
-            <button key={c} onClick={() => setCategory(c)} className={cn("px-3 py-1.5 rounded-md text-xs font-medium border transition-colors", category === c ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted")}>{c}</button>
+            <button key={c} onClick={() => setCategory(c)} aria-pressed={category === c} className={cn("px-3 py-1.5 rounded-md text-xs font-medium border transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none", category === c ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted")}>{c}</button>
           ))}
-          <div className="w-px bg-border mx-1" />
+          <div className="w-px bg-border mx-1" role="separator" />
           {["All","VEG","NON-VEG"].map(d => (
-            <button key={d} onClick={() => setDietFilter(d)} className={cn("px-3 py-1.5 rounded-md text-xs font-medium border transition-colors", dietFilter === d ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted")}>{d}</button>
+            <button key={d} onClick={() => setDietFilter(d)} aria-pressed={dietFilter === d} className={cn("px-3 py-1.5 rounded-md text-xs font-medium border transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none", dietFilter === d ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted")}>{d}</button>
           ))}
-          <div className="w-px bg-border mx-1" />
+          <div className="w-px bg-border mx-1" role="separator" />
           {["All","High Iron","High Calcium","High Protein"].map(g => (
-            <button key={g} onClick={() => setGoalFilter(g)} className={cn("px-3 py-1.5 rounded-md text-xs font-medium border transition-colors", goalFilter === g ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted")}>{g}</button>
+            <button key={g} onClick={() => setGoalFilter(g)} aria-pressed={goalFilter === g} className={cn("px-3 py-1.5 rounded-md text-xs font-medium border transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none", goalFilter === g ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted")}>{g}</button>
           ))}
         </div>
       </div>

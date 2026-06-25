@@ -22,7 +22,7 @@ export default function StepPhysiology({ data, onChange, onNext }: Props) {
         </div>
         <div className="space-y-2">
           <Label>Gender</Label>
-          <select className="w-full h-10 px-3 rounded-md border border-input bg-card" value={data.gender} onChange={(e) => onChange("gender", e.target.value)}>
+          <select className="w-full h-10 px-3 rounded-md border border-input bg-card focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none" value={data.gender} onChange={(e) => onChange("gender", e.target.value)}>
             <option value="Female">Female</option>
             <option value="Male">Male</option>
           </select>

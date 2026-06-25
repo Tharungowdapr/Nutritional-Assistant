@@ -38,6 +38,7 @@ from app.schemas.auth import (
 from app.core.dependencies import require_user
 from fastapi.responses import JSONResponse
 from app.utils.general import calculate_profile_completion
+from app.core.config import settings
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 limiter = Limiter(key_func=get_remote_address)
@@ -60,6 +61,9 @@ async def signup(request: Request, data: SignupRequest, db: Session = Depends(ge
     db.commit()
     db.refresh(user)
 
+    user.last_login_at = datetime.now(timezone.utc)
+    db.commit()
+
     token = create_access_token(data={"sub": str(user.id)})
     return TokenResponse(
         access_token=token,
@@ -80,6 +84,9 @@ async def login(request: Request, data: LoginRequest, db: Session = Depends(get_
     user = db.query(UserDB).filter(UserDB.email == data.email.lower()).first()
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    user.last_login_at = datetime.now(timezone.utc)
+    db.commit()
 
     token = create_access_token(data={"sub": str(user.id)})
     return TokenResponse(
@@ -125,9 +132,9 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Ses
 
         # Send email only if RESEND_API_KEY is configured
         import resend
-        from app.core.config import settings
 
         resend_key = getattr(settings, "RESEND_API_KEY", "") or ""
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3001")
         if resend_key:  # ✅ fixed: was checking SECRET_KEY (always truthy)
             resend.api_key = resend_key
             try:
@@ -137,7 +144,7 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Ses
                         "to": [user.email],
                         "subject": "Password Reset — AaharAI NutriSync",
                         "html": (
-                            f"<p>Reset your password: <a href='http://localhost:3001/reset-password?token={token}'>"
+                            f"<p>Reset your password: <a href='{frontend_url}/reset-password?token={token}'>"
                             f"Click here</a></p>"
                             f"<p>This link expires in 1 hour.</p>"
                         ),

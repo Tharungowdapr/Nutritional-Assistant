@@ -162,7 +162,7 @@ async def get_daily_summary(
 
 @router.get("/summary")
 async def get_summary(
-    days: int = 7,
+    days: int = Query(default=7, ge=1, le=90),
     current_user: UserDB = Depends(require_user),
     db_session=Depends(get_db),
 ):

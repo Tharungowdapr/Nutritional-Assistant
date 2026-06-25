@@ -29,6 +29,8 @@ _llm_router = None
 _rag_service = None
 _meal_agent = None
 _startup_done = False
+_rag_lock = None  # Initialized in lifespan
+_bg_task = None
 
 
 def _log_mem(stage: str):
@@ -109,7 +111,7 @@ async def _init_background():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: app serves immediately, heavy init runs in background."""
-    global _startup_done
+    global _startup_done, _bg_task
 
     logger.info("Starting AaharAI NutriSync...")
 
@@ -119,7 +121,7 @@ async def lifespan(app: FastAPI):
     # Deferred background initialization (app starts serving immediately)
     import asyncio
 
-    asyncio.create_task(_init_background())
+    _bg_task = asyncio.create_task(_init_background())
 
     logger.info("API ready! (services initializing in background)")
     _startup_done = True
@@ -127,8 +129,14 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down...")
 
 
-# Rate Limiter
-limiter = Limiter(key_func=get_remote_address)
+    # Rate Limiter — use X-Forwarded-For for Render/proxy support
+    def _get_client_ip(request):
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+        return request.client.host if request.client else "unknown"
+
+    limiter = Limiter(key_func=_get_client_ip)
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -168,7 +176,7 @@ async def add_security_headers(request: Request, call_next):
     # CSP for additional protection
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+        "script-src 'self' 'unsafe-inline'; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: https:; "
         "font-src 'self' data:; "

@@ -87,6 +87,9 @@ class Settings(BaseSettings):
         "http://localhost:8000",
     ]
 
+    # ── Frontend URL (for password reset links, etc.) ──────────
+    FRONTEND_URL: str = "http://localhost:3001"
+
     # ── Security ──
     ALLOWED_HOSTS: list[str] = ["*"]  # Allow all in dev; override via env in production
 

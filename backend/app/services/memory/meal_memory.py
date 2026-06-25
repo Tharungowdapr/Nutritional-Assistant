@@ -117,7 +117,7 @@ def get_daily_summary(user_id: int, date: str = None) -> Dict[str, Any]:
         return {"date": date, "meals": len(meals), **totals}
     except Exception as e:
         logger.warning(f"Failed to get daily summary: {e}")
-        return {"date": date, "meals": 0, **totals}
+        return {"date": date, "meals": 0, "calories": 0, "protein_g": 0, "fat_g": 0, "carbs_g": 0, "fibre_g": 0}
     finally:
         db.close()
 

@@ -94,7 +94,7 @@ export default function ChatPage() {
 
       {/* Mobile sidebar toggle */}
       <button
-        className="md:hidden fixed bottom-20 right-4 z-50 p-3 rounded-full bg-primary text-primary-foreground shadow-lg"
+        className="md:hidden fixed bottom-20 right-4 z-50 p-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         onClick={() => setSidebarOpen(!sidebarOpen)}
         aria-label={sidebarOpen ? "Close chat history sidebar" : "Open chat history sidebar"}
       >
@@ -254,7 +254,7 @@ export default function ChatPage() {
         </div>
 
         {/* Input */}
-        <div className="shrink-0 p-4 border-t border-border/60 bg-background/70 backdrop-blur-sm">
+        <div className="shrink-0 p-4 border-t border-border/60 bg-background/70 backdrop-blur-sm pb-16 lg:pb-4">
           <form onSubmit={handleSend} className="max-w-3xl mx-auto flex items-center gap-2">
             <Input
               ref={inputRef}

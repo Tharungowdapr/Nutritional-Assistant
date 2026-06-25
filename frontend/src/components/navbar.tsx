@@ -74,7 +74,9 @@ export function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted transition-colors"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                aria-label="User menu"
+                aria-expanded={profileMenuOpen}
               >
                 <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
                   {user.name?.charAt(0)?.toUpperCase() || "U"}

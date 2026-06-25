@@ -232,7 +232,10 @@ async def update_session_title(
         raise HTTPException(status_code=404, detail="Chat session not found")
 
     if "title" in title_data:
-        session.title = title_data["title"]
+        title_val = str(title_data["title"]).strip()
+        if not title_val:
+            raise HTTPException(status_code=400, detail="Title cannot be empty")
+        session.title = title_val[:255]
         db.commit()
 
     return ChatSessionResponse(

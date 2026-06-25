@@ -105,9 +105,17 @@ export function RAGChatSidebar({ currentSessionId, onSessionSelect }: RAGChatSid
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-2">
           {isLoading ? (
-            <p className="text-xs text-muted-foreground">Loading chats...</p>
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="animate-pulse h-12 rounded-lg bg-muted/50" />
+              ))}
+            </div>
           ) : sessions.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No chats yet. Create one to start!</p>
+            <div className="text-center py-8">
+              <MessageSquare className="w-8 h-8 mx-auto mb-2 text-muted-foreground/40" />
+              <p className="text-xs text-muted-foreground">No chats yet</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">Create one to get started</p>
+            </div>
           ) : (
             sessions.map(session => (
               <div

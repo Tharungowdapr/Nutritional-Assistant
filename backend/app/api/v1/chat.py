@@ -7,7 +7,7 @@ import json
 import uuid
 import logging
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi import APIRouter, Depends, Request, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from slowapi import Limiter
@@ -223,15 +223,15 @@ async def chat_stream(
 
         except Exception as e:
             logger.error(f"Streaming error: {e}")
-            yield f"data: {json.dumps({'error': str(e), 'final': True})}\n\n"
+            yield f"data: {json.dumps({'error': 'An error occurred while generating the response. Please try again.', 'final': True})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @router.get("/history")
 async def get_chat_history(
-    limit: int = 50,
-    offset: int = 0,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
     user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):

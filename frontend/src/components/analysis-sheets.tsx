@@ -21,7 +21,7 @@ export function AnalysisSheets() {
   }, []);
 
   if (err) {
-    return <div className="bg-card border border-border rounded-xl p-5 text-red-700">Error: {err}</div>;
+    return <div className="bg-card border border-border/60 rounded-xl p-5 text-destructive">Error: {err}</div>;
   }
 
   if (!report || !report.sheets) return null;
@@ -47,7 +47,7 @@ export function AnalysisSheets() {
               </thead>
               <tbody>
                 {(sheet.rows || []).slice(0, 50).map((row: any, rIdx: number) => (
-                  <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-white/5' : ''}>
+                  <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-muted/20' : ''}>
                     {(sheet.columns || []).map((col: string, cIdx: number) => (
                       <td key={cIdx} className="px-2 py-1">{row?.[col] ?? ''}</td>
                     ))}

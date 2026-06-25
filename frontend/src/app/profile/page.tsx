@@ -87,13 +87,13 @@ export default function ProfilePage() {
   const bmi = calcBmi();
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
+    <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold flex items-center gap-3">
+        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
           <User className="w-8 h-8 text-primary" />
           My Profile
         </h1>
-        <p className="text-muted-foreground mt-2">Manage your personal information and health profile</p>
+        <p className="text-muted-foreground mt-2 text-sm">Manage your personal information and health profile</p>
       </div>
 
       {/* Personal Information */}
@@ -129,7 +129,7 @@ export default function ProfilePage() {
               value={bio} 
               onChange={e => setBio(e.target.value)}
               placeholder="Tell us about yourself..."
-              className="w-full h-24 px-3 py-2 border border-border rounded-xl bg-background text-sm resize-none"
+              className="w-full h-24 px-3 py-2 border border-border rounded-xl bg-background text-sm resize-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             />
           </div>
         </CardContent>
@@ -159,7 +159,7 @@ export default function ProfilePage() {
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">Gender</label>
-              <select value={gender} onChange={e => setGender(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border bg-background">
+              <select value={gender} onChange={e => setGender(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
                 <option value="male">Male</option>
                 <option value="female">Female</option>
                 <option value="other">Other</option>
@@ -182,7 +182,7 @@ export default function ProfilePage() {
 
           <div>
             <label className="text-sm font-medium mb-2 block">Activity Level</label>
-            <select value={activityLevel} onChange={e => setActivityLevel(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border bg-background">
+              <select value={activityLevel} onChange={e => setActivityLevel(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
               <option value="sedentary">Sedentary (little/no exercise)</option>
               <option value="light">Light (1-3 days/week)</option>
               <option value="moderate">Moderate (3-5 days/week)</option>
@@ -205,7 +205,7 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Diet Type</label>
-              <select value={dietType} onChange={e => setDietType(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border bg-background">
+              <select value={dietType} onChange={e => setDietType(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
                 <option value="VEG">Vegetarian</option>
                 <option value="NON-VEG">Non-Vegetarian</option>
                 <option value="VEGAN">Vegan</option>
@@ -214,7 +214,7 @@ export default function ProfilePage() {
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">Primary Goal</label>
-              <select value={goal} onChange={e => setGoal(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border bg-background">
+              <select value={goal} onChange={e => setGoal(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-border bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
                 <option value="Maintenance">Maintain Weight</option>
                 <option value="Weight Loss">Weight Loss</option>
                 <option value="Muscle Gain">Muscle Gain</option>
