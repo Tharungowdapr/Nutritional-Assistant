@@ -4,7 +4,7 @@ Daily food logging with macro tracking.
 """
 
 from zoneinfo import ZoneInfo
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from datetime import datetime, timedelta
 
 from app.models.user import get_db, DailyLogDB, UserDB
