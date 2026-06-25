@@ -4,14 +4,12 @@ Entry point for the FastAPI application.
 """
 
 import logging
-import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from app.api.v1.router import api_router
@@ -29,7 +27,6 @@ _llm_router = None
 _rag_service = None
 _meal_agent = None
 _startup_done = False
-_rag_lock = None  # Initialized in lifespan
 _bg_task = None
 
 
@@ -108,6 +105,17 @@ async def _init_background():
         logger.warning(f"LLM router init deferred: {e}")
 
 
+# Rate Limiter — use X-Forwarded-For for Render/proxy support
+def _get_client_ip(request):
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+limiter = Limiter(key_func=_get_client_ip)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: app serves immediately, heavy init runs in background."""
@@ -127,15 +135,6 @@ async def lifespan(app: FastAPI):
     _startup_done = True
     yield
     logger.info("Shutting down...")
-
-    # Rate Limiter — use X-Forwarded-For for Render/proxy support
-    def _get_client_ip(request):
-        forwarded = request.headers.get("X-Forwarded-For")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
-        return request.client.host if request.client else "unknown"
-
-    limiter = Limiter(key_func=_get_client_ip)
 
 
 app = FastAPI(
@@ -166,15 +165,10 @@ if not settings.DEBUG:
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
-    # Prevent clickjacking
     response.headers["X-Frame-Options"] = "DENY"
-    # Prevent MIME type sniffing
     response.headers["X-Content-Type-Options"] = "nosniff"
-    # XSS protection (legacy but still useful)
     response.headers["X-XSS-Protection"] = "1; mode=block"
-    # Referrer policy
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    # CSP for additional protection
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline'; "
@@ -186,10 +180,8 @@ async def add_security_headers(request: Request, call_next):
         "base-uri 'self'; "
         "form-action 'self'"
     )
-    # HSTS (only in production with HTTPS)
     if not settings.DEBUG and request.url.scheme == "https":
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    # Permissions policy
     response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
     return response
 

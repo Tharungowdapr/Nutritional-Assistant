@@ -161,7 +161,6 @@ class NutriSyncDB:
             return []
 
         # Use boolean masking (creates view, not copy)
-        import re
         import pandas as pd
 
         mask = pd.Series([True] * len(self.food), index=self.food.index)
@@ -191,8 +190,6 @@ class NutriSyncDB:
         return self.food[mask]
 
     def get_food_by_name(self, name: str):
-        import re
-
         if getattr(self, "food", None) is None:
             return None
         match = self.food[self.food["Food Name"].str.lower() == name.lower()]  # Case-insensitive exact match
@@ -203,8 +200,6 @@ class NutriSyncDB:
         return match.iloc[0].to_dict()
 
     def get_rda(self, profile: str):
-        import re
-
         if getattr(self, "rda", None) is None:
             return None
         match = self.rda[self.rda["Profile"].str.contains(profile, case=False, na=False, regex=False)]
