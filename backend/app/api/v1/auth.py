@@ -286,5 +286,5 @@ async def delete_account(user: UserDB = Depends(require_user), db: Session = Dep
 
     return JSONResponse(
         content={"message": "Account permanently deleted"},
-        headers={"Clear-Site-Data": '"cache", "cookies", "storage"'},
+        headers={"Clear-Site-Data": "cache, cookies, storage"},
     )
