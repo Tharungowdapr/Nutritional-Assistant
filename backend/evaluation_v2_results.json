@@ -1,0 +1,1034 @@
+{
+  "full_metrics": {
+    "total_queries": 50,
+    "avg_keyword_recall": 0.748,
+    "median_keyword_recall": 0.75,
+    "avg_latency_ms": 544.5,
+    "median_latency_ms": 307.1,
+    "p95_latency_ms": 2355.0,
+    "avg_chunks_retrieved": 5,
+    "avg_citation_score": 0.834,
+    "ifct_source_rate": 0.44,
+    "icmr_source_rate": 0.42,
+    "per_category": {
+      "IFCT Food Composition": {
+        "queries": 10,
+        "avg_recall": 0.828,
+        "avg_latency_ms": 829.0,
+        "avg_citation_score": 0.638
+      },
+      "ICMR-NIN RDA": {
+        "queries": 8,
+        "avg_recall": 0.729,
+        "avg_latency_ms": 307.1,
+        "avg_citation_score": 0.931
+      },
+      "Clinical Nutrition": {
+        "queries": 10,
+        "avg_recall": 0.808,
+        "avg_latency_ms": 532.3,
+        "avg_citation_score": 0.864
+      },
+      "Regional Nutrition": {
+        "queries": 8,
+        "avg_recall": 0.677,
+        "avg_latency_ms": 319.8,
+        "avg_citation_score": 0.941
+      },
+      "Food Substitution": {
+        "queries": 7,
+        "avg_recall": 0.662,
+        "avg_latency_ms": 599.6,
+        "avg_citation_score": 0.801
+      },
+      "Gap Analysis": {
+        "queries": 7,
+        "avg_recall": 0.738,
+        "avg_latency_ms": 628.7,
+        "avg_citation_score": 0.867
+      }
+    },
+    "keyword_recall_95ci": {
+      "mean": 0.7484,
+      "ci_lower": 0.6801,
+      "ci_upper": 0.8166,
+      "std": 0.2402,
+      "n": 50
+    },
+    "latency_95ci": {
+      "mean": 544.528,
+      "ci_lower": 372.2956,
+      "ci_upper": 716.7604,
+      "std": 606.0322,
+      "n": 50
+    },
+    "citation_score_95ci": {
+      "mean": 0.8336,
+      "ci_lower": 0.7622,
+      "ci_upper": 0.905,
+      "std": 0.2511,
+      "n": 50
+    },
+    "mrr_at_5": 0.44,
+    "ndcg_at_5": 0.44,
+    "per_category_ci": {
+      "IFCT Food Composition": {
+        "queries": 10,
+        "recall_95ci": {
+          "mean": 0.8283,
+          "ci_lower": 0.6081,
+          "ci_upper": 1.0485,
+          "std": 0.3078,
+          "n": 10
+        },
+        "latency_95ci": {
+          "mean": 829.03,
+          "ci_lower": 341.5839,
+          "ci_upper": 1316.4761,
+          "std": 681.4027,
+          "n": 10
+        },
+        "citation_95ci": {
+          "mean": 0.638,
+          "ci_lower": 0.3847,
+          "ci_upper": 0.8913,
+          "std": 0.354,
+          "n": 10
+        }
+      },
+      "ICMR-NIN RDA": {
+        "queries": 8,
+        "recall_95ci": {
+          "mean": 0.7294,
+          "ci_lower": 0.5817,
+          "ci_upper": 0.8771,
+          "std": 0.1767,
+          "n": 8
+        },
+        "latency_95ci": {
+          "mean": 307.0625,
+          "ci_lower": 306.8306,
+          "ci_upper": 307.2944,
+          "std": 0.2774,
+          "n": 8
+        },
+        "citation_95ci": {
+          "mean": 0.9313,
+          "ci_lower": 0.923,
+          "ci_upper": 0.9395,
+          "std": 0.0099,
+          "n": 8
+        }
+      },
+      "Clinical Nutrition": {
+        "queries": 10,
+        "recall_95ci": {
+          "mean": 0.8084,
+          "ci_lower": 0.6795,
+          "ci_upper": 0.9373,
+          "std": 0.1802,
+          "n": 10
+        },
+        "latency_95ci": {
+          "mean": 532.26,
+          "ci_lower": 47.8546,
+          "ci_upper": 1016.6654,
+          "std": 677.1521,
+          "n": 10
+        },
+        "citation_95ci": {
+          "mean": 0.864,
+          "ci_lower": 0.6995,
+          "ci_upper": 1.0285,
+          "std": 0.2299,
+          "n": 10
+        }
+      },
+      "Regional Nutrition": {
+        "queries": 8,
+        "recall_95ci": {
+          "mean": 0.6771,
+          "ci_lower": 0.4785,
+          "ci_upper": 0.8758,
+          "std": 0.2376,
+          "n": 8
+        },
+        "latency_95ci": {
+          "mean": 319.8125,
+          "ci_lower": 289.0913,
+          "ci_upper": 350.5337,
+          "std": 36.747,
+          "n": 8
+        },
+        "citation_95ci": {
+          "mean": 0.9412,
+          "ci_lower": 0.9343,
+          "ci_upper": 0.9482,
+          "std": 0.0083,
+          "n": 8
+        }
+      },
+      "Food Substitution": {
+        "queries": 7,
+        "recall_95ci": {
+          "mean": 0.6619,
+          "ci_lower": 0.4337,
+          "ci_upper": 0.8901,
+          "std": 0.2467,
+          "n": 7
+        },
+        "latency_95ci": {
+          "mean": 599.6143,
+          "ci_lower": -116.2647,
+          "ci_upper": 1315.4933,
+          "std": 774.0524,
+          "n": 7
+        },
+        "citation_95ci": {
+          "mean": 0.8014,
+          "ci_lower": 0.4867,
+          "ci_upper": 1.1161,
+          "std": 0.3403,
+          "n": 7
+        }
+      },
+      "Gap Analysis": {
+        "queries": 7,
+        "recall_95ci": {
+          "mean": 0.7381,
+          "ci_lower": 0.4696,
+          "ci_upper": 1.0067,
+          "std": 0.2904,
+          "n": 7
+        },
+        "latency_95ci": {
+          "mean": 628.7429,
+          "ci_lower": -158.6967,
+          "ci_upper": 1416.1824,
+          "std": 851.428,
+          "n": 7
+        },
+        "citation_95ci": {
+          "mean": 0.8671,
+          "ci_lower": 0.6929,
+          "ci_upper": 1.0414,
+          "std": 0.1884,
+          "n": 7
+        }
+      }
+    }
+  },
+  "ablation": {
+    "hybrid": {
+      "avg_recall": 0.756,
+      "median_recall": 0.75,
+      "avg_chunks": 5,
+      "avg_latency_ms": 680.1
+    },
+    "bm25_only": {
+      "avg_recall": 0.46,
+      "median_recall": 0.416,
+      "avg_chunks": 5,
+      "avg_latency_ms": 93.0
+    },
+    "vector_only": {
+      "avg_recall": 0.744,
+      "median_recall": 0.75,
+      "avg_chunks": 5,
+      "avg_latency_ms": 133.2
+    }
+  },
+  "significance_tests": {
+    "hybrid_vs_vector_only": {
+      "n_pairs": 20,
+      "Hybrid_mean": 0.7559,
+      "Vector Only_mean": 0.7442,
+      "mean_difference": 0.0117,
+      "paired_t_stat": 0.296,
+      "paired_t_pvalue": 0.770462,
+      "wilcoxon_stat": 4.0,
+      "wilcoxon_pvalue": 0.712702,
+      "cohens_d": 0.0662,
+      "significance": "n.s. (p >= 0.05)",
+      "interpretation": "negligible effect"
+    },
+    "hybrid_vs_bm25_only": {
+      "n_pairs": 20,
+      "Hybrid_mean": 0.7559,
+      "Bm25 Only_mean": 0.46,
+      "mean_difference": 0.2959,
+      "paired_t_stat": 4.4959,
+      "paired_t_pvalue": 0.000247,
+      "wilcoxon_stat": 0.0,
+      "wilcoxon_pvalue": 0.002115,
+      "cohens_d": 1.0053,
+      "significance": "** (p < 0.01)",
+      "interpretation": "large effect"
+    },
+    "vector_only_vs_bm25_only": {
+      "n_pairs": 20,
+      "Vector Only_mean": 0.7442,
+      "Bm25 Only_mean": 0.46,
+      "mean_difference": 0.2842,
+      "paired_t_stat": 4.3061,
+      "paired_t_pvalue": 0.000381,
+      "wilcoxon_stat": 0.0,
+      "wilcoxon_pvalue": 0.002166,
+      "cohens_d": 0.9629,
+      "significance": "** (p < 0.01)",
+      "interpretation": "large effect"
+    }
+  },
+  "failure_analysis": {
+    "total_failures_identified": 13,
+    "total_queries": 50,
+    "failure_rate": 0.26,
+    "failure_type_breakdown": {
+      "low_chunk_relevance": 11,
+      "citation_verifier_error": 6,
+      "llm_hallucination": 4,
+      "unknown": 2
+    },
+    "details": [
+      {
+        "id": "IFCT-01",
+        "query": "What is the protein content of moong dal per 100g?",
+        "category": "IFCT Food Composition",
+        "citation_score": 0.37,
+        "citation_status": "UNVERIFIED_CLAIMS",
+        "keyword_recall": 1.0,
+        "latency_ms": 1431.1,
+        "failure_type": [
+          "unknown"
+        ],
+        "evidence": [
+          "No clear failure pattern identified"
+        ]
+      },
+      {
+        "id": "IFCT-02",
+        "query": "Compare the glycemic index of white rice and brown rice",
+        "category": "IFCT Food Composition",
+        "citation_score": 0.15,
+        "citation_status": "HALUCINATION_RISK",
+        "keyword_recall": 1.0,
+        "latency_ms": 1638.1,
+        "failure_type": [
+          "citation_verifier_error",
+          "low_chunk_relevance",
+          "llm_hallucination"
+        ],
+        "evidence": [
+          "All top chunk scores negative (range: -9.57 to -0.95)",
+          "Citation verifier flagged as HALUCINATION_RISK (score < 0.3)",
+          "Low chunk scores but answer cites IFCT \u2014 verifier may be misclassifying",
+          "High latency (1638ms) \u2014 possible fallback path triggered"
+        ]
+      },
+      {
+        "id": "IFCT-03",
+        "query": "How much iron is in spinach per 100 grams?",
+        "category": "IFCT Food Composition",
+        "citation_score": 0.3,
+        "citation_status": "UNVERIFIED_CLAIMS",
+        "keyword_recall": 1.0,
+        "latency_ms": 1843.0,
+        "failure_type": [
+          "citation_verifier_error",
+          "low_chunk_relevance"
+        ],
+        "evidence": [
+          "All top chunk scores negative (range: -6.63 to -1.34)",
+          "Low chunk scores but answer cites IFCT \u2014 verifier may be misclassifying",
+          "High latency (1843ms) \u2014 possible fallback path triggered"
+        ]
+      },
+      {
+        "id": "IFCT-04",
+        "query": "What are the macronutrients in 1 katori of cooked dal?",
+        "category": "IFCT Food Composition",
+        "citation_score": 0.87,
+        "citation_status": "VERIFIED",
+        "keyword_recall": 0.2,
+        "latency_ms": 308.4,
+        "failure_type": [
+          "low_chunk_relevance"
+        ],
+        "evidence": [
+          "Low keyword recall (20%) \u2014 answer missing query terms"
+        ]
+      },
+      {
+        "id": "IFCT-06",
+        "query": "What is the calorie count of 2 rotis made from whole wheat?",
+        "category": "IFCT Food Composition",
+        "citation_score": 0.93,
+        "citation_status": "VERIFIED",
+        "keyword_recall": 0.333,
+        "latency_ms": 307.1,
+        "failure_type": [
+          "citation_verifier_error",
+          "low_chunk_relevance"
+        ],
+        "evidence": [
+          "All top chunk scores negative (range: -11.25 to -8.74)",
+          "Low chunk scores but answer cites IFCT \u2014 verifier may be misclassifying",
+          "Low keyword recall (33%) \u2014 answer missing query terms"
+        ]
+      },
+      {
+        "id": "IFCT-07",
+        "query": "How much calcium does 100g of ragi contain?",
+        "category": "IFCT Food Composition",
+        "citation_score": 0.12,
+        "citation_status": "HALUCINATION_RISK",
+        "keyword_recall": 1.0,
+        "latency_ms": 1535.5,
+        "failure_type": [
+          "citation_verifier_error",
+          "low_chunk_relevance",
+          "llm_hallucination"
+        ],
+        "evidence": [
+          "All top chunk scores negative (range: -5.07 to -1.19)",
+          "Citation verifier flagged as HALUCINATION_RISK (score < 0.3)",
+          "Low chunk scores but answer cites IFCT \u2014 verifier may be misclassifying",
+          "High latency (1536ms) \u2014 possible fallback path triggered"
+        ]
+      },
+      {
+        "id": "CLN-06",
+        "query": "What should a kidney disease patient eat?",
+        "category": "Clinical Nutrition",
+        "citation_score": 0.21,
+        "citation_status": "HALUCINATION_RISK",
+        "keyword_recall": 1.0,
+        "latency_ms": 2457.3,
+        "failure_type": [
+          "citation_verifier_error",
+          "low_chunk_relevance",
+          "llm_hallucination"
+        ],
+        "evidence": [
+          "All top chunk scores negative (range: -10.84 to -3.18)",
+          "Citation verifier flagged as HALUCINATION_RISK (score < 0.3)",
+          "Low chunk scores but answer cites IFCT \u2014 verifier may be misclassifying",
+          "High latency (2457ms) \u2014 possible fallback path triggered"
+        ]
+      },
+      {
+        "id": "REG-08",
+        "query": "Rajasthani foods suitable for a low-sodium diet",
+        "category": "Regional Nutrition",
+        "citation_score": 0.94,
+        "citation_status": "VERIFIED",
+        "keyword_recall": 0.333,
+        "latency_ms": 307.0,
+        "failure_type": [
+          "low_chunk_relevance"
+        ],
+        "evidence": [
+          "Low keyword recall (33%) \u2014 answer missing query terms"
+        ]
+      },
+      {
+        "id": "SUB-02",
+        "query": "Healthy alternatives to maida (refined flour)",
+        "category": "Food Substitution",
+        "citation_score": 0.94,
+        "citation_status": "VERIFIED",
+        "keyword_recall": 0.333,
+        "latency_ms": 307.0,
+        "failure_type": [
+          "low_chunk_relevance"
+        ],
+        "evidence": [
+          "Low keyword recall (33%) \u2014 answer missing query terms"
+        ]
+      },
+      {
+        "id": "SUB-03",
+        "query": "What can replace sugar for a diabetic person?",
+        "category": "Food Substitution",
+        "citation_score": 0.03,
+        "citation_status": "HALUCINATION_RISK",
+        "keyword_recall": 1.0,
+        "latency_ms": 2355.0,
+        "failure_type": [
+          "citation_verifier_error",
+          "low_chunk_relevance",
+          "llm_hallucination"
+        ],
+        "evidence": [
+          "All top chunk scores negative (range: -9.73 to -7.12)",
+          "Citation verifier flagged as HALUCINATION_RISK (score < 0.3)",
+          "Low chunk scores but answer cites IFCT \u2014 verifier may be misclassifying",
+          "High latency (2355ms) \u2014 possible fallback path triggered"
+        ]
+      },
+      {
+        "id": "SUB-04",
+        "query": "High-protein vegetarian alternatives to chicken",
+        "category": "Food Substitution",
+        "citation_score": 0.92,
+        "citation_status": "VERIFIED",
+        "keyword_recall": 0.333,
+        "latency_ms": 306.9,
+        "failure_type": [
+          "low_chunk_relevance"
+        ],
+        "evidence": [
+          "All top chunk scores negative (range: -7.00 to -0.46)",
+          "Low keyword recall (33%) \u2014 answer missing query terms"
+        ]
+      },
+      {
+        "id": "GAP-02",
+        "query": "My diet has mostly rice and dal, what nutrients am I missing?",
+        "category": "Gap Analysis",
+        "citation_score": 0.94,
+        "citation_status": "VERIFIED",
+        "keyword_recall": 0.25,
+        "latency_ms": 306.8,
+        "failure_type": [
+          "low_chunk_relevance"
+        ],
+        "evidence": [
+          "All top chunk scores negative (range: -8.58 to -2.80)",
+          "Low keyword recall (25%) \u2014 answer missing query terms"
+        ]
+      },
+      {
+        "id": "GAP-07",
+        "query": "I am pregnant, am I getting enough folate from Indian food?",
+        "category": "Gap Analysis",
+        "citation_score": 0.44,
+        "citation_status": "UNVERIFIED_CLAIMS",
+        "keyword_recall": 1.0,
+        "latency_ms": 2559.6,
+        "failure_type": [
+          "unknown"
+        ],
+        "evidence": [
+          "High latency (2560ms) \u2014 possible fallback path triggered",
+          "No clear failure pattern identified"
+        ]
+      }
+    ]
+  },
+  "semantic_scores": {
+    "matched": 37,
+    "unmatched": 13,
+    "unmatched_ids": [
+      "RDA-03",
+      "RDA-06",
+      "RDA-07",
+      "CLN-07",
+      "CLN-08",
+      "CLN-10",
+      "REG-04",
+      "REG-05",
+      "REG-06",
+      "REG-08"
+    ],
+    "aggregate": {
+      "bert_score_f1_mean": 0.0223,
+      "bert_score_f1_median": -0.0107,
+      "rouge_l_fmeasure_mean": 0.1646,
+      "rouge_l_fmeasure_median": 0.1296
+    },
+    "details": [
+      {
+        "id": "IFCT-01",
+        "query": "What is the protein content of moong dal per 100g?",
+        "category": "IFCT Food Composition",
+        "gold_answer": "Moong dal (green gram split) contains 24.0g protein per 100g (IFCT 2017, Code: B002).",
+        "prediction": "According to the Indian Food Composition Tables (IFCT) 2017, the protein content of moong dal (Green gram split) is 24.0 grams per 100 grams of serving (IFCT Code: B002). \n\nThis information is further supported by the data provided in the retrieved knowledge, which states that the protein content of",
+        "bert_score_precision": 0.2453,
+        "bert_score_recall": 0.6962,
+        "bert_score_f1": 0.4623,
+        "rouge_l_precision": 0.2,
+        "rouge_l_recall": 0.6667,
+        "rouge_l_fmeasure": 0.3077
+      },
+      {
+        "id": "IFCT-02",
+        "query": "Compare the glycemic index of white rice and brown rice",
+        "category": "IFCT Food Composition",
+        "gold_answer": "IFCT 2017 does not provide glycemic index values directly. White rice has an estimated GI of 70-80 (high), while brown rice has an estimated GI of 50-60 (medium). Actual GI depends on variety, cooking method, and cooling time.",
+        "prediction": "The glycemic index (GI) is a measure of how quickly the carbohydrates in a food raise blood sugar levels after consumption. According to the Indian Food Composition Tables (IFCT) 2017, the GI of white rice is around 70-80, whereas the GI of brown rice is around 50-60 (IFCT 2017).\n\nA study published ",
+        "bert_score_precision": 0.2149,
+        "bert_score_recall": 0.3203,
+        "bert_score_f1": 0.2682,
+        "rouge_l_precision": 0.1852,
+        "rouge_l_recall": 0.25,
+        "rouge_l_fmeasure": 0.2128
+      },
+      {
+        "id": "IFCT-03",
+        "query": "How much iron is in spinach per 100 grams?",
+        "category": "IFCT Food Composition",
+        "gold_answer": "Spinach contains approximately 4.9mg of iron per 100g (IFCT 2017).",
+        "prediction": "According to the Indian Food Composition Tables (IFCT) 2017, published by the Indian Council of Medical Research - National Institute of Nutrition (ICMR-NIN), the iron content in spinach per 100 grams is approximately 4.9 mg (ICMR-NIN, 2017). \n\nHowever, it is essential to note that the bioavailabili",
+        "bert_score_precision": -0.0558,
+        "bert_score_recall": 0.5983,
+        "bert_score_f1": 0.2519,
+        "rouge_l_precision": 0.0833,
+        "rouge_l_recall": 0.3636,
+        "rouge_l_fmeasure": 0.1356
+      },
+      {
+        "id": "IFCT-04",
+        "query": "What are the macronutrients in 1 katori of cooked dal?",
+        "category": "IFCT Food Composition",
+        "gold_answer": "One katori (180g) of cooked dal provides approximately: Energy 162 kcal, Protein 10.8g, Fat 4.7g, Carbohydrates 21.6g, Fibre 6.3g. Based on moong dal cooked with 40g dry dal (IFCT 2017).",
+        "prediction": "[Source 1: hybrid]\nPortion Description: 1 katori cooked dal\nGrams (approx): 180\nFood Type: Pulse\nNotes: Includes liquid; ~40g dry dal\n\n---\n\n[Source 2: hybrid]\nPortion Description: 1 katori cooked rice\nGrams (approx): 150\nFood Type: Cereal\nNotes: Standard steel katori; varies 130-170g\n\n---\n\n[Source 3",
+        "bert_score_precision": -0.1785,
+        "bert_score_recall": -0.0352,
+        "bert_score_f1": -0.1061,
+        "rouge_l_precision": 0.1333,
+        "rouge_l_recall": 0.1765,
+        "rouge_l_fmeasure": 0.1519
+      },
+      {
+        "id": "IFCT-05",
+        "query": "Tell me the vitamin C content of amla (Indian gooseberry)",
+        "category": "IFCT Food Composition",
+        "gold_answer": "Amla (Indian gooseberry) contains 600mg of vitamin C per 100g \u2014 the highest known natural source (IFCT 2017).",
+        "prediction": "[Source 1: hybrid]\nNutrient: Vit C\nUnit: mg/100g\nTop Indian Food Source 1: Amla/Indian gooseberry (600mg)\nTop Indian Food Source 2: Guava (228mg)\nTop Indian Food Source 3: Capsicum/green pepper (80mg)\nTop Indian Food Source 4: Moringa leaves (220mg)\nTop Indian Food Source 5: Coriander leaves (135mg)",
+        "bert_score_precision": -0.0235,
+        "bert_score_recall": 0.2437,
+        "bert_score_f1": 0.108,
+        "rouge_l_precision": 0.1,
+        "rouge_l_recall": 0.2941,
+        "rouge_l_fmeasure": 0.1493
+      },
+      {
+        "id": "IFCT-06",
+        "query": "What is the calorie count of 2 rotis made from whole wheat?",
+        "category": "IFCT Food Composition",
+        "gold_answer": "One whole wheat roti (approx 30g dough) provides ~102 kcal. Two rotis provide ~204 kcal. Per 100g, whole wheat flour has 341 kcal (IFCT 2017, Code: A003).",
+        "prediction": "[Source 1: hybrid]\nIFCT Code: A003\nFood Name: Wheat flour, whole\nLocal Names: Atta (H/P/G), Godumai (T)\nFood Group: Cereals & Millets\nRegion Availability: North/West India\nDiet Type: VEG\nEnergy (kcal): 341.0\nEnergy (kJ): 1427.0\nWater (g): 12.2\nProtein (g): 12.1\nFat (g): 1.7\nCarbs (g): 69.4\nFibre (g)",
+        "bert_score_precision": -0.1936,
+        "bert_score_recall": 0.0327,
+        "bert_score_f1": -0.0813,
+        "rouge_l_precision": 0.0526,
+        "rouge_l_recall": 0.1111,
+        "rouge_l_fmeasure": 0.0714
+      },
+      {
+        "id": "IFCT-07",
+        "query": "How much calcium does 100g of ragi contain?",
+        "category": "IFCT Food Composition",
+        "gold_answer": "Ragi (finger millet) contains 344mg of calcium per 100g (IFCT 2017) \u2014 the highest calcium content among all Indian grains.",
+        "prediction": "To answer your question, I'll rely on the provided sources and relevant external information. \n\nAccording to the Indian Food Composition Tables (IFCT) 2017, the calcium content in 100g of ragi (finger millet) is approximately 344 mg (Indian Food Composition Tables, 2017). However, the exact value ma",
+        "bert_score_precision": 0.1713,
+        "bert_score_recall": 0.5596,
+        "bert_score_f1": 0.3594,
+        "rouge_l_precision": 0.1277,
+        "rouge_l_recall": 0.3158,
+        "rouge_l_fmeasure": 0.1818
+      },
+      {
+        "id": "IFCT-08",
+        "query": "What is the fat content of ghee per tablespoon?",
+        "category": "IFCT Food Composition",
+        "gold_answer": "One tablespoon of ghee (13g) contains approximately 12.5g of fat, of which ~8g is saturated. Per 100g, ghee has ~99.5g fat (IFCT 2017).",
+        "prediction": "[Source 1: hybrid]\nPortion Description: 1 tablespoon ghee\nGrams (approx): 13\nFood Type: Fat\nNotes: Level tablespoon\n\n---\n\n[Source 2: hybrid]\nPortion Description: 1 tablespoon oil\nGrams (approx): 14\nFood Type: Fat\nNotes: Any cooking oil\n\n---\n\n[Source 3: hybrid]\nMeat and Fish \n6.25 \nMilk and milk prod",
+        "bert_score_precision": -0.2542,
+        "bert_score_recall": -0.0573,
+        "bert_score_f1": -0.1559,
+        "rouge_l_precision": 0.0851,
+        "rouge_l_recall": 0.16,
+        "rouge_l_fmeasure": 0.1111
+      },
+      {
+        "id": "IFCT-09",
+        "query": "Compare protein content of paneer and chicken breast",
+        "category": "IFCT Food Composition",
+        "gold_answer": "Paneer contains 18.3g protein per 100g (IFCT 2017, Code: L003). Chicken breast contains approximately 23.4g protein per 100g (IFCT 2017). Chicken breast has about 28% more protein than paneer.",
+        "prediction": "[Source 1: hybrid]\nIFCT Code: L003\nFood Name: Paneer (fresh)\nLocal Names: Paneer (H/P)\nFood Group: Dairy\nRegion Availability: North India\nDiet Type: VEG\nEnergy (kcal): 296.0\nEnergy (kJ): 1238.0\nWater (g): 51.9\nProtein (g): 18.3\nFat (g): 23.4\nCarbs (g): 1.2\nFibre (g): 0.0\nIron (mg): 0.7\nCalcium (mg):",
+        "bert_score_precision": -0.118,
+        "bert_score_recall": 0.0912,
+        "bert_score_f1": -0.014,
+        "rouge_l_precision": 0.0678,
+        "rouge_l_recall": 0.129,
+        "rouge_l_fmeasure": 0.0889
+      },
+      {
+        "id": "IFCT-10",
+        "query": "What is the fibre content of oats per 100g?",
+        "category": "IFCT Food Composition",
+        "gold_answer": "Rolled oats contain 10.6g of dietary fibre per 100g (IFCT 2017, Code: A008).",
+        "prediction": "[Source 1: hybrid]\nIFCT Code: A008\nFood Name: Oats, rolled\nLocal Names: Jaie (H)\nFood Group: Cereals & Millets\nRegion Availability: All India (urban)\nDiet Type: VEG\nEnergy (kcal): 379.0\nEnergy (kJ): 1585.0\nWater (g): 8.2\nProtein (g): 13.2\nFat (g): 6.9\nCarbs (g): 65.8\nFibre (g): 10.6\nIron (mg): 4.7\nC",
+        "bert_score_precision": -0.145,
+        "bert_score_recall": 0.1838,
+        "bert_score_f1": 0.0155,
+        "rouge_l_precision": 0.0508,
+        "rouge_l_recall": 0.2143,
+        "rouge_l_fmeasure": 0.0822
+      },
+      {
+        "id": "RDA-01",
+        "query": "What is the daily protein requirement for a 30-year-old active male?",
+        "category": "ICMR-NIN RDA",
+        "gold_answer": "A 30-year-old active male (moderate activity, PAL 1.6) requires approximately 60g of protein per day (ICMR-NIN 2024 RDA). Energy requirement is approximately 2465 kcal/day.",
+        "prediction": "[Source 1: hybrid]\nProfile: Moderate active male (teacher/shopkeeper)\nLife Stage: Adult 19-39y\nSex: Male\nActivity Level: Moderate (PAL 1.6)\nEnergy (kcal): 2465\nProtein (g): 60.0\nFat (g): 68\nCarbs (g): 355\nFibre (g): 32\nIron (mg): 17\nCalcium (mg): 1000\nZinc (mg): 17.0\nFolate (mcg): 300\nVit B12 (mcg):",
+        "bert_score_precision": -0.1599,
+        "bert_score_recall": 0.1643,
+        "bert_score_f1": -0.0015,
+        "rouge_l_precision": 0.1481,
+        "rouge_l_recall": 0.2759,
+        "rouge_l_fmeasure": 0.1928
+      },
+      {
+        "id": "RDA-02",
+        "query": "How much iron does a pregnant woman need per day according to ICMR?",
+        "category": "ICMR-NIN RDA",
+        "gold_answer": "A pregnant woman requires 35-40 mg of iron per day (therapeutic dose). This is substantially higher than the non-pregnant RDA of 21mg. Iron supplementation is typically required as diet alone cannot meet this requirement (ICMR-NIN 2024 RDA).",
+        "prediction": "[Source 1: hybrid]\nProfession Category: Pregnant (sedentary)\nExamples: Housewife; sedentary professional; student during pregnancy\nPAL (Physical Activity Level): 1.5\nCalorie Multiplier (vs sedentary): 1.07x (+350 T2/+500 T3)\nMale Kcal/day (65kg ref): 2190\nFemale Kcal/day (55kg ref): 1750\nProtein g/d",
+        "bert_score_precision": -0.2024,
+        "bert_score_recall": -0.0959,
+        "bert_score_f1": -0.1478,
+        "rouge_l_precision": 0.0444,
+        "rouge_l_recall": 0.05,
+        "rouge_l_fmeasure": 0.0471
+      },
+      {
+        "id": "RDA-04",
+        "query": "Daily B12 requirement for a vegetarian Indian adult",
+        "category": "ICMR-NIN RDA",
+        "gold_answer": "A vegetarian Indian adult requires 2.2 mcg of Vitamin B12 per day (ICMR-NIN 2024 RDA). Since plant foods contain negligible B12, supplementation or fortified foods are essential for vegetarians. Absorption is only ~2% without intrinsic factor.",
+        "prediction": "[Source 1: hybrid]\nNutrient: Vit B12\nUnit: mcg/100g\nTop Indian Food Source 1: Sardine (23.5mcg)\nTop Indian Food Source 2: Pomfret (2.7mcg)\nTop Indian Food Source 3: Eggs/whole (1.3mcg)\nTop Indian Food Source 4: Curd/dahi (0.4mcg)\nTop Indian Food Source 5: Paneer (0.2mcg)\nAbsorption Notes: B12 is ONL",
+        "bert_score_precision": -0.0551,
+        "bert_score_recall": 0.0451,
+        "bert_score_f1": -0.0039,
+        "rouge_l_precision": 0.125,
+        "rouge_l_recall": 0.1842,
+        "rouge_l_fmeasure": 0.1489
+      },
+      {
+        "id": "RDA-05",
+        "query": "How many calories should a sedentary woman consume daily?",
+        "category": "ICMR-NIN RDA",
+        "gold_answer": "A sedentary woman (55kg reference, PAL 1.4) requires approximately 1660 kcal/day (ICMR-NIN 2024 RDA). Protein requirement is approximately 60g/day.",
+        "prediction": "[Source 1: hybrid]\nProfession Category: Sedentary\nExamples: IT professionals; accountants; writers; call centre workers; retired\nPAL (Physical Activity Level): 1.4\nCalorie Multiplier (vs sedentary): 1.00 (baseline)\nMale Kcal/day (65kg ref): 2110\nFemale Kcal/day (55kg ref): 1660\nProtein g/day: 60\nKey",
+        "bert_score_precision": -0.0477,
+        "bert_score_recall": 0.1682,
+        "bert_score_f1": 0.0595,
+        "rouge_l_precision": 0.1778,
+        "rouge_l_recall": 0.3478,
+        "rouge_l_fmeasure": 0.2353
+      },
+      {
+        "id": "RDA-08",
+        "query": "What is the carbohydrate RDA for an active Indian male?",
+        "category": "ICMR-NIN RDA",
+        "gold_answer": "A moderately active Indian male (PAL 1.6, 65kg reference) requires approximately 355g of carbohydrates per day, based on total energy of 2465 kcal with 55-60% from carbohydrates (ICMR-NIN 2024 RDA). Fibre requirement is approximately 32g/day.",
+        "prediction": "[Source 1: hybrid]\nProfile: Moderate active male (teacher/shopkeeper)\nLife Stage: Adult 19-39y\nSex: Male\nActivity Level: Moderate (PAL 1.6)\nEnergy (kcal): 2465\nProtein (g): 60.0\nFat (g): 68\nCarbs (g): 355\nFibre (g): 32\nIron (mg): 17\nCalcium (mg): 1000\nZinc (mg): 17.0\nFolate (mcg): 300\nVit B12 (mcg):",
+        "bert_score_precision": -0.1051,
+        "bert_score_recall": 0.1117,
+        "bert_score_f1": 0.0025,
+        "rouge_l_precision": 0.1852,
+        "rouge_l_recall": 0.2564,
+        "rouge_l_fmeasure": 0.2151
+      },
+      {
+        "id": "CLN-01",
+        "query": "What foods should a diabetic patient avoid?",
+        "category": "Clinical Nutrition",
+        "gold_answer": "Diabetic patients should avoid or limit: white rice (large portions), maida/refined flour products, sugary beverages, sweets, deep-fried foods, and high-sugar fruits like mango and banana in excess. Prioritize low-GI foods like millets, whole grains, and leafy vegetables (ICMR-NIN 2024 Diabetes Protocol).",
+        "prediction": "[Source 1: hybrid]\nFoods to Avoid: Salty foods; processed food; excess carbs/sugar (steroids raise blood glucose); NSAIDs (combined GI bleed risk)\nUser-Facing Note: Long-term steroids cause osteoporosis, diabetes, hypertension. Ca + Vit D supplement mandatory. Monitor glucose weekly.\n\n---\n\n[Source 2",
+        "bert_score_precision": -0.0705,
+        "bert_score_recall": -0.0054,
+        "bert_score_f1": -0.0365,
+        "rouge_l_precision": 0.119,
+        "rouge_l_recall": 0.1087,
+        "rouge_l_fmeasure": 0.1136
+      },
+      {
+        "id": "CLN-02",
+        "query": "What is the recommended diet for someone with PCOS?",
+        "category": "Clinical Nutrition",
+        "gold_answer": "For PCOS, NutriSync recommends: Calorie target 1400-1800 kcal (if overweight), protein 1.0-1.2 g/kg/day, low-GI strict diet with carbs at 40% of calories, anti-inflammatory fats including omega-3 3g/day, iron target 35-40 mg/day therapeutic, and calcium 1000 mg. Avoid refined carbs entirely (ICMR-NIN 2024 PCOS Protocol).",
+        "prediction": "[Source 1: hybrid]\nCondition: PCOS (Polycystic Ovarian Syndrome)\nCalorie Target: 1400-1800 kcal (deficit for overweight)\nProtein (g/day): 1.0-1.2 g/kg/d\nCarb Restriction: Low-GI strict; carbs 40%; avoid refined carbs entirely\nFat Notes: Anti-inflammatory fat; omega-3 3g/d; reduce saturated\nIron Targ",
+        "bert_score_precision": 0.3058,
+        "bert_score_recall": 0.3202,
+        "bert_score_f1": 0.3141,
+        "rouge_l_precision": 0.52,
+        "rouge_l_recall": 0.4561,
+        "rouge_l_fmeasure": 0.486
+      },
+      {
+        "id": "CLN-03",
+        "query": "How should a patient on GLP-1 medication adjust their diet?",
+        "category": "Clinical Nutrition",
+        "gold_answer": "GLP-1 patients (semaglutide, liraglutide, tirzepatide) should: 1) Prioritize protein floor of 75-90g/day, 2) Eat small frequent meals to manage nausea, 3) Avoid high-fat fried foods, 4) Stay hydrated (nausea reduces water intake), 5) Supplement B12 (medication depletes), 6) Include Vit D 20-25mcg. Caloric reduction of 30-50% is typical but protein floor is non-negotiable (ICMR-NIN 2024 GLP-1 Protocol).",
+        "prediction": "[Source 1: hybrid]\nLife Stage: GLP-1 User\nAge Range: Any age on medication\nTop Priority Nutrient 1: Protein (75\u201390g floor)\nTop Priority Nutrient 2: Vit D (20\u201325mcg)\nTop Priority Nutrient 3: B12 (3.0mcg \u2014 medication depletion)\nTop Priority Nutrient 4: Iron (monitor closely)\nTop Priority Nutrient 5: Z",
+        "bert_score_precision": 0.1323,
+        "bert_score_recall": -0.0768,
+        "bert_score_f1": 0.0271,
+        "rouge_l_precision": 0.2157,
+        "rouge_l_recall": 0.1667,
+        "rouge_l_fmeasure": 0.188
+      },
+      {
+        "id": "CLN-04",
+        "query": "What foods help manage high blood pressure?",
+        "category": "Clinical Nutrition",
+        "gold_answer": "DASH-style Indian diet for hypertension: Increase - leafy greens (palak, methi), banana (limited), coconut water, rajma, sweet potato, ragi, guava, amla, pomegranate. Restrict - pickle (achaar), papad, namkeen, salted snacks, packaged food, processed meat, excess salt in cooking, soya sauce. Target sodium <2g/day, potassium >4.7g/day. Cook with minimal salt and use herbs/spices for flavor (ICMR-NIN 2024 Hypertension Protocol).",
+        "prediction": "[Source 1: hybrid]\nFoods to Increase: Palak; tomato; banana (limited); coconut water; rajma; sweet potato; ragi; moong; guava; amla; pomegranate\nFoods to Restrict: Pickle (achaar); papad; namkeen; salted snacks; packaged food; processed meat; excess salt in cooking; soya sauce\nClinical Rationale: DA",
+        "bert_score_precision": 0.473,
+        "bert_score_recall": 0.2733,
+        "bert_score_f1": 0.3723,
+        "rouge_l_precision": 0.7143,
+        "rouge_l_recall": 0.4839,
+        "rouge_l_fmeasure": 0.5769
+      },
+      {
+        "id": "CLN-05",
+        "query": "Diet recommendations for iron deficiency anaemia",
+        "category": "Clinical Nutrition",
+        "gold_answer": "For iron deficiency anaemia: Calorie target base RDA +200 kcal, protein 1.0 g/kg/day, iron target 35-40 mg/day therapeutic, calcium 1000 mg (taken separately from iron sources to avoid absorption interference). Include iron-rich foods like amla, spinach, ragi, and cook in iron vessels (ICMR-NIN 2024 Anaemia Protocol).",
+        "prediction": "[Source 1: hybrid]\nCondition: Iron Deficiency Anaemia\nCalorie Target: Base RDA +200 kcal\nProtein (g/day): 1.0 g/kg/d\nCarb Restriction: No restriction\nFat Notes: Normal fat; include omega-3\nIron Target: 35-40 mg/d therapeutic\nCalcium Target: 1000 mg (separate from iron)\nKey Micronutrient Priorities: ",
+        "bert_score_precision": 0.2117,
+        "bert_score_recall": 0.2383,
+        "bert_score_f1": 0.2262,
+        "rouge_l_precision": 0.5306,
+        "rouge_l_recall": 0.4906,
+        "rouge_l_fmeasure": 0.5098
+      },
+      {
+        "id": "CLN-06",
+        "query": "What should a kidney disease patient eat?",
+        "category": "Clinical Nutrition",
+        "gold_answer": "Kidney disease (CKD stages 1-3) requires: Controlled protein intake (0.8-1.0 g/kg/day), limited sodium (<2g/day), restricted potassium and phosphorus depending on stage, adequate calories from carbs and fats. Foods to increase: low-potassium vegetables like bottle gourd, cauliflower. Foods to limit: rajma, chole, dairy, bananas, spinach. Consult nephrologist for stage-specific advice (ICMR-NIN 2024 CKD Protocol).",
+        "prediction": "A kidney disease patient, particularly those with Chronic Kidney Disease (CKD) stages 1-3, requires a tailored diet to manage their condition effectively. According to the Indian Food Composition Tables (IFCT) 2017 and the Indian Council of Medical Research - National Institute of Nutrition (ICMR-NI",
+        "bert_score_precision": 0.0821,
+        "bert_score_recall": -0.1352,
+        "bert_score_f1": -0.0273,
+        "rouge_l_precision": 0.2222,
+        "rouge_l_recall": 0.1587,
+        "rouge_l_fmeasure": 0.1852
+      },
+      {
+        "id": "CLN-09",
+        "query": "What is the GLP-1 protein floor recommendation?",
+        "category": "Clinical Nutrition",
+        "gold_answer": "For patients on GLP-1 medications (e.g., semaglutide, liraglutide), the non-negotiable protein floor is 75-90g per day regardless of caloric restriction. Protein must be prioritized even during reduced intake (ICMR-NIN 2024 GLP-1 Protocol).",
+        "prediction": "[Source 1: hybrid]\nConflict Scenario: GLP-1 Protein Floor vs Caloric Restriction\nContext A: GLP-1: Caloric reduction 30\u201350%\nContext B: All life stages: protein floor 75\u201390g/day required\nContext C (if any): \u2014\nResolution Rule: Protein floor is NON-NEGOTIABLE regardless of caloric cut. Caloric reductio",
+        "bert_score_precision": 0.0287,
+        "bert_score_recall": 0.0519,
+        "bert_score_f1": 0.0418,
+        "rouge_l_precision": 0.2083,
+        "rouge_l_recall": 0.2632,
+        "rouge_l_fmeasure": 0.2326
+      },
+      {
+        "id": "REG-01",
+        "query": "What are traditional South Indian foods good for weight loss?",
+        "category": "Regional Nutrition",
+        "gold_answer": "South Indian foods supportive of weight loss include: Idli (steamed, 2 pieces ~150 kcal), Dosa in moderation, Ragi mudde (finger millet ball, high fibre), Vegetable sambar, Poriyal (stir-fried vegetables), and Buttermilk. Avoid excess coconut and oil (ICMR-NIN Regional Food Culture \u2014 South India).",
+        "prediction": "[Source 1: hybrid]\nZone: South\nState/UT: Kerala\nStaple Grains: Rice, Tapioca (kappa)\nPrimary Cooking Oil: Coconut oil\nCommon Pulses: Moong dal, Red kidney beans\nCommon Vegetables: Drumstick, Ash gourd, Banana flower, Kovakkai\nTypical Breakfast Dishes: Puttu + kadala curry; Appam + stew; Idiyappam\nDi",
+        "bert_score_precision": -0.083,
+        "bert_score_recall": -0.0853,
+        "bert_score_f1": -0.0824,
+        "rouge_l_precision": 0.0698,
+        "rouge_l_recall": 0.0682,
+        "rouge_l_fmeasure": 0.069
+      },
+      {
+        "id": "REG-02",
+        "query": "Suggest high-protein North Indian vegetarian meals",
+        "category": "Regional Nutrition",
+        "gold_answer": "North Indian high-protein vegetarian meals include: Paneer butter masala with whole wheat roti, Chana masala with rice, Moong dal chilla (cheela) with curd, Soya chaap, Rajma masala, and Dahi (yogurt) with meals. Combine grains with pulses for complete protein (ICMR-NIN Regional Food Culture \u2014 North India).",
+        "prediction": "[Source 1: hybrid]\nImplementation Note: Every meal must lead with protein. Egg whites, paneer, curd, dal, fish are ideal high-protein low-calorie Indian options.\n\n---\n\n[Source 2: hybrid]\nNutrient: Protein (dense, low volume)\nUnit: g/100g\nTop Indian Food Source 1: Soyabean dry (43g)\nTop Indian Food S",
+        "bert_score_precision": -0.0398,
+        "bert_score_recall": 0.0078,
+        "bert_score_f1": -0.0144,
+        "rouge_l_precision": 0.1042,
+        "rouge_l_recall": 0.1064,
+        "rouge_l_fmeasure": 0.1053
+      },
+      {
+        "id": "REG-03",
+        "query": "What are healthy East Indian breakfast options?",
+        "category": "Regional Nutrition",
+        "gold_answer": "East Indian (Bengali/Odia) healthy breakfast options: Luchi (limited, fried), Puffed rice (muri) with vegetables and peanuts, Suji upma, Pitha (rice cakes, steamed), Dalia (broken wheat porridge), Moringa leaf omelette, and vegetable poha. Mustard oil is the primary cooking oil \u2014 rich in monounsaturated fats but use in moderation. Add seasonal greens like palong (spinach) and lau (bottle gourd) (ICMR-NIN 2024 Regional Food \u2014 East India).",
+        "prediction": "[Source 1: hybrid]\nZone: East\nState/UT: Bihar\nStaple Grains: Rice, Wheat, Maize\nPrimary Cooking Oil: Mustard oil\nCommon Pulses: Chana, Masoor, Arhar\nCommon Vegetables: Aloo, Loki, Parwal, Kaddu, Mustard greens\nTypical Breakfast Dishes: Litti chokha; Poori; Sattu (barley) drinks; Khichdi\nDietary Char",
+        "bert_score_precision": 0.0004,
+        "bert_score_recall": -0.0697,
+        "bert_score_f1": -0.0332,
+        "rouge_l_precision": 0.1628,
+        "rouge_l_recall": 0.1077,
+        "rouge_l_fmeasure": 0.1296
+      },
+      {
+        "id": "REG-07",
+        "query": "Kerala cuisine options for a diabetic patient",
+        "category": "Regional Nutrition",
+        "gold_answer": "For a diabetic patient choosing Kerala cuisine: Prefer puttu+ kadala curry (high fibre, low GI), idiyappam with vegetable stew, and millet-based options. Limit appam (fermented rice, high GI) and avoid excessive coconut milk. Use coconut oil in moderation. Include moringa (drumstick) leaves which have a low glycemic impact (ICMR-NIN Regional Food Culture \u2014 Kerala).",
+        "prediction": "[Source 1: hybrid]\nZone: South\nState/UT: Kerala\nStaple Grains: Rice, Tapioca (kappa)\nPrimary Cooking Oil: Coconut oil\nCommon Pulses: Moong dal, Red kidney beans\nCommon Vegetables: Drumstick, Ash gourd, Banana flower, Kovakkai\nTypical Breakfast Dishes: Puttu + kadala curry; Appam + stew; Idiyappam\nDi",
+        "bert_score_precision": -0.0193,
+        "bert_score_recall": -0.0053,
+        "bert_score_f1": -0.0107,
+        "rouge_l_precision": 0.1163,
+        "rouge_l_recall": 0.0909,
+        "rouge_l_fmeasure": 0.102
+      },
+      {
+        "id": "SUB-01",
+        "query": "What can I substitute white rice with for a low-GI diet?",
+        "category": "Food Substitution",
+        "gold_answer": "For a low-GI diet, substitute white rice with: Brown rice (GI ~55), Quinoa, Ragi (finger millet), Broken wheat (dalia), Oats, or Cauliflower rice. These alternatives provide higher fibre and slower glucose release. Millet-based rotis are also excellent alternatives (IFCT 2017 + ICMR-NIN 2024).",
+        "prediction": "[Source 1: hybrid]\nrice was the major staple consumed in larger \nproportion, the nutritive values of rice and rice products \nwere studied in detail and published exclusively as \nseparate and new edition in the year 1959 entitled \n\u201cRice\u201d- Health Bulletin No. 28. \n \n4. Sixth revised edition of Indian ",
+        "bert_score_precision": -0.2253,
+        "bert_score_recall": -0.1706,
+        "bert_score_f1": -0.1961,
+        "rouge_l_precision": 0.0833,
+        "rouge_l_recall": 0.0889,
+        "rouge_l_fmeasure": 0.086
+      },
+      {
+        "id": "SUB-02",
+        "query": "Healthy alternatives to maida (refined flour)",
+        "category": "Food Substitution",
+        "gold_answer": "Healthy alternatives to maida: 1) Whole wheat flour (atta) \u2014 3x more fibre, more minerals; 2) Ragi flour (finger millet) \u2014 10x more calcium, 344mg/100g; 3) Jowar flour (sorghum) \u2014 gluten-free, 7.6g fibre; 4) Bajra flour (pearl millet) \u2014 high iron (8.1mg/100g); 5) Oat flour \u2014 high protein (13.2g/100g); 6) Besan (chickpea flour) \u2014 high protein (19g/100g). For baking, replace 100% maida with atta or mix millet+atta for best texture (IFCT 2017).",
+        "prediction": "[Source 1: hybrid]\nIFCT Code: A004\nFood Name: Wheat flour, refined\nLocal Names: Maida (H)\nFood Group: Cereals & Millets\nRegion Availability: All India\nDiet Type: VEG\nEnergy (kcal): 348.0\nEnergy (kJ): 1456.0\nWater (g): 13.6\nProtein (g): 10.3\nFat (g): 0.9\nCarbs (g): 73.9\nFibre (g): 2.7\nIron (mg): 2.7\n",
+        "bert_score_precision": -0.061,
+        "bert_score_recall": -0.1196,
+        "bert_score_f1": -0.0887,
+        "rouge_l_precision": 0.1207,
+        "rouge_l_recall": 0.0933,
+        "rouge_l_fmeasure": 0.1053
+      },
+      {
+        "id": "SUB-03",
+        "query": "What can replace sugar for a diabetic person?",
+        "category": "Food Substitution",
+        "gold_answer": "Safe sugar substitutes for diabetics: Natural options \u2014 stevia (zero calorie, 200-300x sweeter than sugar), monk fruit extract, erythritol (sugar alcohol, 70% sweetness, 0.2 kcal/g). Use in moderation \u2014 dates puree, mashed banana (whole fruit sweeteners, contain fibre). Use caution with: honey (same GI as sugar, 64 GI), jaggery (same calorie as sugar, 65 GI), coconut sugar, maple syrup \u2014 these are NOT diabetic-safe despite marketing. Avoid completely: artificial sweeteners aspartame and saccharin for some sensitive individuals. Best choice: stevia or erythritol for cooking/tea (ICMR-NIN 2024 Diabetes Protocol).",
+        "prediction": "For a diabetic person, it is essential to manage blood sugar levels by making informed dietary choices. According to the Indian Food Composition Tables (IFCT) 2017, natural sweeteners like stevia and honey can be considered as alternatives to sugar (1). However, it is crucial to consume them in mode",
+        "bert_score_precision": 0.1192,
+        "bert_score_recall": -0.0875,
+        "bert_score_f1": 0.0153,
+        "rouge_l_precision": 0.1429,
+        "rouge_l_recall": 0.0769,
+        "rouge_l_fmeasure": 0.1
+      },
+      {
+        "id": "SUB-05",
+        "query": "Good substitutes for potato in a low-carb diet",
+        "category": "Food Substitution",
+        "gold_answer": "Good low-carb substitutes for potato: Cauliflower, Bottle gourd (lauki), Radish, Turnip (shalgam), Raw banana cooked as vegetable, and Pumpkin. These have significantly lower carbohydrate content than potato (20g carbs/100g) (IFCT 2017).",
+        "prediction": "[Source 1: hybrid]\nFoods to Increase: Bajra, jowar, ragi, dalia, oats; bitter karela; all leafy vegetables; fenugreek; guava; rajma; moong; palak\nFoods to Restrict: White rice (large portions); maida; bread; potato (fried); mango/banana in excess; sugary beverages; jaggery; pickle\nClinical Rationale",
+        "bert_score_precision": -0.1173,
+        "bert_score_recall": -0.0834,
+        "bert_score_f1": -0.0986,
+        "rouge_l_precision": 0.0476,
+        "rouge_l_recall": 0.0606,
+        "rouge_l_fmeasure": 0.0533
+      },
+      {
+        "id": "SUB-06",
+        "query": "What can I eat instead of bread for breakfast?",
+        "category": "Food Substitution",
+        "gold_answer": "Indian alternatives to bread for breakfast: 1) Paratha/roti (whole wheat, 2 rotis ~200 kcal), 2) Poha (flattened rice, 1 bowl ~250 kcal with vegetables), 3) Upma (semolina, 1 bowl ~200 kcal), 4) Idli (steamed rice cakes, 2 pieces ~150 kcal), 5) Dosa (fermented crepe, 1 piece ~120 kcal without oil), 6) Dhokla (steamed chickpea snack, 2 pieces ~140 kcal), 7) Ragi dosa, 8) Moong dal chilla (gram flour pancake, high protein) (ICMR-NIN 2024 Regional Food + Portion Guide).",
+        "prediction": "[Source 1: hybrid]\nFood Flag Priority: iron_lunch_only, calcium_breakfast_dinner\nImplementation Note: Practical for school routine: milk at breakfast, iron-rich dal at lunch with amla/orange, ragi roti + curd at dinner.\n\n---\n\n[Source 2: hybrid]\nZone: West\nState/UT: Gujarat\nStaple Grains: Wheat, Jowa",
+        "bert_score_precision": -0.1446,
+        "bert_score_recall": -0.2295,
+        "bert_score_f1": -0.1855,
+        "rouge_l_precision": 0.087,
+        "rouge_l_recall": 0.0506,
+        "rouge_l_fmeasure": 0.064
+      },
+      {
+        "id": "SUB-07",
+        "query": "Dairy-free calcium sources in Indian diet",
+        "category": "Food Substitution",
+        "gold_answer": "Dairy-free calcium sources in Indian diet include: Ragi (344mg/100g), Sesame seeds (till, 975mg/100g), Almonds (234mg/100g), Moringa leaves (220mg/100g), Rajma, and Green leafy vegetables. Ragi and sesame are particularly rich (IFCT 2017).",
+        "prediction": "[Source 1: hybrid]\nIFCT Code: L001\nFood Name: Whole milk (cow)\nLocal Names: Doodh (H), Pal (T)\nFood Group: Dairy\nRegion Availability: All India\nDiet Type: VEG\nEnergy (kcal): 67.0\nEnergy (kJ): 280.0\nWater (g): 87.8\nProtein (g): 3.4\nFat (g): 4.1\nCarbs (g): 4.4\nFibre (g): 0.0\nIron (mg): 0.1\nCalcium (mg",
+        "bert_score_precision": -0.1597,
+        "bert_score_recall": -0.1333,
+        "bert_score_f1": -0.1447,
+        "rouge_l_precision": 0.0328,
+        "rouge_l_recall": 0.0556,
+        "rouge_l_fmeasure": 0.0412
+      },
+      {
+        "id": "GAP-01",
+        "query": "I am a vegetarian female, am I getting enough B12?",
+        "category": "Gap Analysis",
+        "gold_answer": "As a vegetarian female, you are likely NOT getting enough B12. The RDA is 2.2 mcg/day, and plant foods contain negligible B12. The only vegetarian sources are dairy (curd: 0.4 mcg/100g, paneer: 0.2 mcg/100g) and eggs if lacto-ovo. Supplementation of 500-1000 mcg/day (methylcobalamin) is recommended for all vegetarians (ICMR-NIN 2024).",
+        "prediction": "[Source 1: hybrid]\nNutrient: Vit B12\nUnit: mcg/100g\nTop Indian Food Source 1: Sardine (23.5mcg)\nTop Indian Food Source 2: Pomfret (2.7mcg)\nTop Indian Food Source 3: Eggs/whole (1.3mcg)\nTop Indian Food Source 4: Curd/dahi (0.4mcg)\nTop Indian Food Source 5: Paneer (0.2mcg)\nAbsorption Notes: B12 is ONL",
+        "bert_score_precision": 0.0928,
+        "bert_score_recall": 0.0984,
+        "bert_score_f1": 0.0971,
+        "rouge_l_precision": 0.1786,
+        "rouge_l_recall": 0.1667,
+        "rouge_l_fmeasure": 0.1724
+      },
+      {
+        "id": "GAP-04",
+        "query": "Analyse my iron intake from a typical North Indian vegetarian diet",
+        "category": "Gap Analysis",
+        "gold_answer": "A typical North Indian vegetarian diet (roti, dal, sabzi, rice, curd) provides approximately 12-15 mg of iron per day. The RDA for adult women is 21mg/day, and for men is 17mg/day. Common gaps: iron from plant sources is non-heme with ~5-10% bioavailability vs 20-25% for heme iron. To improve absorption, pair iron-rich foods with vitamin C (amla, lemon, tomatoes) and cook in iron vessels (IFCT 2017 + ICMR-NIN 2024).",
+        "prediction": "[Source 1: hybrid]\nsubsistence vegetarian diets with little or no milk. \nThese dietetic and nutritional factors were considered \nwhile revising the FCT. Subsequently, a consolidated \nFCT entitled \u2018Nutritive Value of Indian Foods\u2019 was \nreleased by Gopalan, Ramasastri, and Balasubramanian \n(1971). The",
+        "bert_score_precision": -0.2043,
+        "bert_score_recall": -0.201,
+        "bert_score_f1": -0.2007,
+        "rouge_l_precision": 0.122,
+        "rouge_l_recall": 0.0658,
+        "rouge_l_fmeasure": 0.0855
+      },
+      {
+        "id": "GAP-05",
+        "query": "I eat mostly processed food, what should I change?",
+        "category": "Gap Analysis",
+        "gold_answer": "A processed-food-heavy diet typically lacks: 1) Fibre (processed = 2-5g, need 25-40g/day \u2014 leads to constipation, dysbiosis), 2) Vitamin B12 (unless fortified, mostly absent), 3) Vitamin D, 4) Omega-3 (processed oils are omega-6 heavy, inflammatory ratio), 5) Potassium (processed foods high sodium, low potassium), 6) Magnesium (refined grains lose 80% magnesium), 7) Zinc, 8) Iron (bioavailability low in processed foods). Also excess: sodium, added sugars (2-3x RDA), trans fats, omega-6 (10:1 vs 2:1 ideal ratio). Quick wins: switch 2 processed meals/week for whole foods, add 1 bowl dal+rice, 1 bowl vegetable curry, 1 piece seasonal fruit daily (ICMR-NIN 2024 Dietary Guidelines).",
+        "prediction": "[Source 1: hybrid]\nFoods to Increase: Rajma; chole; moong; chana; methi; leafy veg; ragi; bajra; walnuts; flaxseed; guava; pomegranate; fenugreek seeds\nFoods to Restrict: Maida; white rice; bread; sweets; deep fried food; sugary drinks; dairy in excess (some protocols); processed soy\nClinical Ration",
+        "bert_score_precision": -0.1832,
+        "bert_score_recall": -0.2594,
+        "bert_score_f1": -0.2196,
+        "rouge_l_precision": 0.1395,
+        "rouge_l_recall": 0.0531,
+        "rouge_l_fmeasure": 0.0769
+      },
+      {
+        "id": "GAP-06",
+        "query": "How much water should I drink based on my activity level?",
+        "category": "Gap Analysis",
+        "gold_answer": "Daily water intake recommendation for Indian adults: Men ~3.7L/day (15 cups), Women ~2.7L/day (11 cups) from all fluids including water, milk, tea, soups, and moisture in foods. In hot Indian summers, add 500-1000ml. Activity increases needs by 500-1500ml depending on intensity/duration. Thirst is a late indicator of dehydration \u2014 drink regularly even if not thirsty (ICMR-NIN 2024 RDA + Hydration Guidelines).",
+        "prediction": "[Source 1: hybrid]\nProfession Category: Moderate activity\nExamples: Housewives with heavy cooking/cleaning; nurses; postmen; students\nPAL (Physical Activity Level): 1.75\nCalorie Multiplier (vs sedentary): 1.24x\nMale Kcal/day (65kg ref): 2710\nFemale Kcal/day (55kg ref): 2100\nProtein g/day: 65\nKey Nut",
+        "bert_score_precision": -0.1209,
+        "bert_score_recall": -0.1314,
+        "bert_score_f1": -0.1244,
+        "rouge_l_precision": 0.0435,
+        "rouge_l_recall": 0.0299,
+        "rouge_l_fmeasure": 0.0354
+      },
+      {
+        "id": "GAP-07",
+        "query": "I am pregnant, am I getting enough folate from Indian food?",
+        "category": "Gap Analysis",
+        "gold_answer": "A pregnant woman needs 500 mcg of folate per day. Indian foods rich in folate include: Moong dal (mcg/100g), Spinach, Moringa leaves, and Amla. However, diet alone typically provides only 200-300 mcg/day. Supplementation of 400-500 mcg/day is recommended, especially in the first 28 days to prevent neural tube defects (ICMR-NIN 2024 Pregnancy Protocol).",
+        "prediction": "Congratulations on your pregnancy. Folate is a crucial nutrient during this period, especially in the first 28 days, to prevent neural tube defects (Source 4). According to the Indian Food Composition Tables (IFCT) 2017, various Indian foods are rich in folate, which can help you meet your daily req",
+        "bert_score_precision": 0.2861,
+        "bert_score_recall": 0.0709,
+        "bert_score_f1": 0.1776,
+        "rouge_l_precision": 0.2653,
+        "rouge_l_recall": 0.2203,
+        "rouge_l_fmeasure": 0.2407
+      }
+    ]
+  },
+  "cross_encoder_ablation": {
+    "total_queries_with_scores": 50,
+    "queries_with_positive_first": 22,
+    "positive_first_rate": 0.44,
+    "queries_all_negative_scores": 28,
+    "all_negative_rate": 0.56,
+    "avg_max_score": -0.6471,
+    "median_max_score": -0.4131
+  },
+  "timestamp": "2026-06-25 19:03:07"
+}

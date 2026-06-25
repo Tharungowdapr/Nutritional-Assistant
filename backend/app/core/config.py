@@ -77,8 +77,8 @@ class Settings(BaseSettings):
     # ── RAG ────────────────────────────────────────────────────
     RAG_CHUNK_SIZE: int = 512
     RAG_CHUNK_OVERLAP: int = 50
-    RAG_TOP_K: int = 5
-    RAG_SCORE_THRESHOLD: float = 0.3
+    RAG_TOP_K: int = 10
+    RAG_SCORE_THRESHOLD: float = 0.1
 
     # ── CORS ───────────────────────────────────────────────────
     CORS_ORIGINS: list[str] = [

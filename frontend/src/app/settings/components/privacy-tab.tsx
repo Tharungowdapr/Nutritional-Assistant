@@ -1,13 +1,15 @@
 "use client";
 
-import { ShieldCheck, Download } from "lucide-react";
+import { useState } from "react";
+import { ShieldCheck, Download, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 
 export default function PrivacyTab() {
-  const { user } = useAuth();
+  const { user, deleteAccount } = useAuth();
+  const [deleting, setDeleting] = useState(false);
 
   const handleExportData = () => {
     const data = { user, exported_at: new Date().toISOString() };
@@ -20,6 +22,29 @@ export default function PrivacyTab() {
     element.click();
     document.body.removeChild(element);
     toast.success("Data exported successfully");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleting) return;
+    const confirmed = window.confirm(
+      "Are you sure you want to permanently delete your account?\n\n" +
+      "This will remove all of your data including meal plans, food logs, chat history, recipes, and preferences. This action cannot be undone."
+    );
+    if (!confirmed) return;
+
+    const doubleConfirm = window.confirm(
+      "⚠️ FINAL WARNING: This is irreversible. All your data will be lost forever.\n\n" +
+      "Click OK to proceed with permanent deletion."
+    );
+    if (!doubleConfirm) return;
+
+    setDeleting(true);
+    try {
+      await deleteAccount();
+    } catch {
+      toast.error("Failed to delete account. Please try again.");
+      setDeleting(false);
+    }
   };
 
   return (
@@ -59,13 +84,12 @@ export default function PrivacyTab() {
 
       <div className="pt-10 flex flex-col items-center">
         <p className="text-xs text-muted-foreground mb-4 uppercase tracking-[0.2em]">Danger Zone</p>
-        <Button variant="ghost" className="text-destructive hover:bg-destructive/5 hover:text-destructive text-xs font-bold uppercase tracking-widest px-8"
-          onClick={() => {
-            if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-              toast.error("Account deletion is not yet implemented. Contact support.");
-            }
-          }}>
-          Delete NutriSync Account
+        <Button variant="ghost"
+          className="text-destructive hover:bg-destructive/5 hover:text-destructive text-xs font-bold uppercase tracking-widest px-8"
+          disabled={deleting}
+          onClick={handleDeleteAccount}>
+          <AlertTriangle className="w-4 h-4 mr-2" />
+          {deleting ? "Deleting..." : "Delete NutriSync Account"}
         </Button>
       </div>
     </div>

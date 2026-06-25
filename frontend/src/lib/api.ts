@@ -127,6 +127,9 @@ export const authApi = {
 
   changePassword: (data: { current_password: string; new_password: string }) =>
     apiFetch("/api/auth/change-password", { method: "PUT", body: JSON.stringify(data) }),
+
+  deleteAccount: () =>
+    apiFetch("/api/auth/delete-account", { method: "DELETE" }),
 };
 
 // ── Chat ──

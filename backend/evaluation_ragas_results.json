@@ -1,0 +1,591 @@
+{
+  "aggregate": {
+    "faithfulness": {
+      "mean": 0.512,
+      "median": 0.5,
+      "std": 0.1118,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "answer_relevancy": {
+      "mean": 0.518,
+      "median": 0.5,
+      "std": 0.1746,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "context_precision": {
+      "mean": 0.16,
+      "median": 0.0,
+      "std": 0.3104,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "context_recall": {
+      "mean": 0.37,
+      "median": 0.5,
+      "std": 0.2823,
+      "min": 0.0,
+      "max": 1.0
+    }
+  },
+  "per_category_ragas": {
+    "IFCT Food Composition": {
+      "count": 10,
+      "faithfulness_mean": 0.56,
+      "answer_relevancy_mean": 0.65,
+      "context_precision_mean": 0.55,
+      "context_recall_mean": 0.6
+    },
+    "ICMR-NIN RDA": {
+      "count": 8,
+      "faithfulness_mean": 0.5,
+      "answer_relevancy_mean": 0.5,
+      "context_precision_mean": 0.0625,
+      "context_recall_mean": 0.3125
+    },
+    "Clinical Nutrition": {
+      "count": 10,
+      "faithfulness_mean": 0.5,
+      "answer_relevancy_mean": 0.49,
+      "context_precision_mean": 0.15,
+      "context_recall_mean": 0.35
+    },
+    "Regional Nutrition": {
+      "count": 8,
+      "faithfulness_mean": 0.5,
+      "answer_relevancy_mean": 0.5,
+      "context_precision_mean": 0.0625,
+      "context_recall_mean": 0.25
+    },
+    "Food Substitution": {
+      "count": 7,
+      "faithfulness_mean": 0.5,
+      "answer_relevancy_mean": 0.4286,
+      "context_precision_mean": 0.0,
+      "context_recall_mean": 0.4286
+    },
+    "Gap Analysis": {
+      "count": 7,
+      "faithfulness_mean": 0.5,
+      "answer_relevancy_mean": 0.5,
+      "context_precision_mean": 0.0,
+      "context_recall_mean": 0.2143
+    }
+  },
+  "per_query": [
+    {
+      "id": "IFCT-01",
+      "category": "IFCT Food Composition",
+      "question": "What is the protein content of moong dal per 100g?",
+      "faithfulness": 0.7,
+      "answer_relevancy": 1.0,
+      "context_precision": 1.0,
+      "context_recall": 1.0,
+      "has_ground_truth": true
+    },
+    {
+      "id": "IFCT-02",
+      "category": "IFCT Food Composition",
+      "question": "Compare the glycemic index of white rice and brown rice",
+      "faithfulness": 0.7,
+      "answer_relevancy": 1.0,
+      "context_precision": 1.0,
+      "context_recall": 1.0,
+      "has_ground_truth": true
+    },
+    {
+      "id": "IFCT-03",
+      "category": "IFCT Food Composition",
+      "question": "How much iron is in spinach per 100 grams?",
+      "faithfulness": 0.7,
+      "answer_relevancy": 1.0,
+      "context_precision": 1.0,
+      "context_recall": 1.0,
+      "has_ground_truth": true
+    },
+    {
+      "id": "IFCT-04",
+      "category": "IFCT Food Composition",
+      "question": "What are the macronutrients in 1 katori of cooked dal?",
+      "faithfulness": 0.0,
+      "answer_relevancy": 0.0,
+      "context_precision": 1.0,
+      "context_recall": 0.0,
+      "has_ground_truth": true
+    },
+    {
+      "id": "IFCT-05",
+      "category": "IFCT Food Composition",
+      "question": "Tell me the vitamin C content of amla (Indian gooseberry)",
+      "faithfulness": 1.0,
+      "answer_relevancy": 1.0,
+      "context_precision": 0.5,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "IFCT-06",
+      "category": "IFCT Food Composition",
+      "question": "What is the calorie count of 2 rotis made from whole wheat?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.5,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "IFCT-07",
+      "category": "IFCT Food Composition",
+      "question": "How much calcium does 100g of ragi contain?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "IFCT-08",
+      "category": "IFCT Food Composition",
+      "question": "What is the fat content of ghee per tablespoon?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "IFCT-09",
+      "category": "IFCT Food Composition",
+      "question": "Compare protein content of paneer and chicken breast",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "IFCT-10",
+      "category": "IFCT Food Composition",
+      "question": "What is the fibre content of oats per 100g?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.5,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "RDA-01",
+      "category": "ICMR-NIN RDA",
+      "question": "What is the daily protein requirement for a 30-year-old active male?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "RDA-02",
+      "category": "ICMR-NIN RDA",
+      "question": "How much iron does a pregnant woman need per day according to ICMR?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "RDA-03",
+      "category": "ICMR-NIN RDA",
+      "question": "What is the recommended calcium intake for adolescents?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "RDA-04",
+      "category": "ICMR-NIN RDA",
+      "question": "Daily B12 requirement for a vegetarian Indian adult",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "RDA-05",
+      "category": "ICMR-NIN RDA",
+      "question": "How many calories should a sedentary woman consume daily?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.5,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "RDA-06",
+      "category": "ICMR-NIN RDA",
+      "question": "What is the RDA for Vitamin D for Indian adults?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "RDA-07",
+      "category": "ICMR-NIN RDA",
+      "question": "How much folate is recommended during pregnancy?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "RDA-08",
+      "category": "ICMR-NIN RDA",
+      "question": "What is the carbohydrate RDA for an active Indian male?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "CLN-01",
+      "category": "Clinical Nutrition",
+      "question": "What foods should a diabetic patient avoid?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "CLN-02",
+      "category": "Clinical Nutrition",
+      "question": "What is the recommended diet for someone with PCOS?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "CLN-03",
+      "category": "Clinical Nutrition",
+      "question": "How should a patient on GLP-1 medication adjust their diet?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.5,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "CLN-04",
+      "category": "Clinical Nutrition",
+      "question": "What foods help manage high blood pressure?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "CLN-05",
+      "category": "Clinical Nutrition",
+      "question": "Diet recommendations for iron deficiency anaemia",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "CLN-06",
+      "category": "Clinical Nutrition",
+      "question": "What should a kidney disease patient eat?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "CLN-07",
+      "category": "Clinical Nutrition",
+      "question": "Foods to avoid with high cholesterol",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.5,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "CLN-08",
+      "category": "Clinical Nutrition",
+      "question": "How to manage diabetes through Indian diet?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.4,
+      "context_precision": 0.5,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "CLN-09",
+      "category": "Clinical Nutrition",
+      "question": "What is the GLP-1 protein floor recommendation?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "CLN-10",
+      "category": "Clinical Nutrition",
+      "question": "Anti-inflammatory foods for arthritis patients",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "REG-01",
+      "category": "Regional Nutrition",
+      "question": "What are traditional South Indian foods good for weight loss?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "REG-02",
+      "category": "Regional Nutrition",
+      "question": "Suggest high-protein North Indian vegetarian meals",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.5,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "REG-03",
+      "category": "Regional Nutrition",
+      "question": "What are healthy East Indian breakfast options?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "REG-04",
+      "category": "Regional Nutrition",
+      "question": "Low GI foods common in West India",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "REG-05",
+      "category": "Regional Nutrition",
+      "question": "What are good millet-based dishes from Karnataka?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "REG-06",
+      "category": "Regional Nutrition",
+      "question": "Traditional Bengali foods for iron deficiency",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "REG-07",
+      "category": "Regional Nutrition",
+      "question": "Kerala cuisine options for a diabetic patient",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "REG-08",
+      "category": "Regional Nutrition",
+      "question": "Rajasthani foods suitable for a low-sodium diet",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "SUB-01",
+      "category": "Food Substitution",
+      "question": "What can I substitute white rice with for a low-GI diet?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "SUB-02",
+      "category": "Food Substitution",
+      "question": "Healthy alternatives to maida (refined flour)",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "SUB-03",
+      "category": "Food Substitution",
+      "question": "What can replace sugar for a diabetic person?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "SUB-04",
+      "category": "Food Substitution",
+      "question": "High-protein vegetarian alternatives to chicken",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "SUB-05",
+      "category": "Food Substitution",
+      "question": "Good substitutes for potato in a low-carb diet",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "SUB-06",
+      "category": "Food Substitution",
+      "question": "What can I eat instead of bread for breakfast?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.0,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "SUB-07",
+      "category": "Food Substitution",
+      "question": "Dairy-free calcium sources in Indian diet",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "GAP-01",
+      "category": "Gap Analysis",
+      "question": "I am a vegetarian female, am I getting enough B12?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "GAP-02",
+      "category": "Gap Analysis",
+      "question": "My diet has mostly rice and dal, what nutrients am I missing?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "GAP-03",
+      "category": "Gap Analysis",
+      "question": "I exercise daily, is my protein intake sufficient?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "GAP-04",
+      "category": "Gap Analysis",
+      "question": "Analyse my iron intake from a typical North Indian vegetarian diet",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    },
+    {
+      "id": "GAP-05",
+      "category": "Gap Analysis",
+      "question": "I eat mostly processed food, what should I change?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "GAP-06",
+      "category": "Gap Analysis",
+      "question": "How much water should I drink based on my activity level?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.0,
+      "has_ground_truth": false
+    },
+    {
+      "id": "GAP-07",
+      "category": "Gap Analysis",
+      "question": "I am pregnant, am I getting enough folate from Indian food?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.0,
+      "context_recall": 0.5,
+      "has_ground_truth": true
+    }
+  ],
+  "config": {
+    "judge_model": "llama-3.3-70b-versatile",
+    "judge_provider": "Groq",
+    "n_queries": 50,
+    "metrics": [
+      "faithfulness",
+      "answer_relevancy",
+      "context_precision",
+      "context_recall"
+    ],
+    "api_calls": 235,
+    "total_tokens": 8539
+  }
+}

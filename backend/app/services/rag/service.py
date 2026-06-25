@@ -116,7 +116,7 @@ class RAGService:
         self, query: str, top_k: int = None, collection_name: str = "nutrisync", source_filter: Optional[str] = None
     ) -> list[dict]:
         """Retrieve relevant chunks using hybrid search + reranking."""
-        top_k = top_k or min(settings.RAG_TOP_K, 3)
+        top_k = top_k or min(settings.RAG_TOP_K, 10)
 
         try:
             hybrid = self._hybrid_cache.get(collection_name)
@@ -124,7 +124,7 @@ class RAGService:
                 hybrid = create_hybrid_retriever(collection_name, self._chroma_client)
                 self._ensure_hybrid_loaded(hybrid, collection_name)
                 self._hybrid_cache[collection_name] = hybrid
-            candidates = hybrid.get_documents_for_rerank(query, k=5)
+            candidates = hybrid.get_documents_for_rerank(query, k=top_k + 5)
 
             if candidates:
                 reranked = rerank_documents(query, candidates, top_k=top_k)

@@ -11,7 +11,19 @@ from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from app.models.user import get_db, UserDB
+from app.models.user import (
+    get_db,
+    UserDB,
+    MealPlanDB,
+    ChatHistoryDB,
+    DailyLogDB,
+    RecipeDB,
+    RecipeHistoryDB,
+    ChatSessionDB,
+    MealPlanHistoryDB,
+    LLMConfigDB,
+    UserMemoryDB,
+)
 from app.core.security import hash_password, verify_password, create_access_token
 from app.schemas.auth import (
     SignupRequest,
@@ -24,6 +36,7 @@ from app.schemas.auth import (
     ChangePasswordRequest,
 )
 from app.core.dependencies import require_user
+from fastapi.responses import JSONResponse
 from app.utils.general import calculate_profile_completion
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
@@ -248,4 +261,30 @@ async def update_profile(
         name=user.name,
         profile=user.profile,
         profile_completion=calculate_profile_completion(user.profile),
+    )
+
+
+@router.delete("/delete-account")
+async def delete_account(user: UserDB = Depends(require_user), db: Session = Depends(get_db)):
+    """Permanently delete the authenticated user's account and all associated data."""
+    uid = user.id
+
+    # Cascade delete all user data from child tables
+    db.query(MealPlanDB).filter(MealPlanDB.user_id == uid).delete()
+    db.query(ChatHistoryDB).filter(ChatHistoryDB.user_id == uid).delete()
+    db.query(DailyLogDB).filter(DailyLogDB.user_id == uid).delete()
+    db.query(RecipeDB).filter(RecipeDB.user_id == uid).delete()
+    db.query(RecipeHistoryDB).filter(RecipeHistoryDB.user_id == uid).delete()
+    db.query(ChatSessionDB).filter(ChatSessionDB.user_id == uid).delete()
+    db.query(MealPlanHistoryDB).filter(MealPlanHistoryDB.user_id == uid).delete()
+    db.query(LLMConfigDB).filter(LLMConfigDB.user_id == uid).delete()
+    db.query(UserMemoryDB).filter(UserMemoryDB.user_id == uid).delete()
+
+    # Delete the user record
+    db.delete(user)
+    db.commit()
+
+    return JSONResponse(
+        content={"message": "Account permanently deleted"},
+        headers={"Clear-Site-Data": '"cache", "cookies", "storage"'},
     )

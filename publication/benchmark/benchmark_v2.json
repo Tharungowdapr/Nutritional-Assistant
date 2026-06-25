@@ -1,0 +1,3953 @@
+{
+  "name": "NutriSyncBench",
+  "version": "2.0",
+  "description": "Ground truth QA dataset for Indian nutrition RAG evaluation",
+  "sources": [
+    "IFCT 2017",
+    "ICMR-NIN 2024 RDA"
+  ],
+  "total_entries": 219,
+  "categories": [
+    "Clinical Nutrition",
+    "Food Composition",
+    "Food Substitution",
+    "Gap Analysis",
+    "Medicine-Nutrition",
+    "RDA Guidelines",
+    "Regional Nutrition",
+    "Supplement Guidance"
+  ],
+  "entries": [
+    {
+      "id": "FC-001",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "What is the protein content of moong dal per 100g?",
+      "gold_answer": "Moong dal (green gram split) contains 24.0g protein per 100g (IFCT 2017, Code: B002).",
+      "expected_keywords": [
+        "24",
+        "24.0",
+        "protein",
+        "moong"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Code B002 — Pulses",
+      "verified": true
+    },
+    {
+      "id": "FC-002",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "How much iron is in spinach per 100 grams?",
+      "gold_answer": "Spinach contains approximately 4.9mg of iron per 100g (IFCT 2017).",
+      "expected_keywords": [
+        "4.9",
+        "iron",
+        "spinach",
+        "100"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Green Leafy Vegetables",
+      "verified": true
+    },
+    {
+      "id": "FC-003",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "What is the calorie count of 2 rotis made from whole wheat?",
+      "gold_answer": "One whole wheat roti (approx 30g dough) provides ~102 kcal. Two rotis provide ~204 kcal. Per 100g, whole wheat flour has 341 kcal (IFCT 2017, Code: A003).",
+      "expected_keywords": [
+        "341",
+        "204",
+        "102",
+        "calorie",
+        "roti",
+        "wheat"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Code A003 — Wheat flour, whole",
+      "verified": true
+    },
+    {
+      "id": "FC-004",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "Compare the glycemic index of white rice and brown rice",
+      "gold_answer": "IFCT 2017 does not provide glycemic index values directly. White rice has an estimated GI of 70-80 (high), while brown rice has an estimated GI of 50-60 (medium). Actual GI depends on variety, cooking method, and cooling time.",
+      "expected_keywords": [
+        "GI",
+        "glycemic",
+        "white rice",
+        "brown rice",
+        "50",
+        "70"
+      ],
+      "source": "IFCT 2017 (estimated, not direct)",
+      "source_ref": "Cereals & Millets",
+      "verified": true
+    },
+    {
+      "id": "FC-005",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "Tell me the vitamin C content of amla (Indian gooseberry)",
+      "gold_answer": "Amla (Indian gooseberry) contains 600mg of vitamin C per 100g — the highest known natural source (IFCT 2017).",
+      "expected_keywords": [
+        "600",
+        "vitamin",
+        "c",
+        "amla",
+        "gooseberry"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Fruits — Amla",
+      "verified": true
+    },
+    {
+      "id": "FC-006",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "How much calcium does 100g of ragi contain?",
+      "gold_answer": "Ragi (finger millet) contains 344mg of calcium per 100g (IFCT 2017) — the highest calcium content among all Indian grains.",
+      "expected_keywords": [
+        "344",
+        "calcium",
+        "ragi",
+        "finger millet"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Cereals & Millets — Ragi",
+      "verified": true
+    },
+    {
+      "id": "FC-007",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "What is the fat content of ghee per tablespoon?",
+      "gold_answer": "One tablespoon of ghee (13g) contains approximately 12.5g of fat, of which ~8g is saturated. Per 100g, ghee has ~99.5g fat (IFCT 2017).",
+      "expected_keywords": [
+        "12.5",
+        "fat",
+        "ghee",
+        "tablespoon",
+        "99.5"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Fats & Oils — Ghee",
+      "verified": true
+    },
+    {
+      "id": "FC-008",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "Compare protein content of paneer and chicken breast",
+      "gold_answer": "Paneer contains 18.3g protein per 100g (IFCT 2017, Code: L003). Chicken breast contains approximately 23.4g protein per 100g (IFCT 2017). Chicken breast has about 28% more protein than paneer.",
+      "expected_keywords": [
+        "18.3",
+        "23.4",
+        "protein",
+        "paneer",
+        "chicken"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Codes L003 (Paneer), M011 (Chicken)",
+      "verified": true
+    },
+    {
+      "id": "FC-009",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "What is the fibre content of oats per 100g?",
+      "gold_answer": "Rolled oats contain 10.6g of dietary fibre per 100g (IFCT 2017, Code: A008).",
+      "expected_keywords": [
+        "10.6",
+        "fibre",
+        "fiber",
+        "oats"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Code A008 — Oats, rolled",
+      "verified": true
+    },
+    {
+      "id": "FC-010",
+      "category": "Food Composition",
+      "difficulty": "hard",
+      "query": "What are the macronutrients in 1 katori of cooked dal?",
+      "gold_answer": "One katori (180g) of cooked dal provides approximately: Energy 162 kcal, Protein 10.8g, Fat 4.7g, Carbohydrates 21.6g, Fibre 6.3g. Based on moong dal cooked with 40g dry dal (IFCT 2017).",
+      "expected_keywords": [
+        "162",
+        "10.8",
+        "4.7",
+        "21.6",
+        "6.3",
+        "katori",
+        "dal"
+      ],
+      "source": "IFCT 2017 + Portion Conversion",
+      "source_ref": "Pulses + Indian Portion Conversions sheet",
+      "verified": true
+    },
+    {
+      "id": "CL-001",
+      "category": "Clinical Nutrition",
+      "difficulty": "easy",
+      "query": "What foods should a diabetic patient avoid?",
+      "gold_answer": "Diabetic patients should avoid or limit: white rice (large portions), maida/refined flour products, sugary beverages, sweets, deep-fried foods, and high-sugar fruits like mango and banana in excess. Prioritize low-GI foods like millets, whole grains, and leafy vegetables (ICMR-NIN 2024 Diabetes Protocol).",
+      "expected_keywords": [
+        "avoid",
+        "sugar",
+        "maida",
+        "white rice",
+        "diabetic",
+        "GI"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Nutrition Protocols — Diabetes",
+      "verified": true
+    },
+    {
+      "id": "CL-002",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "What is the recommended diet for someone with PCOS?",
+      "gold_answer": "For PCOS, NutriSync recommends: Calorie target 1400-1800 kcal (if overweight), protein 1.0-1.2 g/kg/day, low-GI strict diet with carbs at 40% of calories, anti-inflammatory fats including omega-3 3g/day, iron target 35-40 mg/day therapeutic, and calcium 1000 mg. Avoid refined carbs entirely (ICMR-NIN 2024 PCOS Protocol).",
+      "expected_keywords": [
+        "PCOS",
+        "1400",
+        "1800",
+        "protein",
+        "low-GI",
+        "omega-3",
+        "iron"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Nutrition Protocols — PCOS",
+      "verified": true
+    },
+    {
+      "id": "CL-003",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "What is the GLP-1 protein floor recommendation?",
+      "gold_answer": "For patients on GLP-1 medications (e.g., semaglutide, liraglutide), the non-negotiable protein floor is 75-90g per day regardless of caloric restriction. Protein must be prioritized even during reduced intake (ICMR-NIN 2024 GLP-1 Protocol).",
+      "expected_keywords": [
+        "GLP-1",
+        "protein",
+        "75",
+        "90",
+        "floor",
+        "non-negotiable"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "GLP-1 Nutrition Protocol",
+      "verified": true
+    },
+    {
+      "id": "CL-004",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "Diet recommendations for iron deficiency anaemia",
+      "gold_answer": "For iron deficiency anaemia: Calorie target base RDA +200 kcal, protein 1.0 g/kg/day, iron target 35-40 mg/day therapeutic, calcium 1000 mg (taken separately from iron sources to avoid absorption interference). Include iron-rich foods like amla, spinach, ragi, and cook in iron vessels (ICMR-NIN 2024 Anaemia Protocol).",
+      "expected_keywords": [
+        "35",
+        "40",
+        "iron",
+        "anaemia",
+        "therapeutic",
+        "amla",
+        "spinach"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Nutrition Protocols — Iron Deficiency Anaemia",
+      "verified": true
+    },
+    {
+      "id": "CL-005",
+      "category": "Clinical Nutrition",
+      "difficulty": "hard",
+      "query": "What should a kidney disease patient eat?",
+      "gold_answer": "Kidney disease (CKD stages 1-3) requires: Controlled protein intake (0.8-1.0 g/kg/day), limited sodium (<2g/day), restricted potassium and phosphorus depending on stage, adequate calories from carbs and fats. Foods to increase: low-potassium vegetables like bottle gourd, cauliflower. Foods to limit: rajma, chole, dairy, bananas, spinach. Consult nephrologist for stage-specific advice (ICMR-NIN 2024 CKD Protocol).",
+      "expected_keywords": [
+        "kidney",
+        "CKD",
+        "protein",
+        "sodium",
+        "potassium",
+        "phosphorus"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Nutrition Protocols — Kidney Disease",
+      "verified": true
+    },
+    {
+      "id": "RDA-001",
+      "category": "RDA Guidelines",
+      "difficulty": "easy",
+      "query": "What is the daily protein requirement for a 30-year-old active male?",
+      "gold_answer": "A 30-year-old active male (moderate activity, PAL 1.6) requires approximately 60g of protein per day (ICMR-NIN 2024 RDA). Energy requirement is approximately 2465 kcal/day.",
+      "expected_keywords": [
+        "60",
+        "protein",
+        "active",
+        "male",
+        "PAL",
+        "2465"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets — Adult 19-39y",
+      "verified": true
+    },
+    {
+      "id": "RDA-002",
+      "category": "RDA Guidelines",
+      "difficulty": "easy",
+      "query": "How much iron does a pregnant woman need per day?",
+      "gold_answer": "A pregnant woman requires 35-40 mg of iron per day (therapeutic dose). This is substantially higher than the non-pregnant RDA of 21mg. Iron supplementation is typically required as diet alone cannot meet this requirement (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "35",
+        "40",
+        "iron",
+        "pregnant",
+        "therapeutic",
+        "21"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets — Pregnancy",
+      "verified": true
+    },
+    {
+      "id": "RDA-003",
+      "category": "RDA Guidelines",
+      "difficulty": "medium",
+      "query": "How many calories should a sedentary woman consume daily?",
+      "gold_answer": "A sedentary woman (55kg reference, PAL 1.4) requires approximately 1660 kcal/day (ICMR-NIN 2024 RDA). Protein requirement is approximately 60g/day.",
+      "expected_keywords": [
+        "1660",
+        "sedentary",
+        "woman",
+        "kcal",
+        "calorie",
+        "PAL"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Profession Calorie Guide — Sedentary Female",
+      "verified": true
+    },
+    {
+      "id": "RDA-004",
+      "category": "RDA Guidelines",
+      "difficulty": "medium",
+      "query": "Daily B12 requirement for a vegetarian Indian adult",
+      "gold_answer": "A vegetarian Indian adult requires 2.2 mcg of Vitamin B12 per day (ICMR-NIN 2024 RDA). Since plant foods contain negligible B12, supplementation or fortified foods are essential for vegetarians. Absorption is only ~2% without intrinsic factor.",
+      "expected_keywords": [
+        "2.2",
+        "B12",
+        "vegetarian",
+        "supplement",
+        "2%"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets + Micronutrient-Food Matrix",
+      "verified": true
+    },
+    {
+      "id": "RDA-005",
+      "category": "RDA Guidelines",
+      "difficulty": "hard",
+      "query": "What is the carbohydrate RDA for an active Indian male?",
+      "gold_answer": "A moderately active Indian male (PAL 1.6, 65kg reference) requires approximately 355g of carbohydrates per day, based on total energy of 2465 kcal with 55-60% from carbohydrates (ICMR-NIN 2024 RDA). Fibre requirement is approximately 32g/day.",
+      "expected_keywords": [
+        "355",
+        "carb",
+        "active",
+        "male",
+        "2465",
+        "32"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets — Adult Male Moderate Activity",
+      "verified": true
+    },
+    {
+      "id": "RN-001",
+      "category": "Regional Nutrition",
+      "difficulty": "medium",
+      "query": "Suggest high-protein North Indian vegetarian meals",
+      "gold_answer": "North Indian high-protein vegetarian meals include: Paneer butter masala with whole wheat roti, Chana masala with rice, Moong dal chilla (cheela) with curd, Soya chaap, Rajma masala, and Dahi (yogurt) with meals. Combine grains with pulses for complete protein (ICMR-NIN Regional Food Culture — North India).",
+      "expected_keywords": [
+        "paneer",
+        "chana",
+        "moong",
+        "rajma",
+        "protein",
+        "north"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture — North India",
+      "verified": true
+    },
+    {
+      "id": "RN-002",
+      "category": "Regional Nutrition",
+      "difficulty": "medium",
+      "query": "What are traditional South Indian foods good for weight loss?",
+      "gold_answer": "South Indian foods supportive of weight loss include: Idli (steamed, 2 pieces ~150 kcal), Dosa in moderation, Ragi mudde (finger millet ball, high fibre), Vegetable sambar, Poriyal (stir-fried vegetables), and Buttermilk. Avoid excess coconut and oil (ICMR-NIN Regional Food Culture — South India).",
+      "expected_keywords": [
+        "idli",
+        "dosa",
+        "ragi",
+        "sambar",
+        "south",
+        "weight loss"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture — South India",
+      "verified": true
+    },
+    {
+      "id": "RN-003",
+      "category": "Regional Nutrition",
+      "difficulty": "hard",
+      "query": "Kerala cuisine options for a diabetic patient",
+      "gold_answer": "For a diabetic patient choosing Kerala cuisine: Prefer puttu+ kadala curry (high fibre, low GI), idiyappam with vegetable stew, and millet-based options. Limit appam (fermented rice, high GI) and avoid excessive coconut milk. Use coconut oil in moderation. Include moringa (drumstick) leaves which have a low glycemic impact (ICMR-NIN Regional Food Culture — Kerala).",
+      "expected_keywords": [
+        "puttu",
+        "kerala",
+        "diabetic",
+        "kadala",
+        "idiyappam",
+        "moringa"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture — South India (Kerala)",
+      "verified": true
+    },
+    {
+      "id": "FS-001",
+      "category": "Food Substitution",
+      "difficulty": "medium",
+      "query": "What can I substitute white rice with for a low-GI diet?",
+      "gold_answer": "For a low-GI diet, substitute white rice with: Brown rice (GI ~55), Quinoa, Ragi (finger millet), Broken wheat (dalia), Oats, or Cauliflower rice. These alternatives provide higher fibre and slower glucose release. Millet-based rotis are also excellent alternatives (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "brown rice",
+        "quinoa",
+        "ragi",
+        "dalia",
+        "millet",
+        "substitute",
+        "GI"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Food Composition + Regional Food Culture",
+      "verified": true
+    },
+    {
+      "id": "FS-002",
+      "category": "Food Substitution",
+      "difficulty": "easy",
+      "query": "Dairy-free calcium sources in Indian diet",
+      "gold_answer": "Dairy-free calcium sources in Indian diet include: Ragi (344mg/100g), Sesame seeds (till, 975mg/100g), Almonds (234mg/100g), Moringa leaves (220mg/100g), Rajma, and Green leafy vegetables. Ragi and sesame are particularly rich (IFCT 2017).",
+      "expected_keywords": [
+        "ragi",
+        "sesame",
+        "almond",
+        "moringa",
+        "calcium",
+        "dairy-free"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Food Composition Table",
+      "verified": true
+    },
+    {
+      "id": "FS-003",
+      "category": "Food Substitution",
+      "difficulty": "medium",
+      "query": "Good substitutes for potato in a low-carb diet",
+      "gold_answer": "Good low-carb substitutes for potato: Cauliflower, Bottle gourd (lauki), Radish, Turnip (shalgam), Raw banana cooked as vegetable, and Pumpkin. These have significantly lower carbohydrate content than potato (20g carbs/100g) (IFCT 2017).",
+      "expected_keywords": [
+        "cauliflower",
+        "lauki",
+        "radish",
+        "low-carb",
+        "substitute",
+        "potato"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Food Composition Table — Vegetables",
+      "verified": true
+    },
+    {
+      "id": "GA-001",
+      "category": "Gap Analysis",
+      "difficulty": "medium",
+      "query": "I am a vegetarian female, am I getting enough B12?",
+      "gold_answer": "As a vegetarian female, you are likely NOT getting enough B12. The RDA is 2.2 mcg/day, and plant foods contain negligible B12. The only vegetarian sources are dairy (curd: 0.4 mcg/100g, paneer: 0.2 mcg/100g) and eggs if lacto-ovo. Supplementation of 500-1000 mcg/day (methylcobalamin) is recommended for all vegetarians (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "2.2",
+        "B12",
+        "vegetarian",
+        "supplement",
+        "deficiency"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets + Micronutrient-Food Matrix",
+      "verified": true
+    },
+    {
+      "id": "GA-002",
+      "category": "Gap Analysis",
+      "difficulty": "hard",
+      "query": "Analyse my iron intake from a typical North Indian vegetarian diet",
+      "gold_answer": "A typical North Indian vegetarian diet (roti, dal, sabzi, rice, curd) provides approximately 12-15 mg of iron per day. The RDA for adult women is 21mg/day, and for men is 17mg/day. Common gaps: iron from plant sources is non-heme with ~5-10% bioavailability vs 20-25% for heme iron. To improve absorption, pair iron-rich foods with vitamin C (amla, lemon, tomatoes) and cook in iron vessels (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "12",
+        "15",
+        "21",
+        "17",
+        "iron",
+        "non-heme",
+        "bioavailability"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Food Composition + RDA Targets",
+      "verified": true
+    },
+    {
+      "id": "GA-003",
+      "category": "Gap Analysis",
+      "difficulty": "hard",
+      "query": "I am pregnant, am I getting enough folate from Indian food?",
+      "gold_answer": "A pregnant woman needs 500 mcg of folate per day. Indian foods rich in folate include: Moong dal (mcg/100g), Spinach, Moringa leaves, and Amla. However, diet alone typically provides only 200-300 mcg/day. Supplementation of 400-500 mcg/day is recommended, especially in the first 28 days to prevent neural tube defects (ICMR-NIN 2024 Pregnancy Protocol).",
+      "expected_keywords": [
+        "500",
+        "folate",
+        "pregnant",
+        "supplement",
+        "neural tube",
+        "moong"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Pregnancy Protocol + RDA Targets",
+      "verified": true
+    },
+    {
+      "id": "MN-001",
+      "category": "Medicine-Nutrition",
+      "difficulty": "hard",
+      "query": "How should a patient on GLP-1 medication adjust their diet?",
+      "gold_answer": "GLP-1 patients (semaglutide, liraglutide, tirzepatide) should: 1) Prioritize protein floor of 75-90g/day, 2) Eat small frequent meals to manage nausea, 3) Avoid high-fat fried foods, 4) Stay hydrated (nausea reduces water intake), 5) Supplement B12 (medication depletes), 6) Include Vit D 20-25mcg. Caloric reduction of 30-50% is typical but protein floor is non-negotiable (ICMR-NIN 2024 GLP-1 Protocol).",
+      "expected_keywords": [
+        "GLP-1",
+        "protein",
+        "75",
+        "90",
+        "B12",
+        "nausea",
+        "semaglutide"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "GLP-1 Nutrition Protocol + Medicine-Nutrition Impacts",
+      "verified": true
+    },
+    {
+      "id": "MN-002",
+      "category": "Medicine-Nutrition",
+      "difficulty": "medium",
+      "query": "How does metformin affect vitamin B12 levels?",
+      "gold_answer": "Metformin (brand names: Glycomet, Glucophage) depletes Vitamin B12 by 30-40%. Patients on long-term metformin should monitor B12 levels and consider 500-1000 mcg/day supplementation. Folate may also be mildly depleted. Take metformin WITH food to reduce GI side effects (ICMR-NIN 2024 Medicine-Nutrition Impacts).",
+      "expected_keywords": [
+        "metformin",
+        "B12",
+        "30",
+        "40",
+        "deplete",
+        "Glycomet",
+        "Glucophage"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine Nutrition Impacts — Metformin",
+      "verified": true
+    },
+    {
+      "id": "SG-001",
+      "category": "Supplement Guidance",
+      "difficulty": "medium",
+      "query": "Should I take vitamin B12 supplements as a vegetarian?",
+      "gold_answer": "Yes, vegetarians should supplement vitamin B12 (500-1000 mcg/day methylcobalamin). The RDA is 2.2 mcg/day, and plant foods contain negligible B12. Dairy provides only 0.4 mcg/100g (curd) and 0.2 mcg/100g (paneer) — insufficient to meet requirements (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "B12",
+        "supplement",
+        "vegetarian",
+        "500",
+        "1000",
+        "2.2"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Micronutrient-Food Matrix + RDA Targets",
+      "verified": true
+    },
+    {
+      "id": "SG-002",
+      "category": "Supplement Guidance",
+      "difficulty": "medium",
+      "query": "Do I need vitamin D supplements in India?",
+      "gold_answer": "Despite abundant sunlight, 70-80% of urban Indians are vitamin D deficient due to indoor lifestyles, pollution, and sunscreen use. Supplement 600-2000 IU/day (15-50 mcg) is recommended. The RDA is 5-15 mcg/day depending on sun exposure (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "vitamin",
+        "D",
+        "supplement",
+        "600",
+        "2000",
+        "deficient"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets + Life-Stage Priorities",
+      "verified": true
+    },
+    {
+      "id": "SG-003",
+      "category": "Supplement Guidance",
+      "difficulty": "hard",
+      "query": "Should I take iron and calcium supplements together?",
+      "gold_answer": "No, iron and calcium should be taken at least 2-3 hours apart. Calcium inhibits non-heme iron absorption by 50-60%. Take iron with vitamin C (amla, lemon) to enhance absorption, and calcium at a separate meal. Iron RDA: 17-21 mg/day; Calcium RDA: 1000-1200 mg/day (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "iron",
+        "calcium",
+        "separate",
+        "2-3",
+        "hours",
+        "vitamin C"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Micronutrient-Food Matrix",
+      "verified": true
+    },
+    {
+      "id": "SG-004",
+      "category": "Supplement Guidance",
+      "difficulty": "easy",
+      "query": "What is the recommended omega-3 supplement dose?",
+      "gold_answer": "The recommended omega-3 (EPA+DHA) intake is 250-500 mg/day for general health, and up to 2000 mg/day for therapeutic use (anti-inflammatory). Indian vegetarian sources: flaxseed, walnuts, chia seeds. Marine sources: fish oil. ALA from plant sources has only 5-10% conversion to EPA/DHA (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "omega-3",
+        "EPA",
+        "DHA",
+        "250",
+        "500",
+        "fish oil"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols + Micronutrient Matrix",
+      "verified": true
+    },
+    {
+      "id": "SG-005",
+      "category": "Supplement Guidance",
+      "difficulty": "medium",
+      "query": "How much folate should I take during pregnancy?",
+      "gold_answer": "Pregnant women need 500 mcg folate per day. Supplement 400-500 mcg/day folic acid, ideally starting 3 months before conception. The critical window is the first 28 days of pregnancy (neural tube formation). Indian food sources: moong dal, spinach, moringa leaves provide ~200-300 mcg/day (ICMR-NIN 2024 Pregnancy Protocol).",
+      "expected_keywords": [
+        "500",
+        "folate",
+        "pregnant",
+        "folic",
+        "neural tube",
+        "supplement"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Pregnancy Protocol",
+      "verified": true
+    },
+    {
+      "id": "SG-006",
+      "category": "Supplement Guidance",
+      "difficulty": "hard",
+      "query": "What supplements should a GLP-1 patient take?",
+      "gold_answer": "GLP-1 patients should supplement: 1) Vitamin B12 (500-1000 mcg/day, medication depletes 30-40%), 2) Vitamin D (20-25 mcg/day), 3) Protein (75-90g floor, supplement with whey/plant protein if needed), 4) Iron (monitor closely), 5) Zinc (15-17 mg/day). Multivitamin recommended. Take supplements away from medication to avoid nausea (ICMR-NIN 2024 GLP-1 Protocol).",
+      "expected_keywords": [
+        "GLP-1",
+        "B12",
+        "vitamin D",
+        "protein",
+        "75",
+        "90",
+        "zinc"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "GLP-1 Nutrition Protocol",
+      "verified": true
+    },
+    {
+      "id": "SG-007",
+      "category": "Supplement Guidance",
+      "difficulty": "easy",
+      "query": "Do I need protein supplements for muscle building?",
+      "gold_answer": "For most Indians, protein from whole foods (dals, paneer, eggs, chicken, fish, soy) is sufficient. The RDA is 0.8-1.0 g/kg/day, and 1.2-1.7 g/kg/day for athletes. If meeting targets through food is difficult, whey or plant protein supplements (20-30g per serving) can help. Excess protein (>2g/kg/day) has no additional benefit (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "protein",
+        "supplement",
+        "0.8",
+        "1.0",
+        "whey",
+        "RDA"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets + Profession Calorie Guide",
+      "verified": true
+    },
+    {
+      "id": "SG-008",
+      "category": "Supplement Guidance",
+      "difficulty": "hard",
+      "query": "Can I get enough zinc from a vegetarian Indian diet?",
+      "gold_answer": "Zinc RDA is 17 mg/day for men and 13 mg/day for women. Vegetarian sources: pumpkin seeds (7.5 mg/100g), sesame seeds (7.8 mg/100g), chickpeas (3.4 mg/100g), cashews (5.6 mg/100g). However, phytates in Indian grains reduce zinc absorption by 30-50%. Soaking, sprouting, and fermentation improve bioavailability. Vegetarians may need 1.5x the RDA (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "zinc",
+        "17",
+        "13",
+        "phytate",
+        "absorption",
+        "vegetarian"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Micronutrient-Food Matrix",
+      "verified": true
+    },
+    {
+      "id": "SG-009",
+      "category": "Supplement Guidance",
+      "difficulty": "medium",
+      "query": "Is iodine supplementation necessary in India?",
+      "gold_answer": "Iodized salt is mandatory in India since 1992, so general supplementation is not needed if using iodized salt (150 mcg/g salt, ~300 mcg/day from 5g salt). However, pregnant/lactating women may need additional 150-250 mcg/day. Seaweed, fish, and dairy also provide iodine. Avoid excess iodine (>1100 mcg/day) which can cause thyroid dysfunction (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "iodine",
+        "iodized salt",
+        "300",
+        "pregnant",
+        "thyroid"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Micronutrient-Food Matrix",
+      "verified": true
+    },
+    {
+      "id": "SG-010",
+      "category": "Supplement Guidance",
+      "difficulty": "easy",
+      "query": "What multivitamin should an Indian adult take daily?",
+      "gold_answer": "An ideal multivitamin for Indian adults should provide: Vitamin B12 500 mcg, Vitamin D 600-1000 IU, Folate 400 mcg, Iron 10-15 mg (if not on iron separately), Zinc 10-15 mg, Calcium 500 mg (if diet insufficient), and Omega-3 250-500 mg. Choose a brand with methylcobalamin (not cyanocobalamin) for better B12 absorption (ICMR-NIN 2024 RDA targets).",
+      "expected_keywords": [
+        "multivitamin",
+        "B12",
+        "vitamin D",
+        "folate",
+        "zinc",
+        "methylcobalamin"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets comprehensive",
+      "verified": true
+    },
+    {
+      "id": "FC-011",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "How much protein is in 100g of soya chunks?",
+      "gold_answer": "Soya chunks (textured vegetable protein) contain approximately 52g of protein per 100g (dry weight) — the highest plant-based protein source. When cooked, they absorb water and protein content drops to ~17g per 100g cooked (IFCT 2017).",
+      "expected_keywords": [
+        "52",
+        "protein",
+        "soya",
+        "chunks",
+        "TVP"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Pulses & Legumes — Soybean products",
+      "verified": true
+    },
+    {
+      "id": "FC-012",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "What is the calorie content of one egg?",
+      "gold_answer": "One whole egg (50g) contains approximately 71 kcal. Per 100g: eggs provide 166 kcal, 13.3g protein, 11.6g fat, and 1.2g carbs (IFCT 2017).",
+      "expected_keywords": [
+        "71",
+        "166",
+        "egg",
+        "calorie",
+        "13.3",
+        "11.6"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Eggs — Whole egg",
+      "verified": true
+    },
+    {
+      "id": "FC-013",
+      "category": "Food Composition",
+      "difficulty": "hard",
+      "query": "Compare the nutritional profile of bajra and jowar",
+      "gold_answer": "Bajra (pearl millet) per 100g: 361 kcal, 11.6g protein, 4.8g fat, 67g carbs, 11.3g fibre, 8.1mg iron. Jowar (sorghum) per 100g: 349 kcal, 10.4g protein, 1.8g fat, 73g carbs, 7.6g fibre, 4.1mg iron. Bajra has more protein, fat, iron, and fibre; jowar has more carbs (IFCT 2017).",
+      "expected_keywords": [
+        "bajra",
+        "jowar",
+        "361",
+        "349",
+        "protein",
+        "fibre",
+        "iron",
+        "millet"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Cereals & Millets — Bajra (A005), Jowar (A006)",
+      "verified": true
+    },
+    {
+      "id": "FC-014",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "What is the fat profile of coconut oil?",
+      "gold_answer": "Coconut oil is 99.9% fat, of which ~90% is saturated (mainly lauric acid 45-50%), ~6% monounsaturated, and ~1.5% polyunsaturated. Per 100g: 884 kcal, 99.9g fat. Despite high saturated fat, lauric acid has neutral effects on blood cholesterol (IFCT 2017).",
+      "expected_keywords": [
+        "99.9",
+        "saturated",
+        "lauric",
+        "884",
+        "coconut",
+        "fat"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Fats & Oils — Coconut oil",
+      "verified": true
+    },
+    {
+      "id": "FC-015",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "How much vitamin A is in carrots?",
+      "gold_answer": "Carrots contain 1670 mcg of vitamin A (as beta-carotene) per 100g. Cooking increases bioavailability. One medium carrot (50g) provides ~835 mcg vitamin A, which is ~100% of the adult RDA (600-900 mcg/day) (IFCT 2017).",
+      "expected_keywords": [
+        "1670",
+        "vitamin A",
+        "beta-carotene",
+        "carrot",
+        "835"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Vegetables — Carrot",
+      "verified": true
+    },
+    {
+      "id": "FC-016",
+      "category": "Food Composition",
+      "difficulty": "hard",
+      "query": "What is the protein digestibility of Indian foods?",
+      "gold_answer": "Protein digestibility varies: Eggs 97%, Milk 95%, Chicken 94%, Fish 94%, Soy 91%, Rice 88%, Wheat 86%, Chickpeas 82%, Lentils 78%, Beans 72%. Indian cooking methods (pressure cooking, sprouting, fermentation) improve digestibility. The Protein Digestibility Corrected Amino Acid Score (PDCAAS) for mixed Indian diet is ~75-85% (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "digestibility",
+        "97",
+        "88",
+        "82",
+        "78",
+        "PDCAAS",
+        "protein"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Food Composition Table + RDA Technical Report",
+      "verified": true
+    },
+    {
+      "id": "FC-017",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "Which Indian food has the highest calcium content?",
+      "gold_answer": "The highest calcium sources in Indian foods are: Ragi (344mg/100g), Sesame seeds (975mg/100g — note: this is per 100g of seeds, consumed in small quantities), Poppy seeds/khus khus (1450mg/100g), Moringa leaves (220mg/100g), and Amaranth leaves (400mg/100g). For daily consumption, ragi and green leafy vegetables are the most practical sources (IFCT 2017).",
+      "expected_keywords": [
+        "calcium",
+        "ragi",
+        "344",
+        "sesame",
+        "975",
+        "moringa",
+        "highest"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Multiple food groups — Calcium column",
+      "verified": true
+    },
+    {
+      "id": "FC-018",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "What is the water content of cucumber?",
+      "gold_answer": "Cucumber has 96.4g water per 100g — making it one of the most hydrating foods. It provides only 13 kcal, 0.7g protein, 0.1g fat, 2.5g carbs per 100g (IFCT 2017).",
+      "expected_keywords": [
+        "96.4",
+        "water",
+        "cucumber",
+        "13",
+        "kcal"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Vegetables — Cucumber",
+      "verified": true
+    },
+    {
+      "id": "FC-019",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "How much potassium is in a banana?",
+      "gold_answer": "One medium banana (100g edible portion) contains approximately 299mg of potassium. It also provides 104 kcal, 1.3g protein, 0.3g fat, 27g carbs, and 2.4g fibre (IFCT 2017).",
+      "expected_keywords": [
+        "299",
+        "potassium",
+        "banana",
+        "104",
+        "27"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Fruits — Banana",
+      "verified": true
+    },
+    {
+      "id": "FC-020",
+      "category": "Food Composition",
+      "difficulty": "hard",
+      "query": "What are the anti-nutrients in Indian foods and how to reduce them?",
+      "gold_answer": "Common anti-nutrients in Indian foods: 1) Phytates in grains/pulses — reduce mineral absorption; reduce by soaking (6-8h), sprouting, fermentation. 2) Oxalates in spinach, amaranth, rhubarb — reduce calcium/iron absorption; reduce by cooking. 3) Tannins in tea, legumes — reduce iron absorption; avoid tea with meals. 4) Trypsin inhibitors in raw legumes — destroyed by cooking. 5) Lectins in beans — destroyed by pressure cooking. Proper Indian cooking methods (soaking, sprouting, pressure cooking, fermentation) effectively neutralize most anti-nutrients (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "phytate",
+        "oxalate",
+        "tannin",
+        "trypsin",
+        "lectin",
+        "soaking",
+        "sprouting",
+        "fermentation"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Food Composition + Micronutrient Matrix",
+      "verified": true
+    },
+    {
+      "id": "CL-006",
+      "category": "Clinical Nutrition",
+      "difficulty": "hard",
+      "query": "Diet recommendations for type 2 diabetes with kidney complications",
+      "gold_answer": "For T2DM with kidney complications: Controlled protein (0.8-1.0 g/kg/day, mostly plant-based), low-sodium (<2g/day), limited potassium/phosphorus depending on CKD stage, low-GI carbs (40-45% of calories), restrict added sugars. Monitor: HbA1c <7%, BP <130/80, eGFR. Avoid: rajma in excess (high potassium), banana, spinach (high potassium if CKD stage 3+), packaged foods (high sodium). Recommended: millets, bottle gourd, pumpkin, cauliflower (ICMR-NIN 2024 Diabetes + CKD Protocols).",
+      "expected_keywords": [
+        "diabetes",
+        "kidney",
+        "CKD",
+        "protein",
+        "sodium",
+        "low-GI",
+        "HbA1c"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Diabetes + Kidney Disease",
+      "verified": true
+    },
+    {
+      "id": "CL-007",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "What foods help manage high blood pressure naturally?",
+      "gold_answer": "DASH-style Indian diet for hypertension: Increase - leafy greens (palak, methi), banana (limited), coconut water, rajma, sweet potato, ragi, guava, amla, pomegranate. Restrict - pickle (achaar), papad, namkeen, salted snacks, packaged food, processed meat, excess salt in cooking, soya sauce. Target sodium <2g/day, potassium >4.7g/day. Cook with minimal salt and use herbs/spices for flavor (ICMR-NIN 2024 Hypertension Protocol).",
+      "expected_keywords": [
+        "DASH",
+        "hypertension",
+        "sodium",
+        "potassium",
+        "palak",
+        "amla",
+        "pickle"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Hypertension",
+      "verified": true
+    },
+    {
+      "id": "CL-008",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "What should a hypothyroid patient eat?",
+      "gold_answer": "For hypothyroidism: Ensure adequate iodine (use iodized salt), selenium (2-3 Brazil nuts/day or 55-70 mcg supplement), and zinc (pumpkin seeds, chickpeas). Avoid raw cruciferous vegetables (cabbage, cauliflower, broccoli) in large amounts — cooking deactivates goitrogens. Take thyroid medication on empty stomach with water, wait 30-60 min before eating. Limit soy if consuming >2 servings/day. Monitor B12 levels (hypothyroidism is associated with B12 deficiency) (ICMR-NIN 2024 Thyroid Protocol).",
+      "expected_keywords": [
+        "hypothyroid",
+        "iodine",
+        "selenium",
+        "zinc",
+        "goitrogen",
+        "cruciferous",
+        "B12"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Thyroid",
+      "verified": true
+    },
+    {
+      "id": "CL-009",
+      "category": "Clinical Nutrition",
+      "difficulty": "hard",
+      "query": "How does PCOS diet differ for overweight vs normal-weight women?",
+      "gold_answer": "For overweight PCOS (BMI >25): Calorie deficit (1400-1800 kcal/day), strict low-GI, 40% carbs, protein 1.0-1.2 g/kg/day, anti-inflammatory fats. For normal-weight PCOS (BMI 18.5-25): Maintenance calories (1800-2100 kcal/day), moderate low-GI, 45% carbs, protein 0.8-1.0 g/kg/day, focus on insulin sensitivity through exercise and meal timing. Both: iron target 35-40 mg (heavy periods), inositol supplement 2-4g/day may help (ICMR-NIN 2024 PCOS Protocol).",
+      "expected_keywords": [
+        "PCOS",
+        "overweight",
+        "normal-weight",
+        "1400",
+        "1800",
+        "low-GI",
+        "inositol"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — PCOS",
+      "verified": true
+    },
+    {
+      "id": "CL-010",
+      "category": "Clinical Nutrition",
+      "difficulty": "easy",
+      "query": "Is intermittent fasting safe for diabetics?",
+      "gold_answer": "Intermittent fasting can be safe for type 2 diabetics under medical supervision. Benefits: improved insulin sensitivity, weight loss, reduced HbA1c. Risks: hypoglycemia (especially on sulfonylureas or insulin), dehydration, overeating on feast days. Recommend: 16:8 protocol (skip breakfast, eat 12-8pm), monitor blood glucose during fast, stay hydrated with water. Contraindicated: type 1 diabetics, pregnant, elderly, underweight. Always consult doctor before starting (ICMR-NIN 2024 Diabetes Protocol + Clinical Guidelines).",
+      "expected_keywords": [
+        "fasting",
+        "diabetic",
+        "16:8",
+        "hypoglycemia",
+        "insulin",
+        "HbA1c"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Diabetes",
+      "verified": true
+    },
+    {
+      "id": "CL-011",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "What foods help reduce inflammation in the body?",
+      "gold_answer": "Anti-inflammatory foods: Omega-3 sources (flaxseed, walnuts, chia seeds, fish), turmeric (curcumin with black pepper), ginger, green tea, berries, leafy greens, olive oil, almonds, and moringa. Avoid: processed foods, refined oils, excess sugar, maida, deep-fried foods. The Indian diet inherently includes many anti-inflammatory spices — turmeric, ginger, garlic, cinnamon, and fenugreek are all known to reduce inflammatory markers (ICMR-NIN 2024 Anti-inflammatory Protocol).",
+      "expected_keywords": [
+        "anti-inflammatory",
+        "omega-3",
+        "turmeric",
+        "curcumin",
+        "ginger",
+        "flaxseed"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Inflammation",
+      "verified": true
+    },
+    {
+      "id": "CL-012",
+      "category": "Clinical Nutrition",
+      "difficulty": "hard",
+      "query": "How should a patient with fatty liver disease adjust their diet?",
+      "gold_answer": "For NAFLD (Non-Alcoholic Fatty Liver Disease): Calorie deficit 500-1000 kcal/day for weight loss (target 7-10% body weight), restrict refined carbs and added sugars completely, increase protein to 1.0-1.5 g/kg/day, include omega-3 (2-3g/day), limit saturated fat (<7% of calories), no alcohol. Foods to increase: leafy greens, coffee (2-3 cups/day protects liver), green tea, turmeric, garlic, olive oil. Foods to avoid: sugary drinks, maida, white rice, fried foods, packaged snacks. Vitamin E 800 IU/day may help (ICMR-NIN 2024 NAFLD Protocol).",
+      "expected_keywords": [
+        "NAFLD",
+        "fatty liver",
+        "calorie deficit",
+        "protein",
+        "omega-3",
+        "vitamin E",
+        "alcohol"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — NAFLD",
+      "verified": true
+    },
+    {
+      "id": "CL-013",
+      "category": "Clinical Nutrition",
+      "difficulty": "easy",
+      "query": "Can diet cure iron deficiency anaemia?",
+      "gold_answer": "Diet alone may not cure iron deficiency anaemia but is essential for management. Iron-rich foods: amla (600mg vit C + iron), spinach (4.9mg/100g), ragi (3.9mg/100g), garden cress seeds (halim, 100mg/100g), beetroot, dates. Non-heme iron from plants has 5-10% absorption vs heme iron from meat at 20-25%. To maximize absorption: pair iron foods with vitamin C (amla, lemon), cook in iron vessels, avoid tea/coffee with meals. For moderate-severe anaemia, iron supplements (60-120mg/day) are typically required alongside dietary changes (ICMR-NIN 2024 Anaemia Protocol).",
+      "expected_keywords": [
+        "anaemia",
+        "iron",
+        "non-heme",
+        "5-10%",
+        "vitamin C",
+        "supplement",
+        "amla"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Iron Deficiency Anaemia",
+      "verified": true
+    },
+    {
+      "id": "CL-014",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "What foods trigger migraine headaches?",
+      "gold_answer": "Common migraine trigger foods: aged cheese (paneer stored >3 days), cured/processed meats, chocolate, caffeine (excess or withdrawal), artificial sweeteners (aspartame), MSG (ajinomoto), alcohol (red wine), citrus fruits in excess, bananas (very ripe), and fermented foods. Not all triggers affect everyone — maintain a food diary. Indian diet considerations: limit pickle (aged, high tyramine), avoid excess tea/coffee, limit fermented foods if sensitive. Anti-migraine nutrients: magnesium (dark leafy greens, nuts, seeds), riboflavin (milk, eggs), coenzyme Q10 (ICMR-NIN 2024 Migraine Protocol).",
+      "expected_keywords": [
+        "migraine",
+        "trigger",
+        "cheese",
+        "chocolate",
+        "caffeine",
+        "MSG",
+        "tyramine"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Migraine",
+      "verified": true
+    },
+    {
+      "id": "CL-015",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "Diet for ulcerative colitis during flare-up",
+      "gold_answer": "During UC flare-up: Low-fibre/low-residue diet to reduce bowel irritation. Allowed: white rice, refined flour (maida in small amounts), well-cooked vegetables without skin, ripe bananas, apple puree, lean chicken/fish, eggs, curd (if tolerated). Avoid: raw vegetables, whole grains, nuts, seeds, spicy food, milk (if lactose intolerant), fried food, beans, cabbage, onions, garlic. Small frequent meals, stay hydrated. Between flare-ups: gradually reintroduce fibre, probiotics (curd, buttermilk), and anti-inflammatory foods (turmeric, ginger). Omega-3 supplementation may help (ICMR-NIN 2024 IBD Protocol).",
+      "expected_keywords": [
+        "ulcerative colitis",
+        "flare",
+        "low-fibre",
+        "low-residue",
+        "white rice",
+        "probiotic"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — IBD",
+      "verified": true
+    },
+    {
+      "id": "RDA-006",
+      "category": "RDA Guidelines",
+      "difficulty": "medium",
+      "query": "What is the iron RDA for adolescent girls?",
+      "gold_answer": "Adolescent girls (14-18 years) require 27 mg of iron per day to support growth and menstruation. This is higher than adult women (21 mg/day). Food sources: garden cress seeds (halim, 100mg/100g), amla, spinach, ragi, beetroot. Absorption is poor from vegetarian sources — pair with vitamin C (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "27",
+        "iron",
+        "adolescent",
+        "girls",
+        "menstruation"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets — Teen 14-18y Female",
+      "verified": true
+    },
+    {
+      "id": "RDA-007",
+      "category": "RDA Guidelines",
+      "difficulty": "easy",
+      "query": "How much calcium do I need daily?",
+      "gold_answer": "Calcium RDA for Indian adults (19-64 years) is 1000 mg/day. Adolescents (13-18 years) need 1000-1300 mg/day. Pregnant/lactating women need 1000-1200 mg/day. Elderly (65+) need 1200 mg/day. Indian sources: ragi (344mg/100g), milk (120mg/100ml), curd (140mg/100g), sesame seeds (975mg/100g), amaranth leaves (400mg/100g), moringa leaves (220mg/100g) (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "1000",
+        "calcium",
+        "RDA",
+        "ragi",
+        "milk",
+        "curd"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets — All Life Stages",
+      "verified": true
+    },
+    {
+      "id": "RDA-008",
+      "category": "RDA Guidelines",
+      "difficulty": "hard",
+      "query": "How does protein requirement change with age?",
+      "gold_answer": "Protein RDA by age: Infants 0-6mo (1.5g/kg), 7-12mo (1.2g/kg), Children 1-3y (1.1g/kg), 4-8y (0.95g/kg), 9-13y (0.95g/kg), Adolescents 14-18y (0.85-0.95g/kg), Adults 19-64y (0.8-1.0g/kg), Elderly 65+ (1.0-1.2g/kg — higher due to sarcopenia), Pregnancy (1.1g/kg + 10g/day), Lactation (1.2g/kg + 15g/day). Elderly need MORE protein, not less, contrary to common belief (ICMR-NIN 2024 RDA + Life-Stage Priorities).",
+      "expected_keywords": [
+        "protein",
+        "age",
+        "RDA",
+        "elderly",
+        "sarcopenia",
+        "1.0",
+        "1.2"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets — All Life Stages",
+      "verified": true
+    },
+    {
+      "id": "RDA-009",
+      "category": "RDA Guidelines",
+      "difficulty": "medium",
+      "query": "What is the recommended fibre intake for Indian adults?",
+      "gold_answer": "Fibre RDA for Indian adults: Men (30-40g/day), Women (25-32g/day), Adolescents (28-34g/day), Children (20-30g/day). Most Indians consume only 15-20g/day. Good sources: oats (10.6g/100g), rajma (5.1g/100g), chickpeas (7.6g/100g), ragi (3.6g/100g), pear (3.1g/100g), almonds (12.5g/100g), leafy vegetables. Increase gradually with adequate water to avoid bloating (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "fibre",
+        "30",
+        "40",
+        "25",
+        "32",
+        "RDA",
+        "oats",
+        "ragi"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets — All Life Stages",
+      "verified": true
+    },
+    {
+      "id": "RDA-010",
+      "category": "RDA Guidelines",
+      "difficulty": "easy",
+      "query": "How much water should I drink daily?",
+      "gold_answer": "Daily water intake recommendation for Indian adults: Men ~3.7L/day (15 cups), Women ~2.7L/day (11 cups) from all fluids including water, milk, tea, soups, and moisture in foods. In hot Indian summers, add 500-1000ml. Activity increases needs by 500-1500ml depending on intensity/duration. Thirst is a late indicator of dehydration — drink regularly even if not thirsty (ICMR-NIN 2024 RDA + Hydration Guidelines).",
+      "expected_keywords": [
+        "water",
+        "3.7",
+        "2.7",
+        "hydrate",
+        "thirst",
+        "dehydration"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets + Profession Calorie Guide",
+      "verified": true
+    },
+    {
+      "id": "RDA-011",
+      "category": "RDA Guidelines",
+      "difficulty": "medium",
+      "query": "What is the RDA for zinc in Indian adults?",
+      "gold_answer": "Zinc RDA: Adult men 17 mg/day, Adult women 13 mg/day, Pregnant women 14 mg/day, Lactating women 17 mg/day. Due to high phytate content in Indian diet (inhibits zinc absorption), vegetarians may need 1.5x the RDA. Good sources: pumpkin seeds (7.5mg/100g), sesame seeds (7.8mg/100g), chickpeas (3.4mg/100g), cashews (5.6mg/100g), eggs (1.3mg/100g), chicken (2.4mg/100g) (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "zinc",
+        "17",
+        "13",
+        "RDA",
+        "phytate",
+        "pumpkin",
+        "sesame"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets — Micronutrients",
+      "verified": true
+    },
+    {
+      "id": "RDA-012",
+      "category": "RDA Guidelines",
+      "difficulty": "hard",
+      "query": "How are Indian RDAs different from WHO/FAO recommendations?",
+      "gold_answer": "Indian RDAs (ICMR-NIN 2024) differ from WHO/FAO in several ways: 1) Lower protein RDA (0.8-1.0g/kg vs 1.0-1.2g/kg WHO) due to lower average body weight and different reference protein, 2) Higher iron RDA for women (21mg vs 12-18mg WHO) due to high prevalence of anaemia, 3) Higher folate RDA (300 mcg vs 200 mcg WHO) due to widespread deficiency, 4) Calcium RDA similar (1000mg), 5) Vitamin D RDA lower (5-15 mcg vs 15-20 mcg WHO) accounting for tropical sun exposure. Indian RDAs are population-specific, accounting for dietary patterns, body size, and endemic deficiencies (ICMR-NIN 2024 RDA Technical Report).",
+      "expected_keywords": [
+        "RDA",
+        "WHO",
+        "FAO",
+        "difference",
+        "protein",
+        "iron",
+        "folate"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets — Technical Report",
+      "verified": true
+    },
+    {
+      "id": "RN-004",
+      "category": "Regional Nutrition",
+      "difficulty": "medium",
+      "query": "What are healthy East Indian breakfast options?",
+      "gold_answer": "East Indian (Bengali/Odia) healthy breakfast options: Luchi (limited, fried), Puffed rice (muri) with vegetables and peanuts, Suji upma, Pitha (rice cakes, steamed), Dalia (broken wheat porridge), Moringa leaf omelette, and vegetable poha. Mustard oil is the primary cooking oil — rich in monounsaturated fats but use in moderation. Add seasonal greens like palong (spinach) and lau (bottle gourd) (ICMR-NIN 2024 Regional Food — East India).",
+      "expected_keywords": [
+        "east",
+        "bengali",
+        "muri",
+        "pitha",
+        "dalia",
+        "mustard oil",
+        "breakfast"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture — East India",
+      "verified": true
+    },
+    {
+      "id": "RN-005",
+      "category": "Regional Nutrition",
+      "difficulty": "hard",
+      "query": "What are the healthiest Gujarati dishes?",
+      "gold_answer": "Healthiest Gujarati dishes: 1) Dhokla (steamed fermented chickpea snack — high protein, low fat), 2) Khichdi (rice + moong dal — easily digestible, complete protein), 3) Thepla (whole wheat + methi flatbread — high fibre), 4) Handvo (savory lentil-rice cake — fermented, high protein), 5) Undhiyu (mixed winter vegetables — high fibre, vitamins), 6) Karela sabzi (bitter gourd — blood sugar management), 7) Chaas (spiced buttermilk — probiotic). Gujarati cuisine is predominantly vegetarian and uses groundnut oil. The traditional thali is well-balanced but portion control is key (ICMR-NIN 2024 Regional Food — West India).",
+      "expected_keywords": [
+        "gujarati",
+        "dhokla",
+        "khichdi",
+        "thepla",
+        "handvo",
+        "undhiyu",
+        "vegetarian"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture — West India (Gujarat)",
+      "verified": true
+    },
+    {
+      "id": "RN-006",
+      "category": "Regional Nutrition",
+      "difficulty": "medium",
+      "query": "What is a healthy Punjabi diet for weight loss?",
+      "gold_answer": "Punjabi diet modifications for weight loss: Replace naan/paratha with whole wheat roti or millet roti, increase dal and vegetable portions, reduce ghee/oil, choose tandoori/grilled over fried, include sarson ka saag (mustard greens, high iron/fibre) in season, limit butter paneer, replace lassi (sweet) with buttermilk or chaas. Typical Punjabi meals are calorie-dense — halving portion sizes of oil/ghee can reduce 300-500 kcal/day (ICMR-NIN 2024 Regional Food — North India).",
+      "expected_keywords": [
+        "punjabi",
+        "weight loss",
+        "roti",
+        "sarson",
+        "paneer",
+        "buttermilk"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture — North India (Punjab)",
+      "verified": true
+    },
+    {
+      "id": "RN-007",
+      "category": "Regional Nutrition",
+      "difficulty": "easy",
+      "query": "Which Indian region has the healthiest traditional diet?",
+      "gold_answer": "The healthiest traditional Indian diet is debated, but several regions score well: 1) South Indian (Tamil/Kerala) — fermented foods (idli/dosa), high vegetable use, coconut in moderation, ragi in Karnataka; 2) Gujarati — predominantly vegetarian, fermented snacks, balanced thali; 3) Bengali — fish-based, seasonal greens, mustard oil (good fat profile). Common strengths across regions: high vegetable/fibre intake, fermented foods (probiotics), spices (anti-inflammatory). Common weakness: high refined grain consumption in some regions. The best diet combines regional strengths — probiotic ferments from South, millets from Central/West, fish/vegetables from East (ICMR-NIN 2024 Regional Food Culture — All Zones).",
+      "expected_keywords": [
+        "healthiest",
+        "south",
+        "gujarati",
+        "bengali",
+        "fermented",
+        "millet",
+        "regional"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture — All Zones summary",
+      "verified": true
+    },
+    {
+      "id": "RN-008",
+      "category": "Regional Nutrition",
+      "difficulty": "medium",
+      "query": "What are traditional Rajasthani foods and their nutritional value?",
+      "gold_answer": "Traditional Rajasthani foods: Dal baati churma (high calorie, baati is baked whole wheat), Bajra roti (pearl millet, high iron/fibre), Ker sangri (desert vegetable, rich in fibre/iron), Moth bean curry (high protein for desert region), Gatte ki sabzi (gram flour dumplings in curd gravy). Nutritional strengths: millet-based (iron/fibre), legume-rich (protein), use of buttermilk (probiotic/protein). Weakness: deep-frying (baati, gatte), high ghee use. Choose baked baati, bajra roti, and ker sangri for healthier options (ICMR-NIN 2024 Regional Food — North India).",
+      "expected_keywords": [
+        "rajasthani",
+        "baati",
+        "bajra",
+        "ker sangri",
+        "moth",
+        "millet"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture — North India (Rajasthan)",
+      "verified": true
+    },
+    {
+      "id": "RN-009",
+      "category": "Regional Nutrition",
+      "difficulty": "hard",
+      "query": "How does regional food culture affect nutritional deficiencies in India?",
+      "gold_answer": "Regional dietary patterns drive deficiency patterns: North India (wheat-based) — lower iron deficiency than South but higher obesity; South India (rice-based) — higher B12 deficiency (less dairy/meat), lower protein; West India (millet + legume based in Gujarat) — relatively balanced but low B12; East India (rice + fish) — lowest B12 deficiency (fish consumption), adequate protein; Central India (millet-based) — highest iron intake, lowest obesity but protein quality concerns. Universal across regions: 1) Vitamin D deficiency (indoor lifestyles), 2) B12 deficiency in vegetarians, 3) Iron deficiency in women, 4) Folate inadequacy in pregnancy. Regional dietary counselling is essential — a one-size-fits-all approach ignores >5000 years of food culture (ICMR-NIN 2024 Regional Food Culture + Deficiency Mapping).",
+      "expected_keywords": [
+        "regional",
+        "deficiency",
+        "north",
+        "south",
+        "east",
+        "west",
+        "B12",
+        "iron"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture + Disease Protocols",
+      "verified": true
+    },
+    {
+      "id": "RN-010",
+      "category": "Regional Nutrition",
+      "difficulty": "medium",
+      "query": "What is the role of fermented foods in Indian regional diets?",
+      "gold_answer": "Fermented foods are central to Indian regional diets: South — idli, dosa, uttapam (rice+urad dal fermented, improves protein quality 2x, increases B vitamins), appam; North — dahi (curd, probiotic, 140mg/100g calcium), kanji (carrot/beet fermented drink); East — panch phoron fermented pickles; West — dhokla (chickpea+rice fermented, high protein), handvo. Benefits: improves digestibility, reduces anti-nutrients (phytates by 50%), increases B12 content (in some ferments), provides probiotics. Daily inclusion of fermented foods (curd, idli, dosa, dhokla) is recommended for gut health (ICMR-NIN 2024 Regional Food + Micronutrient Matrix).",
+      "expected_keywords": [
+        "fermented",
+        "idli",
+        "dosa",
+        "curd",
+        "dhokla",
+        "probiotic",
+        "B12"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture + Micronutrient Food Matrix",
+      "verified": true
+    },
+    {
+      "id": "FS-004",
+      "category": "Food Substitution",
+      "difficulty": "medium",
+      "query": "Healthy alternatives to maida (refined flour)",
+      "gold_answer": "Healthy alternatives to maida: 1) Whole wheat flour (atta) — 3x more fibre, more minerals; 2) Ragi flour (finger millet) — 10x more calcium, 344mg/100g; 3) Jowar flour (sorghum) — gluten-free, 7.6g fibre; 4) Bajra flour (pearl millet) — high iron (8.1mg/100g); 5) Oat flour — high protein (13.2g/100g); 6) Besan (chickpea flour) — high protein (19g/100g). For baking, replace 100% maida with atta or mix millet+atta for best texture (IFCT 2017).",
+      "expected_keywords": [
+        "maida",
+        "atta",
+        "ragi",
+        "jowar",
+        "bajra",
+        "besan",
+        "substitute"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Cereals & Millets — Various",
+      "verified": true
+    },
+    {
+      "id": "FS-005",
+      "category": "Food Substitution",
+      "difficulty": "medium",
+      "query": "What can replace sugar for a diabetic person?",
+      "gold_answer": "Safe sugar substitutes for diabetics: Natural options — stevia (zero calorie, 200-300x sweeter than sugar), monk fruit extract, erythritol (sugar alcohol, 70% sweetness, 0.2 kcal/g). Use in moderation — dates puree, mashed banana (whole fruit sweeteners, contain fibre). Use caution with: honey (same GI as sugar, 64 GI), jaggery (same calorie as sugar, 65 GI), coconut sugar, maple syrup — these are NOT diabetic-safe despite marketing. Avoid completely: artificial sweeteners aspartame and saccharin for some sensitive individuals. Best choice: stevia or erythritol for cooking/tea (ICMR-NIN 2024 Diabetes Protocol).",
+      "expected_keywords": [
+        "sugar",
+        "substitute",
+        "stevia",
+        "erythritol",
+        "diabetic",
+        "jaggery",
+        "honey"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Diabetes",
+      "verified": true
+    },
+    {
+      "id": "FS-006",
+      "category": "Food Substitution",
+      "difficulty": "easy",
+      "query": "What can I eat instead of bread for breakfast?",
+      "gold_answer": "Indian alternatives to bread for breakfast: 1) Paratha/roti (whole wheat, 2 rotis ~200 kcal), 2) Poha (flattened rice, 1 bowl ~250 kcal with vegetables), 3) Upma (semolina, 1 bowl ~200 kcal), 4) Idli (steamed rice cakes, 2 pieces ~150 kcal), 5) Dosa (fermented crepe, 1 piece ~120 kcal without oil), 6) Dhokla (steamed chickpea snack, 2 pieces ~140 kcal), 7) Ragi dosa, 8) Moong dal chilla (gram flour pancake, high protein) (ICMR-NIN 2024 Regional Food + Portion Guide).",
+      "expected_keywords": [
+        "bread",
+        "breakfast",
+        "poha",
+        "upma",
+        "idli",
+        "dosa",
+        "chilla"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture + Portion Conversions",
+      "verified": true
+    },
+    {
+      "id": "FS-007",
+      "category": "Food Substitution",
+      "difficulty": "hard",
+      "query": "What can replace milk for calcium if I am lactose intolerant?",
+      "gold_answer": "Lactose-free calcium alternatives: 1) Ragi (344mg/100g — best Indian option), 2) Sesame seeds (tahini, til laddoo, 975mg/100g, use 1 tbsp/day), 3) Amaranth leaves (400mg/100g cooked), 4) Moringa leaves (220mg/100g), 5) Almonds (234mg/100g, 10-12/day), 6) Soy milk (fortified, ~120mg/100ml), 7) Curd (140mg/100g — lactose is partially broken down, many tolerate it), 8) Small fish with bones (if non-veg). Note: bioavailability varies — ragi calcium absorption is moderate (as oxalate content). Consume varied sources for 1000mg/day target. Does NOT include: breastmilk (for infants), nut milks (most are low calcium unless fortified) (ICMR-NIN 2024 Micronutrient Matrix + IFCT 2017).",
+      "expected_keywords": [
+        "milk",
+        "lactose",
+        "calcium",
+        "ragi",
+        "sesame",
+        "soy milk",
+        "moringa"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Food Composition + Micronutrient Matrix",
+      "verified": true
+    },
+    {
+      "id": "FS-008",
+      "category": "Food Substitution",
+      "difficulty": "medium",
+      "query": "What can I use instead of oil for cooking?",
+      "gold_answer": "Oil-free cooking alternatives: Use non-stick pans and cook with: 1) Water/vegetable broth (sautéing), 2) Steam (dhokla, idli, momos), 3) Air fryer (french fries, snacks), 4) Baking/roasting (roti, vegetables), 5) Microwave steaming, 6) Minimal oil spray (1 tsp for full meal). For flavor without oil: tadka on top (1 tsp ghee in hot water with spices), use hung curd for creamy texture, use tomato/onion puree for gravies. For salads: lemon juice, curd, hung curd dressings instead of oil-based. Note: some fat is essential for fat-soluble vitamin absorption (A, D, E, K) — include 1-2 tsp of healthy fat (ghee, olive oil, mustard oil) per meal (ICMR-NIN 2024 Cooking Guidelines).",
+      "expected_keywords": [
+        "oil",
+        "cooking",
+        "non-stick",
+        "steam",
+        "air fryer",
+        "ghee",
+        "substitute"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines for Indians",
+      "verified": true
+    },
+    {
+      "id": "FS-009",
+      "category": "Food Substitution",
+      "difficulty": "hard",
+      "query": "What are protein alternatives to chicken for non-vegetarians?",
+      "gold_answer": "Protein alternatives to chicken (per 100g): Fish — pomfret (19g), mackerel/bangda (20g), sardines (22g); Eggs (13g/2 eggs); Paneer (18g); Soya chunks (52g dry, 17g cooked); Poultry alternatives — turkey (22g), duck (18g); Seafood — prawns (21g), squid (15g). Chicken breast has 23.4g/100g. Best protein-for-protein swaps: 100g chicken = 120g pomfret = 3 eggs = 130g paneer = 30g soya chunks dry. Consider B12 (fish > chicken > eggs > paneer) and iron (chicken > fish > paneer) (IFCT 2017).",
+      "expected_keywords": [
+        "chicken",
+        "protein",
+        "alternative",
+        "fish",
+        "paneer",
+        "soya",
+        "eggs"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Various food groups — Protein column",
+      "verified": true
+    },
+    {
+      "id": "FS-010",
+      "category": "Food Substitution",
+      "difficulty": "easy",
+      "query": "What can I use instead of rice in my daily diet?",
+      "gold_answer": "Rice alternatives for Indian diet: 1) Quinoa (complete protein, 14g protein/100g, high fibre), 2) Broken wheat/Dalia (low GI, 12g fibre/100g), 3) Barnyard millet/Samak (vrat rice, low carb, high fibre), 4) Brown rice (more fibre than white rice), 5) Cauliflower rice (low carb, ~25 kcal/100g vs rice 120 kcal/100g cooked), 6) Oats (10.6g fibre/100g). Best replacement: mix millets (50%) with rice (50%) for taste + nutrition. For weight loss: replace full rice portion with cauliflower rice or quinoa (ICMR-NIN 2024 + IFCT 2017).",
+      "expected_keywords": [
+        "rice",
+        "substitute",
+        "quinoa",
+        "dalia",
+        "brown rice",
+        "millet",
+        "low carb"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Food Composition + RDA Guidelines",
+      "verified": true
+    },
+    {
+      "id": "GA-004",
+      "category": "Gap Analysis",
+      "difficulty": "medium",
+      "query": "I am a vegan Indian, what nutrients am I likely deficient in?",
+      "gold_answer": "Vegans are at high risk for: 1) Vitamin B12 — zero plant sources, MUST supplement (500-1000 mcg/day), 2) Vitamin D — same as general population but no dairy fortification, 3) Iron — lower absorption (non-heme, 5-10% vs 20-25%), pair with vitamin C, 4) Calcium — avoid if not eating ragi, sesame, fortified foods, 5) Zinc — lower absorption due to phytates, 6) Omega-3 (EPA/DHA) — ALA from flax/chia converts at only 5-10%, consider algae-based DHA supplement, 7) Protein — achievable with varied intake (dal+rice combos, soya, tofu, nuts, seeds) but needs planning. Vegan RDA: 1.3x protein of non-vegan to account for lower digestibility (ICMR-NIN 2024 + complementing foods guidance).",
+      "expected_keywords": [
+        "vegan",
+        "B12",
+        "iron",
+        "calcium",
+        "zinc",
+        "omega-3",
+        "deficiency"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets + Life-Stage Priorities",
+      "verified": true
+    },
+    {
+      "id": "GA-005",
+      "category": "Gap Analysis",
+      "difficulty": "hard",
+      "query": "I eat mostly processed food, what nutrients am I missing?",
+      "gold_answer": "A processed-food-heavy diet typically lacks: 1) Fibre (processed = 2-5g, need 25-40g/day — leads to constipation, dysbiosis), 2) Vitamin B12 (unless fortified, mostly absent), 3) Vitamin D, 4) Omega-3 (processed oils are omega-6 heavy, inflammatory ratio), 5) Potassium (processed foods high sodium, low potassium), 6) Magnesium (refined grains lose 80% magnesium), 7) Zinc, 8) Iron (bioavailability low in processed foods). Also excess: sodium, added sugars (2-3x RDA), trans fats, omega-6 (10:1 vs 2:1 ideal ratio). Quick wins: switch 2 processed meals/week for whole foods, add 1 bowl dal+rice, 1 bowl vegetable curry, 1 piece seasonal fruit daily (ICMR-NIN 2024 Dietary Guidelines).",
+      "expected_keywords": [
+        "processed",
+        "fibre",
+        "B12",
+        "omega-3",
+        "sodium",
+        "magnesium",
+        "deficiency"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines — Ultra-processed food reduction",
+      "verified": true
+    },
+    {
+      "id": "GA-006",
+      "category": "Gap Analysis",
+      "difficulty": "medium",
+      "query": "How do I know if I am eating enough protein?",
+      "gold_answer": "Signs of inadequate protein: hair thinning/brittle nails, slow wound healing, frequent infections, muscle loss, fatigue, sugar cravings. For most Indian adults, target 0.8-1.0 g/kg/day. Practical assessment: track 1 typical day's intake — 2 rotis + 1 bowl dal = ~25g protein; add curd (5g), 1 egg (6g), 100g chicken (23g) to reach 50-60g target. For a 65kg adult: need ~52g/day. Indian diet common gap: lunch/dinner provide most protein, breakfast is carb-heavy (poha/upma/paratha) with <5g protein. Add eggs/curd/milk/dal chilla at breakfast (ICMR-NIN 2024 RDA Targets).",
+      "expected_keywords": [
+        "protein",
+        "deficiency",
+        "0.8",
+        "1.0",
+        "52",
+        "60",
+        "intake"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets + Protein Food Sources",
+      "verified": true
+    },
+    {
+      "id": "GA-007",
+      "category": "Gap Analysis",
+      "difficulty": "hard",
+      "query": "My child is a picky eater, what nutrients should I worry about?",
+      "gold_answer": "Picky eaters are at risk for: 1) Iron (deficiency affects cognitive development) — include ragi, jaggery, amla; 2) Protein (growth requires ~1g/kg/day) — use moong dal, paneer, eggs; 3) Calcium (bone development, 600-1000mg/day) — milk, curd, ragi; 4) Vitamin A (immunity, vision) — carrots, pumpkin, papaya; 5) Zinc (appetite regulation, growth) — pumpkin seeds powder in foods; 6) B12 — eggs, milk, supplement. Strategies: hide veggies in paratha/kofta/thepla, make smoothies (milk + banana + dates + nuts), use fun shapes, involve child in cooking. Force feeding backfires — offer repeated exposure (10-15 times) to new foods. Multivitamin syrup can fill temporary gaps (ICMR-NIN 2024 Life-Stage Priorities — Children).",
+      "expected_keywords": [
+        "picky eater",
+        "child",
+        "iron",
+        "protein",
+        "calcium",
+        "zinc",
+        "B12"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Life-Stage Priorities — Children + RDA Targets",
+      "verified": true
+    },
+    {
+      "id": "GA-008",
+      "category": "Gap Analysis",
+      "difficulty": "medium",
+      "query": "How much protein do I need if I exercise daily?",
+      "gold_answer": "Daily protein needs by activity level: Sedentary: 0.8 g/kg (~52g for 65kg); Moderate exercise (3-5x/week): 1.2-1.4 g/kg (~78-91g); Strength training (4-6x/week): 1.4-1.7 g/kg (~91-110g); Endurance athletes: 1.2-1.6 g/kg (~78-104g). For a 65kg person exercising daily: target 78-91g protein. Indian sources to meet this: 2 eggs (12g) + 1 bowl dal (10g) + 200ml milk (6g) + 100g chicken/fish (23g) + 100g curd (4g) + 1 scoop whey (24g) = 79g. Distribute across 4 meals (20-25g each) for optimal MPS (muscle protein synthesis) (ICMR-NIN 2024 + Sports Nutrition Guidelines).",
+      "expected_keywords": [
+        "protein",
+        "exercise",
+        "strength",
+        "endurance",
+        "MPS",
+        "1.2",
+        "1.7"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Profession Calorie Guide + RDA Targets",
+      "verified": true
+    },
+    {
+      "id": "GA-009",
+      "category": "Gap Analysis",
+      "difficulty": "easy",
+      "query": "Is my diet giving me enough energy throughout the day?",
+      "gold_answer": "Signs of inadequate energy intake: mid-morning slump, irritability before meals, brain fog, sugar cravings. For sustained energy: Eat breakfast within 2h of waking (protein + complex carbs — eggs/curd/dal chilla + whole grains), include protein (20-25g) at every meal, complex carbs over simple (millets > white rice), healthy fats (nuts, seeds) for satiety, eat every 3-4 hours (main meals + 1-2 snacks). Indian diet optimization: replace white rice with brown rice/millet (slower glucose release), add nuts (10/day) as mid-meal snack, include curd at lunch (protein + probiotics). Calorie needs vary: sedentary women ~1660 kcal/day, men ~2110 kcal/day (ICMR-NIN 2024 Diet Guidelines).",
+      "expected_keywords": [
+        "energy",
+        "protein",
+        "breakfast",
+        "complex carbs",
+        "1660",
+        "2110"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Profession Calorie Guide + Dietary Guidelines",
+      "verified": true
+    },
+    {
+      "id": "GA-010",
+      "category": "Gap Analysis",
+      "difficulty": "hard",
+      "query": "What is the nutritional gap analysis for a typical Indian meal?",
+      "gold_answer": "A typical Indian thali (roti + dal + rice + sabzi + curd + pickle) provides ~800-1000 kcal, with gaps: 1) Protein: ~25-30g (need 50-60g) — gap of 50%, 2) Fibre: ~15g (need 30g women/40g men) — gap of 50-60%, 3) B12: ~0.5 mcg (need 2.2 mcg) — gap of 77%, especially if vegetarian, 4) Iron: ~8-10mg (need 21mg women) — gap of 50%, 5) Calcium: ~400mg (need 1000mg) — gap of 60%. Strengths: adequate carbs, reasonable fat, good spice intake (antioxidants), fermented food (curd). Quick fixes: add 1 bowl dal (protein +10g), 1 cup curd (calcium +140mg), 1 bowl leafy sabzi (iron + fibre), 1 seasonal fruit (vitamins), and for non-vegetarians, add 100g chicken/fish once daily (ICMR-NIN 2024 RDA + Food Composition analysis).",
+      "expected_keywords": [
+        "thali",
+        "gap",
+        "protein",
+        "fibre",
+        "B12",
+        "iron",
+        "calcium"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Food Composition + RDA Targets — comparative analysis",
+      "verified": true
+    },
+    {
+      "id": "MN-003",
+      "category": "Medicine-Nutrition",
+      "difficulty": "medium",
+      "query": "How does metformin affect vitamin B12 levels?",
+      "gold_answer": "Metformin (Glycomet, Glucophage) significantly reduces vitamin B12 absorption by 30-40% through altered gut motility and reduced IF secretion. Long-term use (>6 months) increases deficiency risk. Symptoms: neuropathy, cognitive decline, anaemia. Monitoring: serum B12 every 6-12 months. Prevention: supplement 500-1000 mcg/day methylcobalamin, take with food. Also depletes folate mildly. Take metformin WITH meals to reduce GI side effects (ICMR-NIN 2024 Medicine-Nutrition Interactions).",
+      "expected_keywords": [
+        "metformin",
+        "B12",
+        "30",
+        "40",
+        "methylcobalamin",
+        "Glycomet",
+        "Glucophage"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition Impacts",
+      "verified": true
+    },
+    {
+      "id": "MN-004",
+      "category": "Medicine-Nutrition",
+      "difficulty": "hard",
+      "query": "What are the nutrition interactions with statins?",
+      "gold_answer": "Statins (atorvastatin, rosuvastatin) interactions: 1) CoQ10 depletion (40-50%) — causes muscle pain, fatigue. Supplement 100-200mg CoQ10/day. 2) Grapefruit juice inhibits CYP3A4 metabolism — increases statin blood levels 3-5x, DO NOT consume. 3) Red yeast rice contains natural statins — double effect, avoid. 4) High-fibre foods (oats, psyllium) bind statins — take statin 2h before or after high-fibre meal. 5) Vitamin D deficiency worsens statin myopathy — maintain D levels. 6) Omega-3 2-4g/day supports cardiovascular benefit (ICMR-NIN 2024 Medicine-Nutrition Impacts).",
+      "expected_keywords": [
+        "statin",
+        "CoQ10",
+        "grapefruit",
+        "atorvastatin",
+        "myopathy",
+        "omega-3"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition Impacts",
+      "verified": true
+    },
+    {
+      "id": "MN-005",
+      "category": "Medicine-Nutrition",
+      "difficulty": "medium",
+      "query": "How should I take thyroid medication with food?",
+      "gold_answer": "Levothyroxine (thyroid medication) must be taken on empty stomach (30-60 min before breakfast) with plain water. Food interactions: 1) Calcium/iron supplements — separate by 4+ hours, 2) High-fibre foods (oats, bran) — reduce absorption by 20-30%, 3) Coffee — reduces absorption by 30-40%, wait 60 min, 4) Soy (tofu, soya milk) — can interfere, separate by 4 hours, 5) Walnuts and high-fibre cereals — reduce absorption. Consistency is key: take same way every day, same time, same brand. Never take with other medications. Monitor TSH 6-8 weeks after any change (ICMR-NIN 2024 Medicine-Nutrition Impacts).",
+      "expected_keywords": [
+        "thyroid",
+        "levothyroxine",
+        "empty stomach",
+        "calcium",
+        "coffee",
+        "soy",
+        "TSH"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition Impacts",
+      "verified": true
+    },
+    {
+      "id": "MN-006",
+      "category": "Medicine-Nutrition",
+      "difficulty": "easy",
+      "query": "Can I drink milk with antibiotics?",
+      "gold_answer": "Depends on the antibiotic: Tetracyclines (doxycycline) and fluoroquinolones (ciprofloxacin) — NO, calcium in milk binds to these antibiotics, reducing absorption by 50-90%. Take them 2h before or 6h after dairy. Penicillins (amoxicillin) and macrolides (azithromycin) — generally safe to take with milk. Cephalosporins — safe with milk. Always check specific medication leaflet. General rule: take antibiotics with water, 1h before or 2h after meals unless otherwise instructed. Also: limit grapefruit for many medications, avoid alcohol with metronidazole (ICMR-NIN 2024 Medicine-Nutrition Interactions).",
+      "expected_keywords": [
+        "milk",
+        "antibiotic",
+        "tetracycline",
+        "ciprofloxacin",
+        "calcium",
+        "absorption"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition Impacts",
+      "verified": true
+    },
+    {
+      "id": "MN-007",
+      "category": "Medicine-Nutrition",
+      "difficulty": "hard",
+      "query": "What foods interact with blood thinners (warfarin)?",
+      "gold_answer": "Warfarin (blood thinner) interacts with vitamin K-rich foods: High vitamin K (reduce intake) — spinach (483 mcg/100g), kale, methi leaves, cabbage, broccoli, lettuce, cauliflower. Moderate K — green peas, cucumber, pumpkin. Low K — carrots, onion, potato, apple, banana, rice. Consistent intake is more important than avoidance — maintain stable weekly vitamin K intake. Also: cranberry juice potentiates warfarin (bleeding risk), mango/grapefruit inhibit metabolism, alcohol increases bleeding risk, ginger/garlic supplements increase bleeding. Monitor INR regularly, especially when changing diet (ICMR-NIN 2024 Medicine-Nutrition Impacts).",
+      "expected_keywords": [
+        "warfarin",
+        "vitamin K",
+        "INR",
+        "spinach",
+        "cranberry",
+        "bleeding",
+        "anticoagulant"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition Impacts",
+      "verified": true
+    },
+    {
+      "id": "MN-008",
+      "category": "Medicine-Nutrition",
+      "difficulty": "medium",
+      "query": "How does alcohol affect nutrient absorption?",
+      "gold_answer": "Chronic alcohol consumption impairs absorption of: 1) B vitamins — especially B1 (thiamine), B9 (folate), B12 — leads to deficiency in 80% of heavy drinkers. 2) Vitamin D — reduced activation in liver. 3) Zinc — increased urinary excretion. 4) Magnesium — low levels in 30% of chronic users. 5) Calcium — reduced absorption + increased excretion. 6) Iron — can increase (liver damage) or decrease (GI bleeding). Acute effects: alcohol inhibits fat absorption (pancreatic function). 1-2 drinks/day: minimal impact. Heavy drinking (>3/day): systematic depletion. Supplement B-complex, magnesium, zinc if regular drinker (ICMR-NIN 2024 Medicine-Nutrition Impacts).",
+      "expected_keywords": [
+        "alcohol",
+        "B1",
+        "B12",
+        "folate",
+        "zinc",
+        "magnesium",
+        "deficiency"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition Impacts + Disease Protocols",
+      "verified": true
+    },
+    {
+      "id": "MN-009",
+      "category": "Medicine-Nutrition",
+      "difficulty": "medium",
+      "query": "What should I eat when taking iron supplements?",
+      "gold_answer": "When taking iron supplements: 1) Take with vitamin C (amla, lemon, orange) — increases absorption 3-6x, 2) Avoid tea, coffee, milk within 2 hours — tannins/calcium block absorption, 3) Take on empty stomach if tolerated (full stomach reduces absorption 50%), 4) If GI upset, take with small amount of food (avoid high-calcium foods), 5) Common side effects: constipation, nausea, dark stools. Choose ferrous bisglycinate (gentler) over ferrous sulfate. Wait 2h between iron and calcium supplements. Cooking in iron vessels increases food iron content 2-5x (ICMR-NIN 2024 Medicine-Nutrition + Anaemia Protocol).",
+      "expected_keywords": [
+        "iron",
+        "supplement",
+        "vitamin C",
+        "tea",
+        "coffee",
+        "calcium",
+        "absorption"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition Impacts + Anaemia Protocol",
+      "verified": true
+    },
+    {
+      "id": "MN-010",
+      "category": "Medicine-Nutrition",
+      "difficulty": "hard",
+      "query": "How does chemotherapy affect nutrition and what should a patient eat?",
+      "gold_answer": "Chemotherapy nutrition management: Common side effects and solutions: 1) Nausea — small frequent meals (5-6/day), avoid strong smells, eat dry toast/crackers before getting up, ginger tea, 2) Taste changes — use spices, lemon, amla; cold foods taste less metallic, 3) Mouth sores — soft, bland foods: khichdi, curd rice, dalia, smoothies, avoid spicy/sour/rough foods, 4) Weight loss — calorie-dense foods: add ghee, nuts, milk powder to meals, 5) Low appetite — liquid nutrition: smoothies, soup, protein shakes, 6) Immune suppression — avoid raw foods (salads, uncooked sprouts, unpeeled fruits), thoroughly cook all foods, practice food hygiene. Important: stay hydrated (2-3L/day), supplement protein (1.2-1.5g/kg/day), multivitamin (with B12, D, zinc). These are general guidelines — individualize with oncologist/dietitian (ICMR-NIN 2024 Oncology Nutrition Protocol).",
+      "expected_keywords": [
+        "chemotherapy",
+        "nausea",
+        "taste",
+        "mouth sores",
+        "weight loss",
+        "protein",
+        "immunity"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Oncology Nutrition",
+      "verified": true
+    },
+    {
+      "id": "FC-021",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "How much protein is in 100g of chicken breast?",
+      "gold_answer": "Chicken breast contains approximately 23.4g of protein per 100g (IFCT 2017). It is a complete protein source containing all essential amino acids. Also provides: 166 kcal, 2.7g fat, 0g carbs per 100g.",
+      "expected_keywords": [
+        "23.4",
+        "protein",
+        "chicken",
+        "166",
+        "amino acid"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Meat & Poultry — Chicken breast",
+      "verified": true
+    },
+    {
+      "id": "FC-022",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "Compare the nutritional value of cow milk and buffalo milk",
+      "gold_answer": "Cow milk per 100ml: 67 kcal, 3.4g protein, 4.1g fat, 4.4g carbs, 120mg calcium. Buffalo milk per 100ml: 97 kcal, 4.3g protein, 6.9g fat, 5.0g carbs, 195mg calcium. Buffalo milk has 45% more calories, 26% more protein, 68% more fat, and 63% more calcium. Cow milk is lower in fat and easier to digest; buffalo milk is creamier and more nutritious per volume (IFCT 2017).",
+      "expected_keywords": [
+        "cow",
+        "buffalo",
+        "milk",
+        "67",
+        "97",
+        "calcium",
+        "120",
+        "195"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Dairy — Cow milk (L001), Buffalo milk (L002)",
+      "verified": true
+    },
+    {
+      "id": "FC-023",
+      "category": "Food Composition",
+      "difficulty": "hard",
+      "query": "What is the glycemic index of common Indian foods?",
+      "gold_answer": "Glycemic index of common Indian foods (glucose = 100): White rice (70-80, high), Brown rice (55-60, medium), Whole wheat roti (55-60, medium), Bajra roti (55-60, medium), Ragi (55-60, medium), Jowar (60-65, medium), Oats (55, medium), Dalia/broken wheat (55, medium), Moong dal (38-45, low), Chickpeas/chana (28-35, low), Rajma (28-42, low), Potato (78-85, high), Sweet potato (54-65, medium), Banana (51-62, medium), Apple (36-42, low), Mango (51-60, medium). Note: GI values vary by cooking method, ripeness, and processing. Cooling cooked rice/potato increases resistant starch and lowers GI significantly (IFCT 2017 + ICMR-NIN 2024 Diabetes Protocol).",
+      "expected_keywords": [
+        "GI",
+        "glycemic",
+        "index",
+        "rice",
+        "roti",
+        "millet",
+        "moong",
+        "low",
+        "medium",
+        "high"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Diabetes + Food Composition",
+      "verified": true
+    },
+    {
+      "id": "FC-024",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "What is the protein content of tofu per 100g?",
+      "gold_answer": "Tofu contains approximately 8.1g of protein per 100g. Firm tofu has ~12g/100g. It is a complete plant protein (IFCT 2017).",
+      "expected_keywords": [
+        "8.1",
+        "tofu",
+        "protein",
+        "soy"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Pulses & Legumes — Soybean products",
+      "verified": true
+    },
+    {
+      "id": "FC-025",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "Compare the fat content of different cooking oils used in India",
+      "gold_answer": "Indian oils per 100g: Ghee (99.5g fat, 60% sat), Coconut (99.9g, 90% sat), Mustard (99g, 12% sat, MUFA-rich), Groundnut (99g, 17% sat), Sunflower (99g, 10% sat, high omega-6). Best: mustard, olive, rice bran. Limit: coconut, excess ghee (IFCT 2017).",
+      "expected_keywords": [
+        "ghee",
+        "coconut",
+        "mustard",
+        "groundnut",
+        "saturated",
+        "MUFA"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Fats & Oils — Complete table",
+      "verified": true
+    },
+    {
+      "id": "FC-026",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "How many calories are in one banana?",
+      "gold_answer": "One medium banana (100g) provides 104 kcal, 1.3g protein, 0.3g fat, 27g carbs, 2.4g fibre, 299mg potassium (IFCT 2017).",
+      "expected_keywords": [
+        "104",
+        "banana",
+        "calorie",
+        "299",
+        "potassium"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Fruits — Banana",
+      "verified": true
+    },
+    {
+      "id": "FC-027",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "What is the iron content of garden cress seeds (halim)?",
+      "gold_answer": "Garden cress seeds (halim) contain ~100mg iron/100g — richest plant iron source. Also 21g protein, 14g fat, 367 kcal/100g. Traditionally given postpartum and for anaemia (IFCT 2017).",
+      "expected_keywords": [
+        "100",
+        "halim",
+        "garden cress",
+        "iron",
+        "postpartum"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Miscellaneous — Garden cress seeds",
+      "verified": true
+    },
+    {
+      "id": "FC-028",
+      "category": "Food Composition",
+      "difficulty": "hard",
+      "query": "Compare the amino acid profile of rice and wheat",
+      "gold_answer": "Rice protein (7.7g/100g) is limited in lysine, adequate in methionine. Wheat (10.8g/100g) limited in lysine/threonine. Their combination provides complementarity. PDCAAS: rice 0.68, wheat 0.45, rice+dal 0.85 (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "lysine",
+        "methionine",
+        "rice",
+        "wheat",
+        "PDCAAS"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Cereals — Amino acid profiles",
+      "verified": true
+    },
+    {
+      "id": "FC-029",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "How much vitamin C is in a lemon?",
+      "gold_answer": "One lemon (50g) provides ~21mg vitamin C. Per 100g: 42mg, 26 kcal, 0.8g protein, 0.2g fat, 9g carbs (IFCT 2017).",
+      "expected_keywords": [
+        "21",
+        "vitamin C",
+        "lemon"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Fruits — Lemon",
+      "verified": true
+    },
+    {
+      "id": "FC-030",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "What is the nutritional value of moringa (drumstick) leaves?",
+      "gold_answer": "Moringa per 100g: 62 kcal, 9.4g protein, 220mg calcium, 4.3mg iron, 1670mcg vit A. Provides 25% daily calcium, 30% iron, >100% vit A (IFCT 2017).",
+      "expected_keywords": [
+        "9.4",
+        "220",
+        "calcium",
+        "4.3",
+        "iron",
+        "moringa"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Green Leafy Vegetables — Moringa",
+      "verified": true
+    },
+    {
+      "id": "FC-031",
+      "category": "Food Composition",
+      "difficulty": "hard",
+      "query": "Compare the nutritional density of different millets",
+      "gold_answer": "Millets per 100g: Ragi (344mg Ca, 361 kcal, 7.3g protein, 3.9mg Fe, 11.3g fibre), Bajra (361 kcal, 11.6g protein, 8.1mg Fe), Jowar (349 kcal, 10.4g protein, 4.1mg Fe), Foxtail (351 kcal, 12.3g protein). Ragi best for Ca, Bajra best Fe+protein (IFCT 2017).",
+      "expected_keywords": [
+        "ragi",
+        "bajra",
+        "jowar",
+        "foxtail",
+        "millet",
+        "calcium",
+        "iron"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Cereals & Millets — Complete millet table",
+      "verified": true
+    },
+    {
+      "id": "FC-032",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "How much protein is in 100g of curd?",
+      "gold_answer": "Curd contains 3.9g protein/100g, 60 kcal, 4.0g fat, 3.5g carbs, 140mg calcium, probiotics, and B12 0.4mcg (IFCT 2017).",
+      "expected_keywords": [
+        "3.9",
+        "140",
+        "curd",
+        "calcium",
+        "protein"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Dairy — Curd (L004)",
+      "verified": true
+    },
+    {
+      "id": "FC-033",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "What are the best Indian sources of omega-3 fatty acids?",
+      "gold_answer": "ALA sources/100g: Flaxseed (22.8g), Chia (17.8g), Walnuts (9.1g), Mustard oil (5.9g). EPA+DHA: Mackerel (2.5g), Sardines (1.8g). ALA converts 5-10%. Vegetarians: 1 tbsp flaxseed + 5 walnuts daily (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "omega-3",
+        "ALA",
+        "EPA",
+        "DHA",
+        "flaxseed",
+        "walnut",
+        "fish"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Fats & Oils + Fish — Omega-3 content",
+      "verified": true
+    },
+    {
+      "id": "FC-034",
+      "category": "Food Composition",
+      "difficulty": "hard",
+      "query": "How does cooking affect the nutrient content of vegetables?",
+      "gold_answer": "Vitamin C loses 50-80% by boiling (steam 15-25%). Folate loses 40-60% boiling. Beta-carotene increases 3-5x with cooking. Oxalates reduce 30-50%. Best: steaming, pressure cooking, stir-fry (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "cooking",
+        "vitamin C",
+        "loss",
+        "steaming",
+        "boiling",
+        "bioavailability"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Food Composition — Cooking effects",
+      "verified": true
+    },
+    {
+      "id": "FC-035",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "What is the nutritional value of different types of dal?",
+      "gold_answer": "Dals per 100g dry: Moong (24g protein/348 kcal/4.7mg Fe), Toor (22g/345/3.5mg), Masoor (24g/346/5.4mg), Urad (24g/346/5.9mg). Best Fe: Urad. Best protein: Moong/Masoor/Urad (IFCT 2017).",
+      "expected_keywords": [
+        "moong",
+        "toor",
+        "masoor",
+        "urad",
+        "dal",
+        "protein",
+        "fibre",
+        "iron"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Pulses — Complete table",
+      "verified": true
+    },
+    {
+      "id": "FC-036",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "How much magnesium is in almonds?",
+      "gold_answer": "Almonds have 275mg magnesium/100g. 10 almonds (12g) = ~33mg. Also 579 kcal, 21g protein, 50g fat, 234mg calcium (IFCT 2017).",
+      "expected_keywords": [
+        "275",
+        "almond",
+        "magnesium",
+        "calcium",
+        "protein"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Nuts & Oilseeds — Almond",
+      "verified": true
+    },
+    {
+      "id": "FC-037",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "Compare the protein quality of different plant sources",
+      "gold_answer": "PDCAAS scores: Soy isolate 1.0, Chickpeas 0.78, Kidney beans 0.73, Lentils 0.71, Peanuts 0.70, Rice 0.68, Wheat gluten 0.45. Traditional grain+pulse combos achieve 0.82-0.92 (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "PDCAAS",
+        "protein",
+        "quality",
+        "lysine",
+        "methionine",
+        "soy"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Protein quality — PDCAAS table",
+      "verified": true
+    },
+    {
+      "id": "FC-038",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "What is the vitamin B12 content of eggs?",
+      "gold_answer": "1 egg (50g) = 1.25mcg B12. Per 100g: 2.5mcg. Yolk contains most B12. 2 eggs exceed the 2.2mcg/day RDA (IFCT 2017).",
+      "expected_keywords": [
+        "1.25",
+        "B12",
+        "egg",
+        "yolk"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Eggs — Vitamin B12 content",
+      "verified": true
+    },
+    {
+      "id": "FC-039",
+      "category": "Food Composition",
+      "difficulty": "hard",
+      "query": "What is the zinc bioavailability from Indian vegetarian foods?",
+      "gold_answer": "Zinc foods per 100g: Pumpkin seeds 7.5mg, Sesame 7.8mg, Cashews 5.6mg, Chickpeas 3.4mg. Phytates reduce absorption 30-50%. Soaking/sprouting/fermentation reduces phytates 30-60%. Vegetarians need 1.5x RDA (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "zinc",
+        "bioavailability",
+        "phytate",
+        "soaking",
+        "sprouting",
+        "pumpkin"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Micronutrient Matrix — Zinc + Food Composition",
+      "verified": true
+    },
+    {
+      "id": "FC-040",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "How much selenium is in Indian foods?",
+      "gold_answer": "Selenium/100g: Brazil nuts 1917mcg (1-2 nuts meets RDA), Tuna 90mcg, Eggs 30mcg, Sunflower seeds 53mcg. RDA: 55-70mcg/day. Punjab soils Se-rich, some eastern regions deficient (ICMR-NIN 2024 + IFCT 2017).",
+      "expected_keywords": [
+        "selenium",
+        "Brazil nuts",
+        "fish",
+        "eggs",
+        "RDA"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Micronutrient Matrix — Selenium",
+      "verified": true
+    },
+    {
+      "id": "FC-041",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "How much fibre is in an apple?",
+      "gold_answer": "1 medium apple (130g with skin) = ~4g fibre. Per 100g: 0.8g protein, 14g carbs, 3.1g fibre, 48 kcal. Majority of fibre in the skin (IFCT 2017).",
+      "expected_keywords": [
+        "4",
+        "apple",
+        "fibre",
+        "kcal",
+        "skin"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Fruits — Apple",
+      "verified": true
+    },
+    {
+      "id": "FC-042",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "Compare calcium content of different green leafy vegetables",
+      "gold_answer": "Calcium cooked/100g: Amaranth 400mg, Moringa 220mg, Methi 200mg, Spinach 73mg (high oxalate). Palak is NOT a good Ca source — oxalates bind calcium (IFCT 2017).",
+      "expected_keywords": [
+        "calcium",
+        "amaranth",
+        "moringa",
+        "methi",
+        "spinach",
+        "oxalate"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Green Leafy Vegetables — Calcium content",
+      "verified": true
+    },
+    {
+      "id": "FC-043",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "How much protein is in a glass of milk?",
+      "gold_answer": "200ml cow milk = 6.8g protein (3.4g/100ml), 134 kcal, 8.2g fat, 240mg Ca. Buffalo milk = 8.6g protein, 390mg Ca (IFCT 2017).",
+      "expected_keywords": [
+        "6.8",
+        "8.6",
+        "protein",
+        "milk",
+        "calcium"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Dairy — Milk protein content",
+      "verified": true
+    },
+    {
+      "id": "FC-044",
+      "category": "Food Composition",
+      "difficulty": "hard",
+      "query": "What is the complete nutritional breakdown of a typical Indian thali?",
+      "gold_answer": "Thali: 2 roti (204 kcal/6.5g protein) + 1 bowl rice (120/2.6g) + 1 dal (162/10.8g) + 1 sabzi (100/2.5g) + curd (60/3.9g) = ~650-750 kcal, 26-28g protein, 12-15g fibre. Deficits: protein and fibre (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "thali",
+        "kcal",
+        "protein",
+        "fibre",
+        "dal",
+        "roti",
+        "curd"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Food Composition + RDA Targets — Meal analysis",
+      "verified": true
+    },
+    {
+      "id": "CL-016",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "Diet recommendations for gestational diabetes",
+      "gold_answer": "GDM: 1800-2200 kcal/day, carbs 40-45% low-GI, protein 1.1-1.3 g/kg. 3 meals+2-3 snacks, no gaps >4h. Avoid white rice, maida, sweets. Prefer brown rice, millets, leafy greens. Monitor 1h post-meal <140 mg/dL (ICMR-NIN 2024 GDM Protocol).",
+      "expected_keywords": [
+        "gestational",
+        "GDM",
+        "low-GI",
+        "protein",
+        "blood glucose"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Gestational Diabetes",
+      "verified": true
+    },
+    {
+      "id": "CL-017",
+      "category": "Clinical Nutrition",
+      "difficulty": "hard",
+      "query": "Diet for diverticulitis patients",
+      "gold_answer": "Flare: clear liquids 24-48h, then low-fibre. After: gradual fibre to 25-35g/day. During flare: khichdi, curd rice, dalia. Maintenance: roti, dal, leafy greens. Stay hydrated (ICMR-NIN 2024 GI Protocol).",
+      "expected_keywords": [
+        "diverticulitis",
+        "flare",
+        "low-fibre",
+        "khichdi",
+        "high-fibre"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — GI / Diverticulitis",
+      "verified": true
+    },
+    {
+      "id": "CL-018",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "What should a gout patient eat and avoid?",
+      "gold_answer": "Avoid organ meats, red meat <150g 2x/week, sardines, beer, sugary drinks. Allowed: low-fat dairy (curd), all veg, fruits, whole grains, eggs. Drink 3-4L water. Cherry juice may help (ICMR-NIN 2024 Gout Protocol).",
+      "expected_keywords": [
+        "gout",
+        "purine",
+        "uric acid",
+        "organ meat",
+        "beer",
+        "curd"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Gout / Hyperuricemia",
+      "verified": true
+    },
+    {
+      "id": "CL-019",
+      "category": "Clinical Nutrition",
+      "difficulty": "easy",
+      "query": "What foods help reduce cholesterol naturally?",
+      "gold_answer": "Oats (beta-glucan), Almonds (23/day reduces LDL 5-7%), Flaxseeds, Garlic, Turmeric, Green tea, Soy protein (25g/day reduces LDL 5-6%). Cook with mustard/olive oil (ICMR-NIN 2024 Dyslipidemia Protocol).",
+      "expected_keywords": [
+        "cholesterol",
+        "LDL",
+        "oats",
+        "almond",
+        "garlic",
+        "turmeric"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Dyslipidemia / Heart Health",
+      "verified": true
+    },
+    {
+      "id": "CL-020",
+      "category": "Clinical Nutrition",
+      "difficulty": "hard",
+      "query": "Diet for cirrhosis of the liver",
+      "gold_answer": "Protein 1.2-1.5 g/kg/day, sodium <2g/day, 25-35 kcal/kg. Small freq meals (5-6/day). Increase plant proteins, veg, curd. Avoid alcohol, fried foods, raw seafood. Supplement B, zinc, magnesium (ICMR-NIN 2024 Hepatology Protocol).",
+      "expected_keywords": [
+        "cirrhosis",
+        "liver",
+        "protein",
+        "sodium",
+        "alcohol",
+        "ascites"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Hepatology / Cirrhosis",
+      "verified": true
+    },
+    {
+      "id": "CL-021",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "Diet for gallbladder stones management",
+      "gold_answer": "Low-fat 20-25% calories, small frequent meals 5-6/day. Avoid fried, creamy gravies, heavy oil. Allowed: low-fat dairy, lean proteins, veg, fruits, whole grains. Fibre 30g/day. Lose weight slowly (ICMR-NIN 2024 GI Protocol).",
+      "expected_keywords": [
+        "gallbladder",
+        "gallstone",
+        "low-fat",
+        "small meals",
+        "fibre"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — GI / Gallbladder",
+      "verified": true
+    },
+    {
+      "id": "CL-022",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "What should a patient with chronic pancreatitis eat?",
+      "gold_answer": "Low-fat 20-30g/day (MCT oil), protein 1.0-1.3 g/kg, small meals 6-8/day. Include lean proteins, cooked veg, khichdi, banana. Avoid fatty, fried, alcohol. Supplement enzymes, vitamins A D E K, B12 (ICMR-NIN 2024 Pancreas Protocol).",
+      "expected_keywords": [
+        "pancreatitis",
+        "low-fat",
+        "MCT",
+        "enzymes",
+        "alcohol",
+        "khichdi"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Pancreas",
+      "verified": true
+    },
+    {
+      "id": "CL-023",
+      "category": "Clinical Nutrition",
+      "difficulty": "easy",
+      "query": "What foods help with constipation?",
+      "gold_answer": "Guava (6.7g fibre), Pears (3.1g), Prunes (7.1g + sorbitol), Papaya, Oats (10.6g), Ragi, Flaxseeds, Isabgol (1 tsp). Indian: warm lemon water, soaked figs, dates. MUST have 2-3L water daily (ICMR-NIN 2024 GI Protocol).",
+      "expected_keywords": [
+        "constipation",
+        "fibre",
+        "guava",
+        "papaya",
+        "flaxseed",
+        "isabgol"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "GI Protocol — Constipation",
+      "verified": true
+    },
+    {
+      "id": "CL-024",
+      "category": "Clinical Nutrition",
+      "difficulty": "hard",
+      "query": "Diet recommendations for rheumatoid arthritis",
+      "gold_answer": "Anti-inflammatory: Omega-3 2-3g/day, turmeric+black pepper, ginger, green tea, vitamin D, zinc. Avoid red meat, processed foods, sugar, omega-6 oils. Weight management critical (ICMR-NIN 2024 RA Protocol).",
+      "expected_keywords": [
+        "rheumatoid",
+        "arthritis",
+        "anti-inflammatory",
+        "omega-3",
+        "turmeric",
+        "vitamin D"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Rheumatoid Arthritis",
+      "verified": true
+    },
+    {
+      "id": "CL-025",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "What should a person with osteoporosis eat?",
+      "gold_answer": "Calcium 1200mg/day, Vit D 600-800 IU, Protein 1.0-1.2 g/kg. Ragi, milk, curd, sesame, amaranth leaves. Reduce sodium, caffeine >3 cups, alcohol. Weight-bearing exercise essential (ICMR-NIN 2024 Osteoporosis Protocol).",
+      "expected_keywords": [
+        "osteoporosis",
+        "calcium",
+        "vitamin D",
+        "protein",
+        "ragi",
+        "sesame"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Bone Health",
+      "verified": true
+    },
+    {
+      "id": "CL-026",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "Diet for Alzheimer's prevention (Indian version)",
+      "gold_answer": "MIND diet: Leafy greens 5+/week, berries (jamun), fish 1x/week (DHA), nuts 10/day, millets. Turmeric (curcumin reduces amyloid plaques). Limit red meat, ghee, fried, sweets. Indian advantage: turmeric, greens, legumes (ICMR-NIN 2024 Neurology Protocol).",
+      "expected_keywords": [
+        "Alzheimer",
+        "MIND",
+        "brain",
+        "turmeric",
+        "leafy greens"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Neurology",
+      "verified": true
+    },
+    {
+      "id": "CL-027",
+      "category": "Clinical Nutrition",
+      "difficulty": "easy",
+      "query": "What foods boost immunity?",
+      "gold_answer": "Amla (600mg vit C), zinc (pumpkin seeds), turmeric, ginger, garlic, curd (probiotics), leafy greens. Diverse 30+ plant foods/week, adequate protein, limit sugar. Sleep 7-8h (ICMR-NIN 2024 Immunity Protocol).",
+      "expected_keywords": [
+        "immunity",
+        "amla",
+        "zinc",
+        "turmeric",
+        "curd",
+        "vitamin C"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Immunity",
+      "verified": true
+    },
+    {
+      "id": "CL-028",
+      "category": "Clinical Nutrition",
+      "difficulty": "hard",
+      "query": "Dietary management of hypothyroid vs hyperthyroid",
+      "gold_answer": "Hypothyroid: ensure iodine (iodized salt), selenium (Brazil nuts), zinc. Limit raw goitrogens (cabbage — cooking deactivates). Levothyroxine empty stomach. Hyperthyroid: calorie-dense (BMR +30-50%), protein 1.2-1.5 g/kg, limit iodine. Both: monitor B12. Selenium 55-70mcg (ICMR-NIN 2024 Thyroid Protocol).",
+      "expected_keywords": [
+        "hypothyroid",
+        "hyperthyroid",
+        "iodine",
+        "selenium",
+        "goitrogen",
+        "levothyroxine",
+        "B12"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Thyroid",
+      "verified": true
+    },
+    {
+      "id": "CL-029",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "Diet for celiac disease in India",
+      "gold_answer": "Strict GF: Avoid wheat, atta, maida, sooji, rava, dalia. Safe: rice, ragi, jowar, bajra, corn, besan, sabudana, amaranth (rajgira), buckwheat (kuttu). Watch cross-contamination. Monitor Fe, B12, D, Ca, Zn (ICMR-NIN 2024 Celiac Protocol).",
+      "expected_keywords": [
+        "celiac",
+        "gluten-free",
+        "wheat",
+        "ragi",
+        "jowar",
+        "besan"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Celiac",
+      "verified": true
+    },
+    {
+      "id": "CL-030",
+      "category": "Clinical Nutrition",
+      "difficulty": "hard",
+      "query": "Post-bariatric surgery diet plan",
+      "gold_answer": "Phase 1: clear liquids 1-2wk. Phase 2: full liquids (thin dal soup, protein shakes) 2-4wk. Phase 3: pureed soft (khichdi, curd) 4-8wk. Phase 4: soft solids. Protein FIRST 60-80g/day. Lifelong supplements: multivit+B12+D+Ca+Fe+Zn (ICMR-NIN 2024 Bariatric Protocol).",
+      "expected_keywords": [
+        "bariatric",
+        "surgery",
+        "post-op",
+        "protein",
+        "pureed",
+        "supplement"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Bariatric / Metabolic Surgery",
+      "verified": true
+    },
+    {
+      "id": "CL-031",
+      "category": "Clinical Nutrition",
+      "difficulty": "medium",
+      "query": "Diet for eczema management",
+      "gold_answer": "Elimination trial 4-6wk (dairy, eggs, peanuts, soy, wheat). Anti-inflammatory: omega-3, curcumin, green tea, probiotic foods (curd). Nutrients: vit D, zinc, vit E, vit C, biotin. Avoid processed foods, sugar. Keep food diary (ICMR-NIN 2024 Dermatology Protocol).",
+      "expected_keywords": [
+        "eczema",
+        "elimination",
+        "dairy",
+        "omega-3",
+        "vitamin D",
+        "zinc",
+        "probiotic"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Dermatology",
+      "verified": true
+    },
+    {
+      "id": "RDA-013",
+      "category": "RDA Guidelines",
+      "difficulty": "medium",
+      "query": "What is the vitamin A RDA for Indian adults?",
+      "gold_answer": "Men 900 mcg RE/day, Women 800, Pregnant 900, Lactating 1100. 12mcg beta-carotene = 1mcg retinol. Sources: Carrots, Pumpkin, Papaya, Mango, leafy greens, milk, eggs (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "vitamin A",
+        "beta-carotene",
+        "carrot",
+        "retinol"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets — Vitamins",
+      "verified": true
+    },
+    {
+      "id": "RDA-014",
+      "category": "RDA Guidelines",
+      "difficulty": "hard",
+      "query": "How do RDA requirements change for athletes?",
+      "gold_answer": "Protein 1.2-1.7 g/kg, Carbs 6-10 g/kg, Iron 17-30mg, Calcium 1200-1500mg, Vitamin D 600-800 IU. Post-workout 20-30g protein within 2h. Indian athletes under-consume protein (ICMR-NIN 2024 Sports Protocol).",
+      "expected_keywords": [
+        "athlete",
+        "protein",
+        "carbs",
+        "hydration"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Profession Calorie Guide + Sports Nutrition",
+      "verified": true
+    },
+    {
+      "id": "RDA-015",
+      "category": "RDA Guidelines",
+      "difficulty": "easy",
+      "query": "How much magnesium do I need daily?",
+      "gold_answer": "Men 370-420 mg/day, Women 310-360. Sources: Almonds (275mg/100g), Pumpkin seeds (262mg), Ragi (130mg). 50-70% Indians deficient (refined grains lose 80% Mg) (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "magnesium",
+        "almond",
+        "pumpkin",
+        "deficiency",
+        "RDA"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets — Micronutrients",
+      "verified": true
+    },
+    {
+      "id": "RDA-016",
+      "category": "RDA Guidelines",
+      "difficulty": "medium",
+      "query": "What is the RDA for calories for different professions?",
+      "gold_answer": "Sedentary: men 2110, women 1660. Moderate: men 2465, women 1950. Heavy: men 2930, women 2300. PAL: 1.4/1.6/1.8. Pregnancy +350, lactation +600 (ICMR-NIN 2024 Profession Calorie Guide).",
+      "expected_keywords": [
+        "calorie",
+        "sedentary",
+        "moderate",
+        "heavy",
+        "PAL",
+        "profession"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Profession Calorie Guide",
+      "verified": true
+    },
+    {
+      "id": "RDA-017",
+      "category": "RDA Guidelines",
+      "difficulty": "hard",
+      "query": "How does protein RDA differ for vegetarians vs non-vegetarians?",
+      "gold_answer": "Same absolute 0.8-1.0 g/kg but vegetarians need 10-20% more due to lower PDCAAS (0.65-0.85 vs 0.92-1.0). Effective vegetarian RDA = 1.0-1.2 g/kg. Must pair grains+pulses (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "protein",
+        "vegetarian",
+        "digestibility",
+        "PDCAAS",
+        "complementary"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA + Protein Quality",
+      "verified": true
+    },
+    {
+      "id": "RDA-018",
+      "category": "RDA Guidelines",
+      "difficulty": "medium",
+      "query": "What is the RDA for vitamin E?",
+      "gold_answer": "Men 10 mg/day, Women 8, Pregnant 10, Lactating 12. Sources/100g: Almonds (25.6mg), Sunflower seeds (33.2mg), Sunflower oil (40mg). Antioxidant protecting cell membranes (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "vitamin E",
+        "tocopherol",
+        "almond",
+        "sunflower",
+        "antioxidant"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA — Fat-soluble Vitamins",
+      "verified": true
+    },
+    {
+      "id": "RDA-019",
+      "category": "RDA Guidelines",
+      "difficulty": "easy",
+      "query": "How much fat should I eat per day?",
+      "gold_answer": "20-30% total calories. For 2000 kcal: 44-66g fat. Saturated <7% (<15g). Trans: zero. Min 20g visible fat for vitamin absorption. Practical: 3-4 tsp oil + 1 tsp ghee/day (ICMR-NIN 2024 Dietary Guidelines).",
+      "expected_keywords": [
+        "fat",
+        "saturated",
+        "MUFA",
+        "PUFA",
+        "ghee",
+        "oil"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA — Fats / Dietary Guidelines",
+      "verified": true
+    },
+    {
+      "id": "RDA-020",
+      "category": "RDA Guidelines",
+      "difficulty": "hard",
+      "query": "What is the iodine RDA and how is it met in Indian diet?",
+      "gold_answer": "Adults 150 mcg/day, Pregnant 220, Lactating 290. Iodized salt (150mcg/g), 5g/day = 300mcg. Warning: Himalayan pink salt, sendha namak lack iodine. Excess >1100mcg causes hyperthyroidism (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "iodine",
+        "iodized salt",
+        "pregnancy",
+        "Himalayan salt"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA + Micronutrient Matrix",
+      "verified": true
+    },
+    {
+      "id": "RDA-021",
+      "category": "RDA Guidelines",
+      "difficulty": "medium",
+      "query": "What is the zinc RDA for different life stages?",
+      "gold_answer": "Infants 2-5mg, Children 5-10mg, Adol males 15mg/females 12mg, Adult men 17mg/women 13mg, Pregnant 14mg, Lactating 17mg, Elderly 12-15mg. Vegetarians 1.5x due to phytates (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "zinc",
+        "RDA",
+        "vegetarian",
+        "phytate",
+        "immunity"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA — Micronutrients",
+      "verified": true
+    },
+    {
+      "id": "RDA-022",
+      "category": "RDA Guidelines",
+      "difficulty": "easy",
+      "query": "How much sugar is safe per day?",
+      "gold_answer": "<10% calories WHO (ideally <5%). 2000 kcal: <50g (12 tsp), ideally <25g (6 tsp). Includes all added sugar. 1 gulab jamun = 12g, 1 ladoo = 8g. Indians average 50-70g/day (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "sugar",
+        "jaggery",
+        "honey",
+        "WHO",
+        "added sugar"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines — Sugar",
+      "verified": true
+    },
+    {
+      "id": "RDA-023",
+      "category": "RDA Guidelines",
+      "difficulty": "hard",
+      "query": "How do nutrient requirements change in the elderly?",
+      "gold_answer": "Energy -15-20%. Protein INCREASE to 1.0-1.2 g/kg (sarcopenia). Ca 1200mg, Vit D 600-800 IU, B12 2.2mcg. Solutions: dal soup, khichdi, smoothies, small frequent meals (ICMR-NIN 2024 Geriatric Protocol).",
+      "expected_keywords": [
+        "elderly",
+        "protein",
+        "sarcopenia",
+        "B12",
+        "vitamin D"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Life-Stage — Geriatric Nutrition",
+      "verified": true
+    },
+    {
+      "id": "RDA-024",
+      "category": "RDA Guidelines",
+      "difficulty": "medium",
+      "query": "What are the potassium RDA targets?",
+      "gold_answer": "4.7 g/day (WHO). Indians consume 2-3g. Sources/100g: Coconut water 250mg, Banana 299mg, Spinach 460mg, Ragi 350mg. Na:K ideal <0.5, Indians 1-1.5 (ICMR-NIN 2024 RDA + HTN Protocol).",
+      "expected_keywords": [
+        "potassium",
+        "RDA",
+        "banana",
+        "spinach",
+        "coconut water",
+        "Na:K"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA — Hypertension Protocol",
+      "verified": true
+    },
+    {
+      "id": "RDA-025",
+      "category": "RDA Guidelines",
+      "difficulty": "medium",
+      "query": "What is the RDA for vitamin B6 in Indian adults?",
+      "gold_answer": "Men 2.0 mg/day, Women 1.9, Pregnant 2.2. Sources/100g: Chickpeas 0.5mg, Chicken 0.5mg, Banana 0.4mg, Pistachios 1.1mg. Important for neurotransmitter synthesis, homocysteine regulation (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "B6",
+        "pyridoxine",
+        "chickpeas",
+        "chicken",
+        "homocysteine"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA — B Vitamins",
+      "verified": true
+    },
+    {
+      "id": "RN-011",
+      "category": "Regional Nutrition",
+      "difficulty": "medium",
+      "query": "What are healthy Maharashtrian foods?",
+      "gold_answer": "Poha (iron-rich), Bharli vangi (stuffed brinjal), Pithla (gram flour curry — protein), Bhakri (jowar/bajra roti — fibre), Modak (steamed). Reduce oil in misal, prefer bhakri over puri (ICMR-NIN 2024 Regional — West).",
+      "expected_keywords": [
+        "maharashtrian",
+        "poha",
+        "bhakri",
+        "pithla",
+        "millet"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture — West India (Maharashtra)",
+      "verified": true
+    },
+    {
+      "id": "RN-012",
+      "category": "Regional Nutrition",
+      "difficulty": "easy",
+      "query": "What are common foods in a Kashmiri diet?",
+      "gold_answer": "Rice staple, mutton in Rogan josh/Yakhni, winter veg (knol khol, hak greens), kahwa/noon chai. Strengths: protein, winter veg, anti-inflammatory spices. Concerns: high red meat, salt in chai (ICMR-NIN 2024 Regional — North).",
+      "expected_keywords": [
+        "kashmiri",
+        "rice",
+        "mutton",
+        "rogan josh",
+        "kahwa",
+        "saffron"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture — North India (Kashmir)",
+      "verified": true
+    },
+    {
+      "id": "RN-013",
+      "category": "Regional Nutrition",
+      "difficulty": "hard",
+      "query": "What is the nutritional value of traditional Assamese cuisine?",
+      "gold_answer": "Rice + fish daily (protein, omega-3, B12), fermented bamboo shoot (probiotics), mustard oil (omega-3), indigenous greens. Dishes: Aloo pitika, Maasor tenga, Khar. Benefits: high omega-3, diverse veg, fermented foods (ICMR-NIN 2024 Regional — East).",
+      "expected_keywords": [
+        "assamese",
+        "fish",
+        "fermented",
+        "bamboo shoot",
+        "mustard oil"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture — East India (Assam)",
+      "verified": true
+    },
+    {
+      "id": "RN-014",
+      "category": "Regional Nutrition",
+      "difficulty": "medium",
+      "query": "Healthy Goan diet for weight management",
+      "gold_answer": "Fish curry (bangda — omega-3), Xacuti (veg curry). Tips: prefer grilled/curried over fried (fish recheado 1x/week), replace white rice with brown, reduce coconut milk, limit feni (ICMR-NIN 2024 Regional — West).",
+      "expected_keywords": [
+        "goan",
+        "fish",
+        "coconut",
+        "xacuti",
+        "bangda",
+        "weight"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture — West India (Goa)",
+      "verified": true
+    },
+    {
+      "id": "RN-015",
+      "category": "Regional Nutrition",
+      "difficulty": "hard",
+      "query": "How does traditional food processing improve nutrition?",
+      "gold_answer": "Fermentation (idli/dosa/dhokla) — B vitamins 2-3x, phytates -50-60%, digestibility +25%, probiotics. Sprouting — vit C 10-20x, phytates reduced. Soaking — phytates -30%. Parboiling rice — retains B vitamins vs polished rice loses 60-80% (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "fermentation",
+        "sprouting",
+        "soaking",
+        "processing",
+        "idli",
+        "probiotic"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food + Micronutrient Matrix",
+      "verified": true
+    },
+    {
+      "id": "RN-016",
+      "category": "Regional Nutrition",
+      "difficulty": "easy",
+      "query": "What is a typical thali and how many calories does it have?",
+      "gold_answer": "2 roti (100-200) + 1 bowl rice (120) + dal (160) + sabzi (100) + curd (60) + salad (15) = 650-750 kcal. 25-30g protein, 15-20g fat. Deficits: fibre (12-15 vs 30-40g), Ca (350-400 vs 1000mg) (ICMR-NIN 2024 + IFCT 2017).",
+      "expected_keywords": [
+        "thali",
+        "calorie",
+        "roti",
+        "dal",
+        "curd"
+      ],
+      "source": "ICMR-NIN 2024 + IFCT 2017",
+      "source_ref": "Portion Conversions",
+      "verified": true
+    },
+    {
+      "id": "RN-017",
+      "category": "Regional Nutrition",
+      "difficulty": "hard",
+      "query": "What are Telangana/Andhra traditional foods and health impact?",
+      "gold_answer": "Rice + spicy curries + Gongura (sorrel — Fe, fibre, vit C) + Pesarattu (moong dosa — protein). Strengths: dal breakfast, greens. Concerns: high rice, ghee. Adapt: millets (sajja/jonna — traditional Telangana millet) (ICMR-NIN 2024 Regional — South).",
+      "expected_keywords": [
+        "telangana",
+        "andhra",
+        "rice",
+        "gongura",
+        "pesarattu",
+        "millet"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food Culture — South (Telangana/Andhra)",
+      "verified": true
+    },
+    {
+      "id": "RN-018",
+      "category": "Regional Nutrition",
+      "difficulty": "medium",
+      "query": "What are healthy snacks from different Indian regions?",
+      "gold_answer": "North: roasted makhana (10g protein/100g), sprouted moong. South: sundal (steamed chickpeas). East: muri (puffed rice + veg). West: dhokla (steamed, 6g protein). Template: 1 protein + 1 raw veg + 1 fruit. Avoid fried (samosa 300-500 kcal) (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "snack",
+        "makhana",
+        "sprouts",
+        "dhokla",
+        "sundal"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines + Regional Snacks",
+      "verified": true
+    },
+    {
+      "id": "RN-019",
+      "category": "Regional Nutrition",
+      "difficulty": "medium",
+      "query": "How can I make my regional Indian diet healthier?",
+      "gold_answer": "1) Protein at breakfast (eggs/curd/chilla). 2) Replace white rice with millets 50:50. 3) Double veg portions. 4) Reduce oil 30-50%. 5) Prefer fermented. 6) Salad at every meal. 7) Water before meals, mindful eating (ICMR-NIN 2024 Dietary Guidelines).",
+      "expected_keywords": [
+        "regional",
+        "healthier",
+        "protein",
+        "millet",
+        "vegetable",
+        "oil"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines + Regional adaptation",
+      "verified": true
+    },
+    {
+      "id": "RN-020",
+      "category": "Regional Nutrition",
+      "difficulty": "hard",
+      "query": "How does Indian thali compare with Harvard Healthy Eating Plate?",
+      "gold_answer": "Harvard: 50% veg/fruit, 25% whole grains, 25% protein. Indian thali: ~60% grains, 15% veg, 10% dal (protein), 5% curd. Fix: halve grain, double veg + dal, add salad, protein at breakfast (ICMR-NIN 2024 + Harvard adaptation).",
+      "expected_keywords": [
+        "Harvard",
+        "plate",
+        "thali",
+        "vegetables",
+        "protein",
+        "grains"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines — Harvard Plate adaptation",
+      "verified": true
+    },
+    {
+      "id": "RN-021",
+      "category": "Regional Nutrition",
+      "difficulty": "medium",
+      "query": "What are healthy UP/Bihari foods?",
+      "gold_answer": "Litti chokha (baked, high fibre), Sattu paratha (20g protein/100g sattu), Dal rice + curd, Dahi chuda, Saag (mixed greens). Strengths: sattu (protein), litti (baked). Concerns: puri/kachori (deep-fried), heavy ghee sweets (ICMR-NIN 2024 Regional).",
+      "expected_keywords": [
+        "UP",
+        "bihari",
+        "litti",
+        "sattu",
+        "chokha",
+        "protein",
+        "saag"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Regional Food — North India (UP/Bihar)",
+      "verified": true
+    },
+    {
+      "id": "RN-022",
+      "category": "Regional Nutrition",
+      "difficulty": "hard",
+      "query": "What is the role of pickles in Indian nutrition?",
+      "gold_answer": "Pickles: fermented (probiotics, anti-inflammatory spices). Risks: high Na (1500-5000mg/100g), high oil. Homemade (controlled salt) 1-2 tsp/day = 75-250mg Na. Avoid store-bought. Better: mint/coriander chutney, lemon squeeze (ICMR-NIN 2024 + FSSAI Guidelines).",
+      "expected_keywords": [
+        "pickle",
+        "achaar",
+        "sodium",
+        "fermented",
+        "probiotic",
+        "homemade"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines + FSSAI",
+      "verified": true
+    },
+    {
+      "id": "FS-011",
+      "category": "Food Substitution",
+      "difficulty": "medium",
+      "query": "What are low-carb alternatives for Indian breakfast?",
+      "gold_answer": "Moong dal chilla (15g carb, 8g protein), Paneer tikka (3g, 20g), Egg bhurji (2g, 15g), Curd+chia (8g, 10g), Sattu drink (15g, 10g), Cauliflower upma (5g). Avoid poha, upma, paratha (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "low-carb",
+        "breakfast",
+        "chilla",
+        "paneer",
+        "egg",
+        "cauliflower"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines — Low-carb adaptation",
+      "verified": true
+    },
+    {
+      "id": "FS-012",
+      "category": "Food Substitution",
+      "difficulty": "easy",
+      "query": "What can I replace maida with in baking?",
+      "gold_answer": "70% atta + 30% ragi/oat/jowar/bajra/besan/almond flour. Whole wheat+bajra needs more water. Gluten-free flours need binding (1 egg). For cakes: 50% maida+50% atta+fruit puree. For roti: 100% atta (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "maida",
+        "baking",
+        "atta",
+        "ragi",
+        "besan",
+        "oat flour"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Cereals — Substitute flours",
+      "verified": true
+    },
+    {
+      "id": "FS-013",
+      "category": "Food Substitution",
+      "difficulty": "hard",
+      "query": "What can I use instead of salt for flavor?",
+      "gold_answer": "Herbs (coriander, mint, curry), Spices (cumin, pepper, turmeric, garam masala), Acid (lemon, tomato, tamarind, curd, vinegar), Aromatics (garlic, ginger, onion, hing), Roasted powders (jeera, til, peanut). KCl salt substitutes — avoid with kidney disease (ICMR-NIN 2024 HTN Protocol).",
+      "expected_keywords": [
+        "salt",
+        "substitute",
+        "herb",
+        "spice",
+        "lemon",
+        "garlic"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines — Salt reduction",
+      "verified": true
+    },
+    {
+      "id": "FS-014",
+      "category": "Food Substitution",
+      "difficulty": "medium",
+      "query": "What are healthy alternatives to fried snacks?",
+      "gold_answer": "Replace samosa with baked or roasted makhana. Bhajiya with baked fritters. Vada with idli. Chips with roasted chana/makhana. French fries with baked sweet potato fries. Air fry (80% less oil), bake, steam, grill (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "fried",
+        "snack",
+        "baked",
+        "air fry",
+        "makhana",
+        "samosa"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines — Healthy cooking",
+      "verified": true
+    },
+    {
+      "id": "FS-015",
+      "category": "Food Substitution",
+      "difficulty": "easy",
+      "query": "What can I use instead of curd in cooking?",
+      "gold_answer": "Buttermilk (same taste, less fat), Plant yogurt (vegan), Lemon+water (sour), Tomato puree (gravy), Coconut milk (rich, dairy-free), Cashew paste (rich), Silken tofu (8g protein, 350mg Ca). Each has different nutritional profile (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "curd",
+        "substitute",
+        "buttermilk",
+        "tofu",
+        "coconut milk",
+        "cashew paste"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Dairy alternatives",
+      "verified": true
+    },
+    {
+      "id": "FS-016",
+      "category": "Food Substitution",
+      "difficulty": "hard",
+      "query": "What are whole-food replacements for sugar in Indian sweets?",
+      "gold_answer": "Dates paste (2:1, fibre+Fe+K), Figs (Ca), Raisins (Fe), Banana (replace 2 tbsp sugar), Apple/pear puree, Sweet potato puree, Coconut sugar (lower GI). Date+almond+cocoa ladoo — no added sugar. Natural sugars still count toward daily sugar budget (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "sugar",
+        "substitute",
+        "dates",
+        "figs",
+        "fruit puree",
+        "ladoo"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines — Natural sweeteners",
+      "verified": true
+    },
+    {
+      "id": "FS-017",
+      "category": "Food Substitution",
+      "difficulty": "medium",
+      "query": "What can I use instead of paneer in a vegan diet?",
+      "gold_answer": "Firm tofu (8g protein, 350mg Ca if Ca-set), Vegan paneer (check protein), Cashew cheese (low protein), Soy chunks crumbled, Chickpea flour homemade paneer. Best: Ca-set tofu. Add nutritional yeast for B12. Soya chunks (52g/100g dry) (IFCT 2017).",
+      "expected_keywords": [
+        "paneer",
+        "vegan",
+        "tofu",
+        "cashew",
+        "protein",
+        "calcium",
+        "soy"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Dairy alternatives + Protein",
+      "verified": true
+    },
+    {
+      "id": "FS-018",
+      "category": "Food Substitution",
+      "difficulty": "easy",
+      "query": "What can I have instead of tea or coffee for energy?",
+      "gold_answer": "Green tea (25-35mg caffeine, EGCG), Tulsi tea, Ginger+lemon, Buttermilk, Coconut water (K+), Smoothies, Sattu drink (10g protein), Amla juice (vit C). Gradual caffeine reduction strategy (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "tea",
+        "coffee",
+        "green tea",
+        "coconut water",
+        "sattu"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines — Beverages",
+      "verified": true
+    },
+    {
+      "id": "FS-019",
+      "category": "Food Substitution",
+      "difficulty": "medium",
+      "query": "What breakfast substitutes are high in protein for weight loss?",
+      "gold_answer": "Chilla (12g protein/150kcal), Egg bhurji 2 eggs + toast (18g/200), Paneer sandwich (15g/180), Greek yogurt+chia (18g/200), Sattu drink (10g/120), Protein smoothie (25g/250). Target 20-30g protein at breakfast (ICMR-NIN 2024 Weight Management).",
+      "expected_keywords": [
+        "protein",
+        "breakfast",
+        "weight loss",
+        "chilla",
+        "eggs",
+        "paneer"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Weight Management + RDA",
+      "verified": true
+    },
+    {
+      "id": "FS-020",
+      "category": "Food Substitution",
+      "difficulty": "medium",
+      "query": "What can replace ghee for a low-fat diet?",
+      "gold_answer": "Oil spray (0.5g fat vs 1 tsp ghee=4.5g), Water sauté, Steam, Bake. Tadka: 1/2 tsp oil + 1 tbsp water. Curd-based cooking. Tomato/onion puree. Ghee on TOP of finished dish (80% less). Saving 3 tsp/day = 135 kcal = 0.5kg/month (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "ghee",
+        "low-fat",
+        "substitute",
+        "oil spray",
+        "tadka"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines — Fat reduction",
+      "verified": true
+    },
+    {
+      "id": "GA-011",
+      "category": "Gap Analysis",
+      "difficulty": "medium",
+      "query": "I'm non-vegetarian — what nutrients might I still lack?",
+      "gold_answer": "Fibre (if meat+rice centric, 10-15g vs 30-40g), Vitamin C (if forget fruits), Calcium (if reduce dairy), Vit D (all Indians), Omega-3 (if no fish 2-3x/wk). Fix: half plate veg, fish 2x/wk, curd, nuts (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "non-vegetarian",
+        "fibre",
+        "vitamin C",
+        "calcium",
+        "omega-3"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines — Diversity",
+      "verified": true
+    },
+    {
+      "id": "GA-012",
+      "category": "Gap Analysis",
+      "difficulty": "easy",
+      "query": "I feel tired all the time — what nutrients am I missing?",
+      "gold_answer": "Iron (women: Hb <12, ferritin), B12 (vegetarians), Vitamin D (70-80% Indians deficient), Magnesium, Protein, Iodine (if non-iodized salt), Dehydration. Fix: check Hb/B12/D, protein at breakfast, 2-3L water, sleep 7-8h (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "fatigue",
+        "iron",
+        "B12",
+        "vitamin D",
+        "magnesium",
+        "protein"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA + Well-being",
+      "verified": true
+    },
+    {
+      "id": "GA-013",
+      "category": "Gap Analysis",
+      "difficulty": "hard",
+      "query": "Analyse the protein gap in a typical Indian vegetarian diet",
+      "gold_answer": "Daily: Breakfast 5-8g, Lunch 22-26g, Dinner 18-22g, Snacks 2g = 47-58g. Target 52-65g. Issues: breakfast carb-heavy, skip reduces to 35-40g. Fix: protein at breakfast (+10-15g), double dal (+10g), curd both meals (+8g), nuts (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "protein",
+        "gap",
+        "vegetarian",
+        "breakfast",
+        "dal",
+        "eggs"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA + Meal Analysis",
+      "verified": true
+    },
+    {
+      "id": "GA-014",
+      "category": "Gap Analysis",
+      "difficulty": "medium",
+      "query": "Is there a fibre gap in the urban Indian diet?",
+      "gold_answer": "Average 15-20g vs target 25-40g. Causes: white rice (0.2g fibre/100g), refined flour, less dal, fewer veg/fruit, carb breakfast. Fix: 1 bowl salad + 1 fruit = +8-10g, replace white rice with millets, oats breakfast (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "fibre",
+        "gap",
+        "urban",
+        "white rice",
+        "salad",
+        "oats"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines — Fibre",
+      "verified": true
+    },
+    {
+      "id": "GA-015",
+      "category": "Gap Analysis",
+      "difficulty": "hard",
+      "query": "What is the calcium gap in Indian diets?",
+      "gold_answer": "RDA 1000mg/day, average intake 400-500mg. Absorption hindered by phytates (30-50%), oxalates, high salt, caffeine, low D. Fix: 1 glass milk (240mg) + 1 curd (140) + 1 ragi (150) + 1 tbsp sesame (100) = 630mg + almonds + greens (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "calcium",
+        "gap",
+        "RDA",
+        "milk",
+        "ragi",
+        "sesame"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA + Micronutrient Matrix",
+      "verified": true
+    },
+    {
+      "id": "GA-016",
+      "category": "Gap Analysis",
+      "difficulty": "medium",
+      "query": "How can I tell if I'm eating enough vegetables?",
+      "gold_answer": "Target 300-400g/day (5+ servings). 1 serving = 80-100g. Signs: constipation, high calorie intake, frequent illness. Assessment: 1 sabzi lunch + 1 dinner + salad = 250-300g. Add breakfast veg + fruit = 350-400g. Fill HALF your plate (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "vegetable",
+        "intake",
+        "serving",
+        "leafy green",
+        "plate"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines — Vegetables",
+      "verified": true
+    },
+    {
+      "id": "GA-017",
+      "category": "Gap Analysis",
+      "difficulty": "hard",
+      "query": "What is the water-soluble vitamin gap in Indian diets?",
+      "gold_answer": "B1 marginal (polished rice loses 80%), B2 common (1.0 vs 1.4-1.8mg), B6 borderline (1.2-1.5 vs 1.9-2.0mg), B9 pregnancy gap (diet 200-300 vs 500mcg), B12 SEVERE in vegetarians (diet 0.5-1 vs 2.2mcg — MUST supplement). Vit C adequate urban (ICMR-NIN 2024 RDA).",
+      "expected_keywords": [
+        "B12",
+        "folate",
+        "riboflavin",
+        "thiamine",
+        "vitamin C",
+        "gap"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA + Micronutrient Matrix — B vitamins",
+      "verified": true
+    },
+    {
+      "id": "GA-018",
+      "category": "Gap Analysis",
+      "difficulty": "easy",
+      "query": "Am I eating enough protein for muscle building?",
+      "gold_answer": "RDA 0.8 sedentary, 1.2-1.7 training. 75kg person 4x/wk: 90-128g. Sources: 3 eggs (18g) + milk (7g) + dal (10g) + chicken (23g) + whey (24g) + nuts (6g) = 88g. Spread 20-30g each meal every 3-4h (ICMR-NIN 2024 Sports).",
+      "expected_keywords": [
+        "muscle",
+        "protein",
+        "gym",
+        "training",
+        "whey",
+        "eggs"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Sports Nutrition + RDA",
+      "verified": true
+    },
+    {
+      "id": "GA-019",
+      "category": "Gap Analysis",
+      "difficulty": "hard",
+      "query": "What nutrients are missing for healthy hair and skin?",
+      "gold_answer": "Iron (amla, ragi, spinach), Zinc (pumpkin seeds), Vitamin C (collagen), Biotin (eggs, almonds), Vitamin A (carrots), Vitamin E (almonds), Omega-3, Protein (95% keratin). Water 2-3L. Reduce sugar (AGEs). Amla, almonds, curd are Indian beauty foods (ICMR-NIN 2024 + Dermatology).",
+      "expected_keywords": [
+        "hair",
+        "skin",
+        "iron",
+        "zinc",
+        "biotin",
+        "collagen",
+        "amla"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dermatology + Micronutrient Matrix",
+      "verified": true
+    },
+    {
+      "id": "GA-020",
+      "category": "Gap Analysis",
+      "difficulty": "medium",
+      "query": "What is the omega-6 to omega-3 ratio gap in Indian diets?",
+      "gold_answer": "Ideal <4:1. Indian urban 20-50:1. Excess omega-6: sunflower oil (60-70%), corn oil, soybean, fried/packaged foods. Omega-3: flaxseed (22.8g), chia (17.8g), walnuts, mustard oil, fish. Fix: mustard+olive oil, 1 tbsp flaxseed + 5 walnuts daily, fish 2-3x/wk (IFCT 2017 + ICMR-NIN 2024).",
+      "expected_keywords": [
+        "omega-6",
+        "omega-3",
+        "ratio",
+        "sunflower oil",
+        "mustard oil",
+        "flaxseed"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Fats & Oils — Fatty acid profiles",
+      "verified": true
+    },
+    {
+      "id": "MN-011",
+      "category": "Medicine-Nutrition",
+      "difficulty": "medium",
+      "query": "What foods interact with blood thinners?",
+      "gold_answer": "Warfarin + vitamin K: Consistent intake of high-K veg (spinach, methi, cabbage) more important than avoidance. Cranberry potentiates warfarin. Grapefruit/mango inhibit metabolism. Alcohol increases bleeding. Monitor INR (ICMR-NIN 2024 Med-Nutrition).",
+      "expected_keywords": [
+        "warfarin",
+        "vitamin K",
+        "INR",
+        "spinach",
+        "cranberry"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition Impacts",
+      "verified": true
+    },
+    {
+      "id": "MN-012",
+      "category": "Medicine-Nutrition",
+      "difficulty": "easy",
+      "query": "Can I drink milk with antibiotics?",
+      "gold_answer": "Tetracyclines + fluoroquinolones — NO (Ca binds, reduces abs 50-90%). Take 2h before/6h after dairy. Penicillins + macrolides — safe with milk. Rule: take with water, 1h before/2h after meals unless directed (ICMR-NIN 2024 Med-Nutrition).",
+      "expected_keywords": [
+        "milk",
+        "antibiotic",
+        "tetracycline",
+        "ciprofloxacin",
+        "calcium"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition Impacts",
+      "verified": true
+    },
+    {
+      "id": "MN-013",
+      "category": "Medicine-Nutrition",
+      "difficulty": "hard",
+      "query": "What are the nutrition interactions with statins?",
+      "gold_answer": "CoQ10 depletion (40-50%) — supplement 100-200mg. Grapefruit — increases statin 3-5x, AVOID. Red yeast rice — contains natural statins, avoid. High-fibre binds — take statin 2h apart. Low D worsens myopathy. Omega-3 2-4g (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "statin",
+        "CoQ10",
+        "grapefruit",
+        "atorvastatin",
+        "myopathy"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition Impacts",
+      "verified": true
+    },
+    {
+      "id": "MN-014",
+      "category": "Medicine-Nutrition",
+      "difficulty": "medium",
+      "query": "How does alcohol affect nutrient absorption?",
+      "gold_answer": "Heavy drinking (>3/day): B1 deficiency (80%), B9, B12, Vitamin D, Zn loss, Mg low, Ca reduced. Inhibits fat absorption. Supplement B-complex, Mg, Zn. 1-2 drinks/day: minimal. Alcohol = 7 kcal/g, empty calories (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "alcohol",
+        "B1",
+        "B12",
+        "folate",
+        "zinc",
+        "magnesium"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition Impacts",
+      "verified": true
+    },
+    {
+      "id": "MN-015",
+      "category": "Medicine-Nutrition",
+      "difficulty": "medium",
+      "query": "What should I eat when taking iron supplements?",
+      "gold_answer": "Take with vit C (amla, lemon) — absorption 3-6x. Avoid tea/coffee/milk 2h. Empty stomach if tolerated. Side effects: constipation, nausea. Prefer ferrous bisglycinate. Separate 2h from calcium. Cook in iron vessels (food Fe 2-5x) (ICMR-NIN 2024 Anaemia).",
+      "expected_keywords": [
+        "iron",
+        "supplement",
+        "vitamin C",
+        "tea",
+        "coffee",
+        "calcium"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition + Anaemia Protocol",
+      "verified": true
+    },
+    {
+      "id": "MN-016",
+      "category": "Medicine-Nutrition",
+      "difficulty": "hard",
+      "query": "How does chemotherapy affect nutrition?",
+      "gold_answer": "Nausea: small frequent meals, ginger tea. Taste: spices, lemon, cold foods. Mouth sores: khichdi, curd rice, smoothies, avoid spicy. Weight loss: calorie-dense (ghee, nuts). Low appetite: liquid nutrition. Immune suppression: avoid raw. Protein 1.2-1.5 g/kg (ICMR-NIN 2024 Oncology).",
+      "expected_keywords": [
+        "chemotherapy",
+        "nausea",
+        "taste",
+        "mouth sores",
+        "weight loss",
+        "protein"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Oncology",
+      "verified": true
+    },
+    {
+      "id": "MN-017",
+      "category": "Medicine-Nutrition",
+      "difficulty": "hard",
+      "query": "How does metformin affect vitamin B12?",
+      "gold_answer": "Reduces B12 absorption 30-40% (altered gut motility, reduced IF). Long-term increases deficiency risk. Symptoms: neuropathy, cognitive decline, anaemia. Monitor B12 6-12 month. Supplement 500-1000mcg methylcobalamin. Also depletes folate (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "metformin",
+        "B12",
+        "methylcobalamin",
+        "Glycomet"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition Impacts",
+      "verified": true
+    },
+    {
+      "id": "MN-018",
+      "category": "Medicine-Nutrition",
+      "difficulty": "medium",
+      "query": "How should I take thyroid medication with food?",
+      "gold_answer": "Levothyroxine: empty stomach 30-60 min before breakfast with water. Ca/Fe — separate 4h. High-fibre — reduces abs 20-30%. Coffee — reduces 30-40%, wait 60 min. Soy — separate 4h. Consistency is key. Monitor TSH (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "thyroid",
+        "levothyroxine",
+        "empty stomach",
+        "calcium",
+        "coffee"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Medicine-Nutrition Impacts",
+      "verified": true
+    },
+    {
+      "id": "SG-011",
+      "category": "Supplement Guidance",
+      "difficulty": "medium",
+      "query": "Should I take calcium and vitamin D together?",
+      "gold_answer": "Yes — Vit D required for Ca absorption. Same meal with food (Ca carbonate needs stomach acid). 1000-1200mg Ca + 600-800 IU D. Separate from Fe by 2-3h. Ca citrate can be taken anytime (ICMR-NIN 2024 + Supplement).",
+      "expected_keywords": [
+        "calcium",
+        "vitamin D",
+        "together",
+        "absorption",
+        "supplement"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA + Micronutrient Matrix",
+      "verified": true
+    },
+    {
+      "id": "SG-012",
+      "category": "Supplement Guidance",
+      "difficulty": "hard",
+      "query": "What supplements should a pregnant woman take?",
+      "gold_answer": "Folic acid 400-500mcg (start preconception), Fe 60-120mg, Ca 1000-1200mg + D 600-800 IU, B12 2.6mcg, Iodine 220mcg, DHA 300mg. Multivitamin with Zn, Cu, Se. WARNING: Vit A >3000mcg is TERATOGENIC (ICMR-NIN 2024 Pregnancy Protocol).",
+      "expected_keywords": [
+        "pregnant",
+        "supplement",
+        "folic acid",
+        "iron",
+        "calcium",
+        "DHA",
+        "B12"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Pregnancy Protocol + RDA",
+      "verified": true
+    },
+    {
+      "id": "SG-013",
+      "category": "Supplement Guidance",
+      "difficulty": "easy",
+      "query": "Should I take probiotic supplements or eat probiotic foods?",
+      "gold_answer": "Food > supplements. Indian probiotics: curd, buttermilk, fermented idli/dosa/dhokla, homemade pickles, kanji. Benefits: 70% immunity is gut. Supplements: multi-strain (Lactobacillus+Bifidobacterium), 10-50 billion CFU. Prebiotics: banana, garlic, onion, oats (ICMR-NIN 2024 Gut Health).",
+      "expected_keywords": [
+        "probiotic",
+        "curd",
+        "buttermilk",
+        "fermented",
+        "supplement",
+        "prebiotic"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Gut Health Protocol",
+      "verified": true
+    },
+    {
+      "id": "SG-014",
+      "category": "Supplement Guidance",
+      "difficulty": "hard",
+      "query": "Can you take too many vitamins — supplement safety?",
+      "gold_answer": "YES: Fat-soluble accumulate — Vit A >3000mcg (liver toxicity), D >100mcg/4000IU (hypercalcemia), E >800mg (bleeding). Water-soluble: C >2000mg (kidney stones), B6 >100mg (nerve damage). Minerals: Fe >45mg, Zn >40mg (Cu deficiency), Se >400mcg. More is NOT better (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "overdose",
+        "toxicity",
+        "vitamin A",
+        "vitamin D",
+        "iron",
+        "zinc",
+        "UL"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Technical Report — Tolerable Upper Limits",
+      "verified": true
+    },
+    {
+      "id": "SG-015",
+      "category": "Supplement Guidance",
+      "difficulty": "medium",
+      "query": "Should children take multivitamins?",
+      "gold_answer": "Most don't need if eating diverse. Gaps: Vit D (50-80% deficient), Fe (40-60% anaemic), B12 (vegetarian families). For picky eaters: age-appropriate syrup with B12, D, Fe, Zn, folate. Avoid megadoses and gummy sweets. Food-first approach (ICMR-NIN 2024 Children).",
+      "expected_keywords": [
+        "children",
+        "multivitamin",
+        "supplement",
+        "vitamin D",
+        "iron",
+        "B12"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Life-Stage Priorities — Children",
+      "verified": true
+    },
+    {
+      "id": "SG-016",
+      "category": "Supplement Guidance",
+      "difficulty": "medium",
+      "query": "What is the best time to take supplements?",
+      "gold_answer": "Morning: multivitamin with breakfast. Midday: Vit D (fatty meal), Fe (with vit C, no tea/coffee). Evening: Ca with dinner, Mg for sleep. Fat-soluble vitamins need food with fat. Fe separate from Ca 2-3h. Zn empty stomach. Probiotics 30 min before breakfast (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "supplement",
+        "timing",
+        "morning",
+        "night",
+        "fat-soluble",
+        "iron",
+        "calcium"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Supplement Guidelines",
+      "verified": true
+    },
+    {
+      "id": "SG-017",
+      "category": "Supplement Guidance",
+      "difficulty": "medium",
+      "query": "What supplements do GLP-1 medication patients need?",
+      "gold_answer": "GLP-1 patients (semaglutide, liraglutide): B12 (500-1000mcg/day — depletes 30-40%), Vit D (20-25mcg/day), Protein (75-90g floor — supplement with whey/plant), Iron (monitor), Zn (15-17mg). Multivitamin recommended. Take away from med to avoid nausea (ICMR-NIN 2024 GLP-1 Protocol).",
+      "expected_keywords": [
+        "GLP-1",
+        "B12",
+        "vitamin D",
+        "protein",
+        "zinc"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "GLP-1 Nutrition Protocol",
+      "verified": true
+    },
+    {
+      "id": "SG-018",
+      "category": "Supplement Guidance",
+      "difficulty": "easy",
+      "query": "Do I need omega-3 supplements on a vegetarian diet?",
+      "gold_answer": "Probably yes. ALA (flaxseed, chia, walnuts) converts to EPA/DHA at only 5-10%. Algae-based DHA supplement (200-500mg/day) recommended for vegetarians. Signs of need: dry skin, brittle nails, brain fog, joint pain. Fish eaters: 2-3x/week usually sufficient (ICMR-NIN 2024).",
+      "expected_keywords": [
+        "omega-3",
+        "supplement",
+        "algae",
+        "DHA",
+        "vegetarian",
+        "flaxseed"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Supplement Guidance + Omega-3",
+      "verified": true
+    },
+    {
+      "id": "FC-047",
+      "category": "Food Composition",
+      "difficulty": "easy",
+      "query": "What is the calorie content of one chapati/roti?",
+      "gold_answer": "One medium whole wheat chapati/roti (30g dough) provides approximately 102 kcal, 3.2g protein, 0.8g fat, 21g carbs, 2.5g fibre (IFCT 2017).",
+      "expected_keywords": [
+        "102",
+        "roti",
+        "chapati",
+        "calorie",
+        "3.2",
+        "protein",
+        "30"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Cereals — Wheat flour, whole (A003)",
+      "verified": true
+    },
+    {
+      "id": "FC-048",
+      "category": "Food Composition",
+      "difficulty": "medium",
+      "query": "How much iron is in 100g of beetroot?",
+      "gold_answer": "Beetroot contains 1.8mg iron per 100g. It provides 43 kcal, 1.7g protein, 0.2g fat, 8.8g carbs, 2.9g fibre. Also rich in folate (109mcg) and potassium (305mg) (IFCT 2017).",
+      "expected_keywords": [
+        "1.8",
+        "beetroot",
+        "iron",
+        "43",
+        "folate",
+        "potassium"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Vegetables — Beetroot",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-01",
+      "category": "Multi-Language",
+      "difficulty": "medium",
+      "query": "Moong dal mein kitna protein hota hai?",
+      "gold_answer": "Moong dal (green gram split) mein 24g protein hota hai har 100g mein (IFCT 2017, Code B002). Yahan protein, fibre aur iron bhi bharpur hota hai.",
+      "expected_keywords": [
+        "24",
+        "protein",
+        "moong",
+        "dal"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Code B002 — Pulses",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-02",
+      "category": "Multi-Language",
+      "difficulty": "medium",
+      "query": "Kya diabetic patients ko chawal khana chahiye?",
+      "gold_answer": "Diabetic patients ko white rice se bachna chahiye kyunki iska glycemic index (70-80) high hota hai. Brown rice ya millets (ragi, jowar) better option hain. ICMR-NIN 2024 guidelines ke mutabik low-GI foods choose karein.",
+      "expected_keywords": [
+        "diabetes",
+        "rice",
+        "chawal",
+        "gi",
+        "brown rice"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Diabetes",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-03",
+      "category": "Multi-Language",
+      "difficulty": "easy",
+      "query": "Ragi mein kitna calcium hota hai?",
+      "gold_answer": "Ragi (finger millet) mein 344mg calcium hota hai har 100g mein — jo Indian grains mein sabse zyada hai. IRON: 3.9mg, fibre: 11.3g bhi hota hai (IFCT 2017).",
+      "expected_keywords": [
+        "ragi",
+        "calcium",
+        "344",
+        "millet"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Cereals — Ragi",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-04",
+      "category": "Multi-Language",
+      "difficulty": "hard",
+      "query": "Iron deficiency anaemia ke liye kya khayen?",
+      "gold_answer": "Iron deficiency anaemia mein iron-rich foods khayen: Amla (600mg vitamin C — iron absorption 3-5x badhata hai), Palak (4.9mg iron/100g), Ragi (3.9mg), Halim/garden cress seeds (100mg iron/100g). Chai aur coffee khane ke saath na lein — tannins iron block karte hain. Vitamin C sources (nimbu, amla) ke saath iron foods combine karein. Cook in iron vessels (ICMR-NIN 2024 Anaemia Protocol).",
+      "expected_keywords": [
+        "iron",
+        "anaemia",
+        "amla",
+        "palak",
+        "ragi",
+        "vitamin c"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Iron Deficiency Anaemia",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-05",
+      "category": "Multi-Language",
+      "difficulty": "medium",
+      "query": "PCOS mein kya khana chahiye aur kya nahi?",
+      "gold_answer": "PCOS mein: Calorie target 1400-1800 kcal (overweight ho toh), protein 1.0-1.2 g/kg/day, low-GI strict diet, anti-inflammatory fats (omega-3 3g/day), iron 35-40 mg/day, calcium 1000 mg. Avoid refined carbs, maida, sugary drinks, high-sugar fruits (mango, chiku) (ICMR-NIN 2024 PCOS Protocol).",
+      "expected_keywords": [
+        "pcos",
+        "low-gi",
+        "protein",
+        "iron",
+        "omega-3"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — PCOS",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-06",
+      "category": "Multi-Language",
+      "difficulty": "hard",
+      "query": "Kya ghee khana healthy hai? Roz kitna ghee khana chahiye?",
+      "gold_answer": "Ghee healthy hai limited quantity mein. 1-2 tsp (5-10g) per day sufficient hai. Ghee mein vitamin A, D, E, K aur butyrate hota hai (gut health ke liye achha). Per 100g: 99.5g fat, 60% saturated, 884 kcal. Zyada ghee (3+ tsp/day) se weight gain, cholesterol badh sakta hai. Balance rakhein (ICMR-NIN 2024 Dietary Guidelines + IFCT 2017).",
+      "expected_keywords": [
+        "ghee",
+        "fat",
+        "saturated",
+        "vitamin",
+        "tsp"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Fats & Oils — Ghee",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-07",
+      "category": "Multi-Language",
+      "difficulty": "easy",
+      "query": "Palak mein kitna iron hota hai?",
+      "gold_answer": "Palak (spinach) mein 4.9mg iron hota hai har 100g mein. Lekin isme oxalates bhi hote hain jo iron absorption kam kar dete hain. Isliye palak ko vitamin C sources (nimbu, amla) ke saath combine karein behtar absorption ke liye (IFCT 2017).",
+      "expected_keywords": [
+        "palak",
+        "spinach",
+        "iron",
+        "4.9",
+        "oxalate"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Green Leafy Vegetables — Spinach",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-08",
+      "category": "Multi-Language",
+      "difficulty": "medium",
+      "query": "Kya vitamin D supplements India mein zaroori hain?",
+      "gold_answer": "Haan, zaroori hain. 70-80% urban Indians vitamin D deficient hain indoor lifestyle, pollution, sunscreen use ki vajah se. Supplement 600-2000 IU/day lein. RDA 5-15 mcg/day hai. Dhoop bhi lein 15-20 min daily (ICMR-NIN 2024 RDA + Supplement Guidelines).",
+      "expected_keywords": [
+        "vitamin d",
+        "supplement",
+        "deficient",
+        "600",
+        "2000"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "RDA Targets + Supplement Guidance",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-09",
+      "category": "Multi-Language",
+      "difficulty": "hard",
+      "query": "Moringa (drumstick) ke patton mein kitna calcium aur protein hota hai?",
+      "gold_answer": "Moringa leaves per 100g: 220mg calcium, 9.4g protein, 4.3mg iron, 1670mcg vitamin A, 42mg vitamin C. Moringa ek nutrient-dense superfood hai — 100g daily calcium ka 25%, iron ka 30%, vitamin A ka 100% provide karta hai (IFCT 2017).",
+      "expected_keywords": [
+        "moringa",
+        "calcium",
+        "220",
+        "protein",
+        "9.4",
+        "iron",
+        "vitamin"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Green Leafy Vegetables — Moringa",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-10",
+      "category": "Multi-Language",
+      "difficulty": "easy",
+      "query": "Ek din mein kitna paani peena chahiye?",
+      "gold_answer": "Adult men 3.7L (~15 cups), women 2.7L (~11 cups) per day. Indian summer mein 500-1000ml extra. Exercise: 500-1500ml extra per hour. Pyaas lagne tak wait na karein — regularly peete rahein. Coconut water, buttermilk, soup bhi count hote hain (ICMR-NIN 2024 Hydration Guidelines).",
+      "expected_keywords": [
+        "paani",
+        "water",
+        "3.7",
+        "2.7",
+        "coconut water",
+        "buttermilk"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Dietary Guidelines — Hydration",
+      "verified": true
+    },
+    {
+      "id": "ML-KN-01",
+      "category": "Multi-Language",
+      "difficulty": "medium",
+      "query": "Ragi tumba calcium a idya?",
+      "gold_answer": "Howdu, ragi (finger millet) nalli 344mg calcium irutte 100g ge — idu ella Indian grains nalligintale hechchu. Raginalli protein 7.3g, iron 3.9mg matthe fibre 11.3g kooda ide (IFCT 2017).",
+      "expected_keywords": [
+        "ragi",
+        "calcium",
+        "344",
+        "millet"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Cereals — Ragi",
+      "verified": true
+    },
+    {
+      "id": "ML-KN-02",
+      "category": "Multi-Language",
+      "difficulty": "medium",
+      "query": "Moringa soppina poshakanshada bali heli",
+      "gold_answer": "Moringa (drumstick) leaves per 100g: 220mg calcium, 9.4g protein, 4.3mg iron, 1670mcg vitamin A, 42mg vitamin C. Moringa ond nutrient-dense superfood — 100g daily calcium 25%, iron 30%, vitamin A 100% odugutte (IFCT 2017).",
+      "expected_keywords": [
+        "moringa",
+        "calcium",
+        "protein",
+        "iron",
+        "vitamin"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Green Leafy Vegetables — Moringa",
+      "verified": true
+    },
+    {
+      "id": "ML-KN-03",
+      "category": "Multi-Language",
+      "difficulty": "hard",
+      "query": "Mutton matthe chicken nalli yavdu aarogyakara?",
+      "gold_answer": "Chicken healthy option — chicken breast (23.4g protein/100g, 166 kcal, 2.7g fat). Mutton (18g protein, 210 kcal, 13g fat) — jasti saturated fat, occasionally tagondu. Chicken protein quality better, fat kammi. Mutton iron rich (3.4mg vs chicken 1.2mg). So anemic aiddavrige mutton olle option, weight loss ge chicken better (IFCT 2017).",
+      "expected_keywords": [
+        "chicken",
+        "mutton",
+        "protein",
+        "fat",
+        "iron",
+        "calorie"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Meat & Poultry — Comparison",
+      "verified": true
+    },
+    {
+      "id": "ML-KN-04",
+      "category": "Multi-Language",
+      "difficulty": "easy",
+      "query": "Amla nalli vitamini C yeshtu ide?",
+      "gold_answer": "Amla (Indian gooseberry) nalli 600mg vitamin C ide 100g ge — idu natural sources nalligintale hechchu. NIMBE hannu (42mg/100g) ge holasi 14 pattu jasti. Daily 1 amla tumba vitamin C needs fill maadutte (IFCT 2017).",
+      "expected_keywords": [
+        "amla",
+        "vitamin c",
+        "600",
+        "gooseberry"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Fruits — Amla",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-11",
+      "category": "Multi-Language",
+      "difficulty": "medium",
+      "query": "Chicken ya mutton? Protein aur fat comparison do",
+      "gold_answer": "Chicken breast: 23.4g protein/100g, 166 kcal, 2.7g fat (best for weight loss, muscle building). Mutton: 18g protein, 210 kcal, 13g fat (jasti saturated fat). Chicken better protein quality, kammi fat. Mutton zyada iron (3.4mg vs 1.2mg) — anaemia patients ke liye better. Overall: chicken zyada healthy daily consumption ke liye (IFCT 2017).",
+      "expected_keywords": [
+        "chicken",
+        "mutton",
+        "protein",
+        "fat",
+        "iron",
+        "calorie"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Meat & Poultry — Comparison",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-12",
+      "category": "Multi-Language",
+      "difficulty": "easy",
+      "query": "Soya chunks mein kitna protein hota hai?",
+      "gold_answer": "Soya chunks (TVP/textured vegetable protein) mein 52g protein hota hai har 100g dry mein — jo sabse zyada plant-based protein source hai. Pakaane ke baad (~17g/100g cooked) bhi achha source hai (IFCT 2017).",
+      "expected_keywords": [
+        "52",
+        "soya",
+        "chunks",
+        "protein",
+        "tvp",
+        "plant"
+      ],
+      "source": "IFCT 2017",
+      "source_ref": "Pulses & Legumes — Soybean products",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-13",
+      "category": "Multi-Language",
+      "difficulty": "hard",
+      "query": "Thyroid patient ko kya khana chahiye aur kya nahi?",
+      "gold_answer": "Hypothyroid: Iodine (iodized salt), selenium (Brazil nuts 1-2/day), zinc (pumpkin seeds) zaroori hain. Kacchi goitrogenic vegetables (gobhi, patta gobhi, broccoli) se bachen — cooking inactivate kar deta hai. Levothyroxine khali pet lein, 30-60 min breakfast se pehle. Calcium/iron supplements se 4+ hours gap rakhein. Coffee se bhi 60 min gap (ICMR-NIN 2024 Thyroid Protocol).",
+      "expected_keywords": [
+        "thyroid",
+        "hypothyroid",
+        "iodine",
+        "selenium",
+        "levothyroxine"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Disease Protocols — Thyroid",
+      "verified": true
+    },
+    {
+      "id": "ML-HI-14",
+      "category": "Multi-Language",
+      "difficulty": "medium",
+      "query": "Kya pregnant ladies ko iron supplements lena chahiye?",
+      "gold_answer": "Haan, pregnant women ke liye iron supplement zaroori hai. RDA 35-40 mg/day hai (non-pregnant 21mg se zyada). 60-90% Indian pregnant women anaemic hain. Supplement 60-120 mg/day recommended hai. Vitamin C (amla, nimbu) ke saath lein absorption ke liye. Calcium se 2-3 hours gap rakhein (ICMR-NIN 2024 Pregnancy Protocol + Anaemia Protocol).",
+      "expected_keywords": [
+        "pregnant",
+        "iron",
+        "supplement",
+        "35",
+        "40",
+        "vitamin c"
+      ],
+      "source": "ICMR-NIN 2024",
+      "source_ref": "Pregnancy Protocol + Anaemia Protocol",
+      "verified": true
+    },
+    {
+      "id": "ML-KN-05",
+      "category": "Multi-Language",
+      "difficulty": "medium",
+      "query": "Kannadadalli protein sources yavdu?",
+      "gold_answer": "Kannada protein sources: Hesaru kaalu (moong dal — 24g/100g), Kadalekaalu (chana — 19g), Avarekai (hyacinth beans — 8g cooked), Soya chunks (52g dry), Mutton (18g), Chicken (23g), Mose (paneer — 18g), Mosaru (curd — 3.9g/100g), Motte (eggs — 13g/100g), Godambu hittu (wheat flour — 10.8g). Daily 0.8-1.0 g/kg target (ICMR-NIN 2024 + IFCT 2017).",
+      "expected_keywords": [
+        "hesaru",
+        "kaalu",
+        "protein",
+        "kadalekaalu",
+        "chicken",
+        "paneer"
+      ],
+      "source": "IFCT 2017 + ICMR-NIN 2024",
+      "source_ref": "Pulses + various food groups",
+      "verified": true
+    }
+  ]
+}
