@@ -4,7 +4,7 @@
 Complete Q2 journal publication for AaharAI NutriSync — statistical validation, RAGAS evaluation, ground truth dataset (NutriSyncBench v2.0), failure analysis, cross-encoder ablation, chunk size ablation, retrieval quality improvements, and account deletion.
 
 ## Constraints & Preferences
-- No Ollama — use only cloud LLM providers (Groq primary)
+- Ollama primary (gemma3:4b local), Groq fallback (llama-3.3-70b-versatile), no-LLM safe mode — circuit breaker with 60s retry
 - Render free tier (512MB) — avoid torch/transformers OOM; lazy RAG init
 - Frontend on Vercel, backend on Render, Neon PostgreSQL
 - Dark mode (black bg) and light mode (white bg) both supported — all colors use semantic Tailwind/CSS variable classes
@@ -28,12 +28,14 @@ Complete Q2 journal publication for AaharAI NutriSync — statistical validation
 - **MRR@5 / nDCG@5**: Both 0.440
 - **Cross-encoder reranker ablation**: 44% positive-first rank, 56% all-negative
 - **Failure mode analysis**: 13 failures (low chunk relevance 11, LLM hallucination 4, citation verifier error 6, unknown 2)
-- **Component-level timing**: `backend/app/services/rag/timing.py` with `ComponentTimer`
+- **Component-level timing**: `backend/app/services/rag/timing.py` with `ComponentTimer` — per-component latency (retrieve, build_context, llm_generation, citation_verification, format_sources) returned in chat response
 - **RAGAS evaluation (Groq judge)**: Faithfulness 0.512, Relevancy 0.518, Context Precision 0.160, Context Recall 0.370
+- **Security hardening**: Secure/HttpOnly cookies (production), CSP/HSTS/X-Frame-Options headers, TrustedHostMiddleware, SECRET_KEY enforcement in production
+</parameter=production
 - **ROUGE-L**: Mean 0.165 (37/50 queries matched to gold answers)
 - **NutriSyncBench v2.0**: 200 QA pairs across 8 categories (Food Composition 46, Clinical Nutrition 31, RDA Guidelines 25, Regional Nutrition 22, Food Substitution 20, Gap Analysis 20, Medicine-Nutrition 18, Supplement Guidance 18)
 - **BERTScore**: roberta-large cached, F1=0.022 (length divergence — fixed with 3000-char capture + gold-length truncation)
-- **Citation verifier upgraded**: Multi-signal (keyword 20% + ngram 15% + medical 20% + cross-encoder NLI 25% + sentence 20%)
+- **Citation verifier upgraded**: Multi-signal (keyword 30% + ngram 25% + medical 30% + sentence 15% + cross-encoder as modifier + negation check)
 - **Retrieval fix**: `top_k` increased 3→10, hybrid candidates `k=5` → `k=top_k+5`, score threshold 0.3→0.1
 - **BERTScore fix**: Predictions truncated to gold answer length (`len(gold)*2`) for fair length-matched comparison
 - **Chunk size ablation script**: `backend/scripts/chunk_size_ablation.py` — tests 256/512/1024 chunk sizes
@@ -64,19 +66,20 @@ Complete Q2 journal publication for AaharAI NutriSync — statistical validation
 
 ## Relevant Files
 - `backend/app/api/v1/auth.py`: Account deletion endpoint (line 266)
-- `backend/app/core/config.py`: RAG_TOP_K=10, RAG_SCORE_THRESHOLD=0.1
-- `backend/app/services/rag/service.py`: Retrieval pipeline with hybrid + reranker (top_k fix, hybrid k fix)
+- `backend/app/core/config.py`: RAG_TOP_K=10, RAG_SCORE_THRESHOLD=0.1, ALLOWED_HOSTS
+- `backend/app/services/rag/service.py`: Retrieval pipeline with hybrid + reranker (top_k fix, hybrid k fix) + ComponentTimer integration
 - `backend/app/services/rag/timing.py`: ComponentTimer for per-component latency
-- `backend/scripts/evaluation.py`: 82 test queries across 8 categories (no multi-language), 3000-char answer capture
+- `backend/scripts/evaluation.py`: 92 test queries across 8 categories, 3000-char answer capture
 - `backend/scripts/evaluation_v2.py`: Enhanced eval with BERTScore, stats, MRR/nDCG, failure analysis
 - `backend/scripts/nutrisync_bench.py`: Benchmark seed (200 entries, v2.0 JSON)
 - `backend/scripts/chunk_size_ablation.py`: 256/512/1024 chunk size comparison
-- `backend/app/services/agents/tools/citation_verifier.py`: Multi-signal verifier with cross-encoder NLI
+- `backend/app/services/agents/tools/citation_verifier.py`: Multi-signal verifier with cross-encoder NLI (keyword 30%, ngram 25%, medical 30%, sentence 15%, negation check)
+- `backend/main.py`: Security headers middleware, TrustedHostMiddleware, CSP/HSTS/X-Frame-Options
 - `frontend/src/app/settings/components/privacy-tab.tsx`: Account deletion UI with double-confirmation
 - `frontend/src/lib/auth-context.tsx`: deleteAccount() in AuthContext
-- `frontend/src/lib/api.ts`: authApi.deleteAccount()
+- `frontend/src/lib/api.ts`: authApi.deleteAccount(), Secure/HttpOnly cookies
 - `frontend/src/lib/chat-context.tsx`: rAF-throttled SSE token processing
-- `frontend/src/middleware.ts`: JWT expiry check
+- `frontend/src/proxy.ts`: JWT expiry check (was middleware.ts)
 - `publication/README.md`: Q2 checklist, 10/11 criteria
 - `publication/results-summary.md`: All metrics
 - `publication/benchmark/benchmark_v2.json`: 200 entries, 8 categories
