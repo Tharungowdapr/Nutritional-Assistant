@@ -217,3 +217,4 @@ async def health_check():
 @app.get("/")
 async def root():
     return {"name": settings.APP_NAME, "version": settings.APP_VERSION, "docs": "/docs"}
+
