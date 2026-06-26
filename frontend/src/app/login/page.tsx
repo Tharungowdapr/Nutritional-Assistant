@@ -20,7 +20,8 @@ function LoginForm() {
   // If already authenticated, redirect to dashboard or onboarding
   useEffect(() => {
     if (!loading && user) {
-      router.replace(user.profile_completion && user.profile_completion >= 50 ? "/dashboard" : "/onboarding");
+      const target = user.profile_completion && user.profile_completion >= 50 ? "/dashboard" : "/onboarding";
+      router.replace(target);
     }
   }, [user, loading, router]);
   const searchParams = useSearchParams();
@@ -32,7 +33,8 @@ function LoginForm() {
     try {
       await login(email, password);
       toast.success("Welcome back!");
-      router.push(redirect);
+      // Force full navigation so AuthProvider remounts with the new token
+      window.location.href = redirect;
     } catch (err: any) {
       toast.error(err.message || "Login failed");
     } finally {
