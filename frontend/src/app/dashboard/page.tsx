@@ -2,15 +2,14 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
-  Flame, TrendingUp, AlertTriangle, ChevronRight, Activity,
+  Flame, AlertTriangle, ChevronRight, Activity,
   Sparkles, Utensils, User, Brain, Plus, Loader2, Settings,
-  Wheat, Apple, Milk, Beef, LeafyGreen, Coffee, Sun, Moon, BarChart3, Shield, Target
+  Wheat, Apple, Milk, Beef, LeafyGreen, Coffee, Sun, Moon, BarChart3
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { trackerApi, apiFetch } from "@/lib/api";
 import { frontendLLM } from "@/lib/llm-provider";
-import { MacroRing } from "@/components/macro-ring";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
 
@@ -63,15 +62,21 @@ const NutritionSkeleton = () => (
 
       {/* Content Skeleton */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-1 space-y-6">
           <div className="bg-card border border-border/60 rounded-2xl p-6">
             <SkeletonPulse className="h-6 w-32 mb-6" />
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <SkeletonPulse key={i} className="h-28" />
+                <SkeletonPulse key={i} className="h-16" />
               ))}
             </div>
           </div>
+          <div className="bg-card border border-border/60 rounded-2xl p-6">
+            <SkeletonPulse className="h-6 w-32 mb-6" />
+            <SkeletonPulse className="h-40" />
+          </div>
+        </div>
+        <div className="lg:col-span-2 space-y-6">
           <div className="bg-card border border-border/60 rounded-2xl p-6">
             <SkeletonPulse className="h-6 w-32 mb-6" />
             <div className="space-y-4">
@@ -80,15 +85,9 @@ const NutritionSkeleton = () => (
               ))}
             </div>
           </div>
-        </div>
-        <div className="space-y-6">
           <div className="bg-card border border-border/60 rounded-2xl p-6">
             <SkeletonPulse className="h-6 w-32 mb-6" />
-            <SkeletonPulse className="h-40" />
-          </div>
-          <div className="bg-card border border-border/60 rounded-2xl p-6">
-            <SkeletonPulse className="h-6 w-32 mb-6" />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               {[1, 2, 3, 4].map((i) => (
                 <SkeletonPulse key={i} className="h-20" />
               ))}
@@ -331,39 +330,8 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Macros + Profile + Analysis */}
+          {/* Left Column: Profile + Analysis */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Macro Rings */}
-            <div className="bg-card border border-border/60 rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-5">
-                <Target className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-semibold">Macronutrients</h2>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <MacroRing label="Calories" current={d.total_calories || 0} target={targets.energy} unit="kcal" size={100} />
-                <MacroRing label="Protein" current={d.total_protein_g || 0} target={targets.protein_g} unit="g" size={100} />
-                <MacroRing label="Carbs" current={d.total_carbs_g || 0} target={targets.carbs_g} unit="g" size={100} />
-                <MacroRing label="Fat" current={d.total_fat_g || 0} target={targets.fat_g} unit="g" size={100} />
-                <MacroRing label="Iron" current={d.total_iron_mg || 0} target={targets.iron_mg} unit="mg" size={100} color="var(--color-iron)" />
-                <MacroRing label="Calcium" current={d.total_calcium_mg || 0} target={targets.calcium_mg} unit="mg" size={100} color="var(--color-calcium)" />
-              </div>
-              <div className="mt-5 space-y-2.5 border-t border-border/40 pt-4">
-                {[
-                  { label: "Calories", value: d.total_calories || 0, unit: "kcal", color: "text-orange-500" },
-                  { label: "Protein", value: d.total_protein_g || 0, unit: "g", color: "text-emerald-500" },
-                  { label: "Carbs", value: d.total_carbs_g || 0, unit: "g", color: "text-blue-500" },
-                  { label: "Fat", value: d.total_fat_g || 0, unit: "g", color: "text-amber-500" },
-                  { label: "Iron", value: d.total_iron_mg || 0, unit: "mg", color: "text-rose-500" },
-                  { label: "Calcium", value: d.total_calcium_mg || 0, unit: "mg", color: "text-indigo-500" },
-                ].map((item) => (
-                  <div key={item.label} className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">{item.label}</span>
-                    <span className={`font-semibold ${item.color}`}>{item.value.toLocaleString()} {item.unit}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Profile Card */}
             {profile?.profile_summary && (
               <div className="bg-card border border-border/60 rounded-2xl p-6">
@@ -437,16 +405,22 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
             </div>
           </div>
 
-          {/* Right Column: Intake + Meals */}
+          {/* Right Column: Meals + Actions */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Today's Intake */}
+            {/* Today's Meals */}
             <div className="bg-card border border-border/60 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
-                  <Flame className="w-5 h-5 text-primary" />
-                  <h2 className="text-lg font-semibold">Today's Intake</h2>
+                  <Utensils className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-semibold">Today's Meals</h2>
                 </div>
-                <span className="text-sm text-muted-foreground font-medium">{d.meal_count || 0} meals</span>
+                {d.meal_count > 0 && (
+                  <Link href="/tracker">
+                    <Button variant="ghost" size="sm" className="gap-1 text-primary">
+                      View All <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                )}
               </div>
 
               {d.meal_count === 0 ? (
@@ -466,65 +440,8 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-5">
-                  {/* Macro Progress */}
-                  <div className="space-y-3">
-                    {[
-                      { label: "Calories", value: d.total_calories || 0, target: targets.energy, color: "var(--color-calories)" },
-                      { label: "Protein", value: d.total_protein_g || 0, target: targets.protein_g, color: "var(--color-protein)" },
-                      { label: "Carbs", value: d.total_carbs_g || 0, target: targets.carbs_g, color: "var(--color-carbs)" },
-                      { label: "Fat", value: d.total_fat_g || 0, target: targets.fat_g, color: "var(--color-fat)" },
-                      { label: "Iron", value: d.total_iron_mg || 0, target: targets.iron_mg, color: "var(--color-iron)" },
-                      { label: "Calcium", value: d.total_calcium_mg || 0, target: targets.calcium_mg, color: "var(--color-calcium)" },
-                    ].map((item) => (
-                      <div key={item.label} className="space-y-1.5">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground font-medium">{item.label}</span>
-                          <span className="font-semibold">
-                            {item.value.toLocaleString()} <span className="text-muted-foreground font-normal">/ {item.target.toLocaleString()}</span>
-                          </span>
-                        </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            style={{ width: `${pct(item.value, item.target)}%`, backgroundColor: item.color }}
-                            className="h-full rounded-full transition-all duration-700 ease-out"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Quick Stats */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border/60">
-                    {[
-                      { label: "Meals", value: d.meal_count || 0, color: "text-primary" },
-                      { label: "Calories", value: `${(d.total_calories || 0).toLocaleString()}`, color: "text-orange-500" },
-                      { label: "Protein", value: `${(d.total_protein_g || 0).toLocaleString()}g`, color: "text-emerald-500" },
-                      { label: "Carbs", value: `${(d.total_carbs_g || 0).toLocaleString()}g`, color: "text-blue-500" },
-                    ].map((stat) => (
-                      <div key={stat.label} className="text-center p-3 rounded-xl bg-muted/30">
-                        <div className={`text-xl font-bold ${stat.color}`}>{stat.value}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5">{stat.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Recent Meals */}
-            {d.meal_count > 0 && (
-              <div className="bg-card border border-border/60 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-lg font-semibold">Recent Meals</h2>
-                  <Link href="/tracker">
-                    <Button variant="ghost" size="sm" className="gap-1 text-primary">
-                      View All <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </Link>
-                </div>
                 <div className="space-y-3">
-                  {Object.entries(d.meals_by_slot || {}).slice(0, 4).map(([slot, items]) => {
+                  {Object.entries(d.meals_by_slot || {}).map(([slot, items]) => {
                     const slotInfo = SLOTS.find(s => s.key === slot);
                     const slotItems = items as any[];
                     const totalCal = slotItems.reduce((sum, item) => sum + (item.calories || 0), 0);
@@ -547,8 +464,8 @@ Include: 1) Overall health assessment 2) Top 2 priorities 3) One actionable tip.
                     );
                   })}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Quick Actions */}
             <div className="bg-card border border-border/60 rounded-2xl p-6">
