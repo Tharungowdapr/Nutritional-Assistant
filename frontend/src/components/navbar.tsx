@@ -23,9 +23,10 @@ const NAV_LINKS = [
 const BOTTOM_NAV_LINKS = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
   { href: "/chat", label: "Chat", icon: MessageSquare },
-  { href: "/meal-plan", label: "Meal Plan", icon: CalendarDays },
-  { href: "/tracker", label: "Tracker", icon: CookingPot },
+  { href: "/meal-plan", label: "Plan", icon: CalendarDays },
+  { href: "/tracker", label: "Track", icon: CookingPot },
   { href: "/explore", label: "Foods", icon: Database },
+  { href: "/recipes", label: "Recipes", icon: Utensils },
 ];
 
 export function Navbar() {
