@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense, useEffect } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Leaf } from "lucide-react";
@@ -14,16 +14,8 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login, user, loading } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
-
-  // If already authenticated, redirect to dashboard or onboarding
-  useEffect(() => {
-    if (!loading && user) {
-      const target = user.profile_completion && user.profile_completion >= 50 ? "/dashboard" : "/onboarding";
-      router.replace(target);
-    }
-  }, [user, loading, router]);
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
 
@@ -33,11 +25,9 @@ function LoginForm() {
     try {
       await login(email, password);
       toast.success("Welcome back!");
-      // Force full navigation so AuthProvider remounts with the new token
       window.location.href = redirect;
     } catch (err: any) {
       toast.error(err.message || "Login failed");
-    } finally {
       setIsLoading(false);
     }
   };

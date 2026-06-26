@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, Leaf } from "lucide-react";
@@ -15,15 +15,8 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signup, user, loading } = useAuth();
+  const { signup } = useAuth();
   const router = useRouter();
-
-  // If already authenticated with profile, redirect to dashboard
-  useEffect(() => {
-    if (!loading && user && user.profile_completion && user.profile_completion >= 50) {
-      router.replace("/dashboard");
-    }
-  }, [user, loading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +27,6 @@ export default function SignupPage() {
       window.location.href = "/onboarding";
     } catch (err: any) {
       toast.error(err.message || "Signup failed");
-    } finally {
       setIsLoading(false);
     }
   };
