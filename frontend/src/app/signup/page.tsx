@@ -31,7 +31,7 @@ export default function SignupPage() {
     try {
       await signup(name, email, password);
       toast.success("Account created!");
-      window.location.href = "/onboarding";
+      router.push("/onboarding");
     } catch (err: any) {
       toast.error(err.message || "Signup failed");
     } finally {

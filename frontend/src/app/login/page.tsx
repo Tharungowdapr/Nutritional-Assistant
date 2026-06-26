@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth-context";
-import { authApi, setToken } from "@/lib/api";
 import { toast } from "sonner";
 
 function LoginForm() {
@@ -31,12 +30,9 @@ function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const data: any = await authApi.login({ email, password });
-      setToken(data.access_token);
+      await login(email, password);
       toast.success("Welcome back!");
-      const hasProfile = data.user?.profile_completion && data.user.profile_completion >= 50;
-      window.location.href = hasProfile ? redirect : "/onboarding";
-      router.refresh();
+      router.push(redirect);
     } catch (err: any) {
       toast.error(err.message || "Login failed");
     } finally {
