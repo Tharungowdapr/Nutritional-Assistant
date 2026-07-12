@@ -184,14 +184,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         buffer = "";
       };
 
+      let sseRemainder = "";
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n").filter(l => l.startsWith("data: "));
+        const raw = sseRemainder + chunk;
+        const parts = raw.split("\n");
+        sseRemainder = parts.pop() || "";
 
-        for (const line of lines) {
+        for (const line of parts) {
+          if (!line.startsWith("data: ")) continue;
           try {
             const json = JSON.parse(line.slice(6));
             if (json.error) throw new Error(json.error);
@@ -209,6 +214,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             // skip malformed SSE lines
           }
         }
+      }
+      if (sseRemainder && sseRemainder.startsWith("data: ")) {
+        try {
+          const json = JSON.parse(sseRemainder.slice(6));
+          if (json.token) fullResponse += json.token;
+        } catch { /* ignore */ }
       }
 
       if (frameId) cancelAnimationFrame(frameId);

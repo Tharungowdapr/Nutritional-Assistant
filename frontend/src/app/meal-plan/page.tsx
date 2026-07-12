@@ -93,6 +93,7 @@ export default function MealPlanPage() {
       let streamError: string | null = null;
       let buffer = "";
       let frameId: number | null = null;
+      let sseRemainder = "";
 
       const flush = () => {
         if (!buffer) return;
@@ -100,34 +101,42 @@ export default function MealPlanPage() {
         buffer = "";
       };
 
+      const processLine = (line: string) => {
+        try {
+          const parsed = JSON.parse(line.slice(6));
+          if (parsed.error) { streamError = parsed.error; return; }
+          if (parsed.token) {
+            buffer += parsed.token;
+            if (!frameId) {
+              frameId = requestAnimationFrame(() => {
+                frameId = null;
+                flush();
+              });
+            }
+          }
+          if (parsed.final && parsed.plan) {
+            setPlan(parsed.plan);
+            loadHistory();
+          }
+        } catch (e) {
+          streamError = "Failed to parse server response";
+        }
+      };
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n").filter(l => l.startsWith("data: "));
-        for (const line of lines) {
-          try {
-            const parsed = JSON.parse(line.slice(6));
-            if (parsed.error) { streamError = parsed.error; break; }
-            if (parsed.token) {
-              buffer += parsed.token;
-              if (!frameId) {
-                frameId = requestAnimationFrame(() => {
-                  frameId = null;
-                  flush();
-                });
-              }
-            }
-            if (parsed.final && parsed.plan) {
-              setPlan(parsed.plan);
-              loadHistory();
-            }
-          } catch (e) {
-            streamError = "Failed to parse server response";
-          }
+        const raw = sseRemainder + chunk;
+        const parts = raw.split("\n");
+        sseRemainder = parts.pop() || "";
+        for (const line of parts) {
+          if (line.startsWith("data: ")) processLine(line);
+          if (streamError) break;
         }
         if (streamError) break;
       }
+      if (sseRemainder && sseRemainder.startsWith("data: ")) processLine(sseRemainder);
 
       if (frameId) cancelAnimationFrame(frameId);
       if (buffer) setStreamText(prev => prev + buffer);
